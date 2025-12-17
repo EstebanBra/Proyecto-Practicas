@@ -1,6 +1,25 @@
 import axios from './root.service.js';
 import cookies from 'js-cookie';
-import { jwtDecode } from 'jwt-decode';
+// Small local JWT decoder to avoid ESM interop issues with the jwt-decode package
+function decodeJwt(token) {
+    if (!token) return null;
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join('')
+        );
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error('Failed to decode JWT', e);
+        return null;
+    }
+}
 import { convertirMinusculas } from '@helpers/formatData.js';
 
 export async function login(dataUser) {
@@ -9,17 +28,25 @@ export async function login(dataUser) {
             email: dataUser.email, 
             password: dataUser.password
         });
-        const { status, data } = response;
-        if (status === 200) {
-            const { nombreCompleto, email, rut, rol } = jwtDecode(data.data.token);
-            const userData = { nombreCompleto, email, rut, rol };
-            sessionStorage.setItem('usuario', JSON.stringify(userData));
-            axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-            cookies.set('jwt-auth', data.data.token, {path:'/'});
-            return response.data
+        const httpStatus = response?.status;
+        const respData = response?.data;
+        if (httpStatus === 200) {
+            // backend returns { status: 'Success', message, data: { token } }
+            const token = respData?.data?.token;
+            if (token) {
+                const payload = decodeJwt(token);
+                const { nombreCompleto, email, rut, rol } = payload || {};
+                const userData = { nombreCompleto, email, rut, rol };
+                sessionStorage.setItem('usuario', JSON.stringify(userData));
+                // set default Authorization header for future requests
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                // also store token in cookie for backend that expects it
+                cookies.set('jwt-auth', token, { path: '/' });
+            }
+            return respData;
         }
     } catch (error) {
-        return error.response.data;
+        return (error && error.response && error.response.data) || { status: 'Server error', message: error.message };
     }
 }
 

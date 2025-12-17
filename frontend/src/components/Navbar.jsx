@@ -47,39 +47,48 @@ const Navbar = () => {
             <div className={`nav-menu ${menuOpen ? 'activado' : ''}`}>
                 <ul>
                     <li>
-                        <NavLink 
-                            to="/home" 
-                            onClick={() => { 
-                                setMenuOpen(false); 
-                                addActiveClass();
-                            }} 
-                            activeClassName="active"
+                        <NavLink
+                            to="/home"
+                            onClick={() => {
+                                setMenuOpen(false);
+                            }}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
                         >
                             Inicio
                         </NavLink>
                     </li>
                     {userRole === 'administrador' && (
                     <li>
-                        <NavLink 
-                            to="/users" 
-                            onClick={() => { 
-                                setMenuOpen(false); 
-                                addActiveClass();
-                            }} 
-                            activeClassName="active"
+                        <NavLink
+                            to="/users"
+                            onClick={() => {
+                                setMenuOpen(false);
+                            }}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
                         >
                             Usuarios
                         </NavLink>
                     </li>
                     )}
+                    {user && (
                     <li>
-                        <NavLink 
-                            to="/auth" 
-                            onClick={() => { 
-                                logoutSubmit(); 
-                                setMenuOpen(false); 
-                            }} 
-                            activeClassName="active"
+                        <NavLink
+                            to="/ofertas"
+                            onClick={() => { setMenuOpen(false); }}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Ofertas
+                        </NavLink>
+                    </li>
+                    )}
+                    <li>
+                        <NavLink
+                            to="/auth"
+                            onClick={() => {
+                                logoutSubmit();
+                                setMenuOpen(false);
+                            }}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
                         >
                             Cerrar sesión
                         </NavLink>
