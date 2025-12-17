@@ -3,9 +3,9 @@ import passport from "passport";
 import {
   handleErrorClient,
   handleErrorServer,
-  } from "../handlers/responseHandlers.js";
+} from "../handlers/responseHandlers.js";
 
-export function authenticateJwt(req, res, next) {
+export const authenticateToken = (req, res, next) => {
   passport.authenticate("jwt", { session: false }, (err, user, info) => {
     if (err) {
       return handleErrorServer(
@@ -27,4 +27,28 @@ export function authenticateJwt(req, res, next) {
     req.user = user;
     next();
   })(req, res, next);
-}
+};
+
+export const isStudent = (req, res, next) => {
+  if (!req.user) {
+    return handleErrorClient(res, 401, "No has iniciado sesión");
+  }
+
+  if (req.user.rol !== "estudiante") {
+    return handleErrorClient(res, 403, "No tienes permisos de estudiante");
+  }
+
+  next();
+};
+
+export const isEncargadoPracticas = (req, res, next) => {
+  if (!req.user) {
+    return handleErrorClient(res, 401, "No has iniciado sesión");
+  }
+
+  if (req.user.rol !== "encargado_practicas") {
+    return handleErrorClient(res, 403, "No tienes permisos de encargado de prácticas");
+  }
+
+  next();
+};

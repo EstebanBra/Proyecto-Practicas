@@ -72,6 +72,20 @@ const Navbar = () => {
                         </NavLink>
                     </li>
                     )}
+                    {userRole === 'estudiante' && (
+                    <li>
+                        <NavLink 
+                            to="/crear-practica" 
+                            onClick={() => { 
+                                setMenuOpen(false); 
+                                addActiveClass();
+                            }} 
+                            activeClassName="active"
+                        >
+                            Registrar Práctica
+                        </NavLink>
+                    </li>
+                    )}
                     <li>
                         <NavLink 
                             to="/auth" 
