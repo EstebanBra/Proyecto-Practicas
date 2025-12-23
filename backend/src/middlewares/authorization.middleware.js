@@ -106,3 +106,36 @@ export async function isEstudiante(req, res, next) {
     );
   }
 }
+
+export async function isDocenteOrEstudiante(req, res, next) {
+  try {
+    // Verifica que el middleware de autenticación haya establecido req.user
+    if (!req.user) {
+      return handleErrorClient(res, 401, "Usuario no autenticado.");
+    }
+
+    const { id, rol } = req.user;
+
+    // Verifica que el payload del token contenga la información necesaria.
+    if (!id || !rol) {
+      return handleErrorClient(
+        res,
+        400,
+        "Token inválido: no contiene la información de usuario requerida (id, rol)."
+      );
+    }
+
+    if (rol !== "docente" && rol !== "estudiante") {
+      return handleErrorClient(
+        res,
+        403,
+        "Acceso denegado",
+        `Tu rol '${rol}' no tiene permiso para realizar esta acción.`
+      );
+    }
+
+    next();
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}

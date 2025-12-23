@@ -35,6 +35,11 @@ const ComentarioSchema = new EntitySchema({
             type: String,
             length: 50,
             default: "general"
+        },
+        archivos: {
+            type: "simple-json",
+            nullable: true,
+            comment: "Array de objetos con información de archivos {nombre, ruta, tipo, tamaño}"
         }
     }
 });
