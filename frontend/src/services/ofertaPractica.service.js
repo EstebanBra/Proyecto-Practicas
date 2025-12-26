@@ -27,10 +27,20 @@ export async function deleteOferta(id) {
   return res.data;
 }
 
+export async function postularOferta(id) {
+  try {
+    const res = await api.post(`${BASE}/${id}/postular`);
+    return res.data;
+  } catch (error) {
+    return error.response.data;
+  }
+}
+
 export default {
   getOfertas,
   getOfertaById,
   createOferta,
   updateOferta,
+  postularOferta,
   deleteOferta,
 };

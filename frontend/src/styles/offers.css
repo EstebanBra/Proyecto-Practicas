@@ -30,6 +30,29 @@
   margin:0;
   font-size:1.05rem;
 }
+.ofertas-container {
+    padding-top: 120px;
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Clase usada en Ofertas.jsx */
+.ofertas-form {
+    padding-top: 100px; 
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Espacio extra para los títulos */
+.ofertas-container h1,
+.ofertas-form h1 {
+    margin-bottom: 20px;
+    margin-top: 0;
+}
 .offer-card__meta small { color:#777; }
 .offer-card__desc { margin:12px 0; color:#333; }
 .offer-card__list { margin:0; padding:0 0 0 18px; color:#444; }

@@ -16,6 +16,7 @@ instance.interceptors.request.use(
     const token = cookies.get('jwt-auth', { path: '/' });
     if(token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Token enviado:', config.headers.Authorization); // Log para depuración
     }
     return config;
   },

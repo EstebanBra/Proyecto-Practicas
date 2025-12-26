@@ -81,7 +81,7 @@ export const ofertaPracticaValidation = Joi.object({
       "any.required": "Los cupos son obligatorios.",
     }),
   fecha_limite: Joi.date()
-    .min('now')
+    .min("now")
     .required()
     .messages({
       "date.base": "La fecha límite debe ser una fecha válida.",

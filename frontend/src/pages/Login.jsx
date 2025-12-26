@@ -20,9 +20,11 @@ const Login = () => {
                 navigate('/home');
             } else if (response.status === 'Client error') {
                 errorData(response.details);
+            } else {
+                alert('Error del servidor: ' + response.message);
             }
         } catch (error) {
-            console.log(error);
+            alert('Error de conexión: ' + error.message);
         }
     };
 
@@ -34,16 +36,14 @@ const Login = () => {
                     {
                         label: "Correo electrónico",
                         name: "email",
-                        placeholder: "example@gmail.cl",
+                        placeholder: "correo@ejemplo.com", // Placeholder genérico
                         fieldType: 'input',
                         type: "email",
                         required: true,
                         minLength: 15,
                         maxLength: 30,
                         errorMessageData: errorEmail,
-                        validate: {
-                            emailDomain: (value) => value.endsWith('@gmail.cl') || 'El correo debe terminar en @gmail.cl'
-                        },
+                        // AQUÍ QUITAMOS LA VALIDACIÓN validate: { emailDomain: ... }
                         onChange: (e) => handleInputChange('email', e.target.value),
                     },
                     {
@@ -55,8 +55,6 @@ const Login = () => {
                         required: true,
                         minLength: 8,
                         maxLength: 26,
-                        pattern: /^[a-zA-Z0-9]+$/,
-                        patternMessage: "Debe contener solo letras y números",
                         errorMessageData: errorPassword,
                         onChange: (e) => handleInputChange('password', e.target.value)
                     },

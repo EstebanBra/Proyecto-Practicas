@@ -9,6 +9,7 @@ import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
 import '@styles/styles.css';
+import OfertasPublicas from '@pages/OfertasPublicas';
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: '/ofertas',
         element: <Ofertas />
+      },
+      {
+        path: '/ofertas-publicas',
+        element: <OfertasPublicas />
       },
       {
         path: '/users',

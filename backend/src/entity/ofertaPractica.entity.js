@@ -24,7 +24,7 @@ const OfertaPracticaSchema = new EntitySchema({
       nullable: false,
     },
     duracion: {
-      type: "int", // duración en semanas
+      type: "int",
       nullable: false,
     },
     modalidad: {
@@ -71,6 +71,13 @@ const OfertaPracticaSchema = new EntitySchema({
       type: "many-to-one",
       joinColumn: { name: "id_encargado" },
       onDelete: "CASCADE",
+    },
+
+    postulantes: {
+      target: "User",
+      type: "many-to-many",
+      joinTable: true,
+      cascade: true,
     }
   },
 });

@@ -6,7 +6,7 @@ import indexRoutes from "./routes/index.routes.js";
 import session from "express-session";
 import passport from "passport";
 import express, { json, urlencoded } from "express";
-import { cookieKey, HOST, PORT } from "./config/configEnv.js";
+import { ACCESS_TOKEN_SECRET, cookieKey, HOST, PORT } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
 import { createUsers } from "./config/initialSetup.js";
 import { passportJwtSetup } from "./auth/passport.auth.js";

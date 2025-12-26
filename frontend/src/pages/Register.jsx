@@ -14,24 +14,25 @@ const Register = () => {
         handleInputChange
     } = useRegister();
 
-const registerSubmit = async (data) => {
-    try {
-        const response = await register(data);
-        if (response.status === 'Success') {
-            showSuccessAlert('¡Registrado!','Usuario registrado exitosamente.');
-            setTimeout(() => {
-                navigate('/auth');
-            }, 3000)
-        } else if (response.status === 'Client error') {
-            errorData(response.details);
+    const registerSubmit = async (data) => {
+        try {
+            const response = await register(data);
+            if (response.status === 'Success') {
+                showSuccessAlert('¡Registrado!', 'Usuario registrado exitosamente.');
+                setTimeout(() => {
+                    navigate('/auth');
+                }, 3000)
+            } else if (response.status === 'Client error') {
+                errorData(response.details);
+            }
+        } catch (error) {
+            console.error("Error al registrar un usuario: ", error);
+            showErrorAlert('Cancelado', 'Ocurrió un error al registrarse.');
         }
-    } catch (error) {
-        console.error("Error al registrar un usuario: ", error);
-        showErrorAlert('Cancelado', 'Ocurrió un error al registrarse.');
     }
-}
 
-const patternRut = new RegExp(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/)
+    //cepta 1.111.111-1 hasta 999.999.999-K (Mucho más robusta)
+    const patternRut = new RegExp(/^\d{1,3}\.\d{3}\.\d{3}-[\dkK]$/);
 
 	return (
 		<main className="container">
@@ -53,16 +54,13 @@ const patternRut = new RegExp(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d
                     {
                         label: "Correo electrónico",
                         name: "email",
-                        placeholder: "example@gmail.cl",
+                        placeholder: "correo@ejemplo.com",
                         fieldType: 'input',
                         type: "email",
                         required: true,
                         minLength: 15,
                         maxLength: 35,
                         errorMessageData: errorEmail,
-                        validate: {
-                            emailDomain: (value) => value.endsWith('@gmail.cl') || 'El correo debe terminar en @gmail.cl'
-                        },
                         onChange: (e) => handleInputChange('email', e.target.value)
                     },
                     {
@@ -72,12 +70,22 @@ const patternRut = new RegExp(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d
                         fieldType: 'input',
                         type: "text",
 						minLength: 9,
-						maxLength: 12,
+						maxLength: 13,
 						pattern: patternRut,
-						patternMessage: "Debe ser xx.xxx.xxx-x o xxxxxxxx-x",
+						patternMessage: "Debe ser xx.xxx.xxx-x o xxxxxxxx-x (acepta K)",
 						required: true,
                         errorMessageData: errorRut,
                         onChange: (e) => handleInputChange('rut', e.target.value)
+                    },
+                    {
+                        label: "Rol",
+                        name: "rol",
+                        fieldType: 'select',
+                        options: [
+                            { value: 'estudiante', label: 'Estudiante' },
+                            { value: 'docente', label: 'Docente (Evaluador)' }
+                        ],
+                        required: true,
                     },
                     {
                         label: "Contraseña",

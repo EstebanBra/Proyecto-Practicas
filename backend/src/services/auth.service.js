@@ -47,12 +47,12 @@ export async function loginService(user) {
   }
 }
 
-
 export async function registerService(user) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    const { nombreCompleto, rut, email } = user;
+    //Extraemos el rol
+    const { nombreCompleto, rut, email, rol } = user;
 
     const createErrorMessage = (dataInfo, message) => ({
       dataInfo,
@@ -60,27 +60,24 @@ export async function registerService(user) {
     });
 
     const existingEmailUser = await userRepository.findOne({
-      where: {
-        email,
-      },
+      where: { email },
     });
     
     if (existingEmailUser) return [null, createErrorMessage("email", "Correo electrónico en uso")];
 
     const existingRutUser = await userRepository.findOne({
-      where: {
-        rut,
-      },
+      where: { rut },
     });
 
     if (existingRutUser) return [null, createErrorMessage("rut", "Rut ya asociado a una cuenta")];
 
+    //Creamos el usuario usando el rol que viene del frontend (o estudiante por defecto)
     const newUser = userRepository.create({
       nombreCompleto,
       email,
       rut,
       password: await encryptPassword(user.password),
-      rol: "estudiante",
+      rol: rol || "estudiante", 
     });
 
     await userRepository.save(newUser);

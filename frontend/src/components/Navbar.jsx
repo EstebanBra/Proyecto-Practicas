@@ -57,6 +57,8 @@ const Navbar = () => {
                             Inicio
                         </NavLink>
                     </li>
+
+                    {/* Solo visible para ADMINISTRADORES */}
                     {userRole === 'administrador' && (
                     <li>
                         <NavLink
@@ -70,7 +72,9 @@ const Navbar = () => {
                         </NavLink>
                     </li>
                     )}
-                    {user && (
+
+                    {/* Visible solo si NO es estudiante (Docentes y Admins) */}
+                    {userRole !== 'estudiante' && (
                     <li>
                         <NavLink
                             to="/ofertas"
@@ -81,6 +85,18 @@ const Navbar = () => {
                         </NavLink>
                     </li>
                     )}
+
+                    {/* Visible para TODOS */}
+                    <li>
+                        <NavLink
+                            to="/ofertas-publicas"
+                            onClick={() => { setMenuOpen(false); }}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Ofertas Publicadas
+                        </NavLink>
+                    </li>
+
                     <li>
                         <NavLink
                             to="/auth"

@@ -233,3 +233,9 @@ input {
 	height: 25px;
 	margin-top: 4px;
 }
+
+/* Adjust the form title size */
+.form h1 {
+    font-size: 24px; /* Reduced size to prevent overlap */
+    margin-top: 20px; /* Add margin to separate from navbar */
+}

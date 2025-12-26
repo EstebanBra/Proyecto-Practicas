@@ -1,6 +1,8 @@
 import axios from './root.service.js';
 import cookies from 'js-cookie';
-// Small local JWT decoder to avoid ESM interop issues with the jwt-decode package
+import { convertirMinusculas } from '@helpers/formatData.js';
+
+// Decodificador JWT local para evitar problemas de compatibilidad
 function decodeJwt(token) {
     if (!token) return null;
     try {
@@ -20,7 +22,6 @@ function decodeJwt(token) {
         return null;
     }
 }
-import { convertirMinusculas } from '@helpers/formatData.js';
 
 export async function login(dataUser) {
     try {
@@ -31,16 +32,13 @@ export async function login(dataUser) {
         const httpStatus = response?.status;
         const respData = response?.data;
         if (httpStatus === 200) {
-            // backend returns { status: 'Success', message, data: { token } }
             const token = respData?.data?.token;
             if (token) {
                 const payload = decodeJwt(token);
                 const { nombreCompleto, email, rut, rol } = payload || {};
                 const userData = { nombreCompleto, email, rut, rol };
                 sessionStorage.setItem('usuario', JSON.stringify(userData));
-                // set default Authorization header for future requests
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                // also store token in cookie for backend that expects it
                 cookies.set('jwt-auth', token, { path: '/' });
             }
             return respData;
@@ -53,12 +51,14 @@ export async function login(dataUser) {
 export async function register(data) {
     try {
         const dataRegister = convertirMinusculas(data);
-        const { nombreCompleto, email, rut, password } = dataRegister
+        const { nombreCompleto, email, rut, password, rol } = dataRegister; 
+        
         const response = await axios.post('/auth/register', {
             nombreCompleto,
             email,
             rut,
-            password
+            password,
+            rol
         });
         return response.data;
     } catch (error) {
