@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { crearEvaluacion } from '@services/evaluaciones_finales.service.js';
+import { crearEvaluacion } from '@services/evaluaciones_finales_f.service.js';
 import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
 
 const useCrearEvaluacion = (fetchEvaluacionesByDocumento) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { crearAutoevaluacion } from '@services/evaluaciones_finales.service.js';
+import { crearAutoevaluacion } from '@services/evaluaciones_finales_f.service.js';
 import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
 
 const useCrearAutoevaluacion = (fetchAutoevaluacionesByDocumento) => {
@@ -37,8 +37,8 @@ const useCrearAutoevaluacion = (fetchAutoevaluacionesByDocumento) => {
             }
 
             return { success: true, data: response };
+            // eslint-disable-next-line no-unused-vars
         } catch (error) {
-            console.error('Error al crear la autoevaluación:', error);
             showErrorAlert('Error', 'No se pudo enviar la autoevaluación');
             return { success: false, data: { error: 'Error al enviar autoevaluación' } };
         } finally {

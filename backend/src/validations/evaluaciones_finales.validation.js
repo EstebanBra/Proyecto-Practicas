@@ -1,7 +1,7 @@
 "use strict";
 import Joi from "joi";
 
-export const evaluacionBodyValidation = Joi.object({
+const evaluacionBaseValidation = {
   id_documento: Joi.number().integer().required().messages({
     "any.required": "El id del documento es obligatorio",
     "number.base": "El id del documento debe ser numérico",
@@ -15,6 +15,10 @@ export const evaluacionBodyValidation = Joi.object({
   comentario: Joi.string().allow("", null).max(1000).messages({
     "string.max": "El comentario no puede superar los 1000 caracteres",
   }),
+};
+
+export const autoevaluacionBodyValidation = Joi.object({
+  ...evaluacionBaseValidation,
 });
 
 export const evaluacionUpdateValidation = Joi.object({
@@ -23,7 +27,7 @@ export const evaluacionUpdateValidation = Joi.object({
     "number.min": "La nota mínima es 1.0",
     "number.max": "La nota máxima es 7.0",
   }),
-  comentario: Joi.string().allow("", null).max(1000).messages({
+  comentario: Joi.string().allow("", null).max(1000).optional().messages({
     "string.max": "El comentario no puede superar los 1000 caracteres",
   }),
 });

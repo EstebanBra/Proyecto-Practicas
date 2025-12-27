@@ -20,15 +20,31 @@ const DocsFinales = () => {
     const { documentos, loading: loadingDocs, fetchDocumentos } = useGetDocumentos();
     const { uploading, handleSubirDocumento } = useSubirDocumento(fetchDocumentos);
     const { submitting: subiendoAutoevaluacion, handleCrearAutoevaluacion } = useCrearAutoevaluacion();
-    const { fetchAutoevaluacionesByDocumento } = useGetEvaluaciones();
+    const { fetchAutoevaluacionesByDocumento, fetchAllAutoevaluacionesByEstudiante } = useGetEvaluaciones();
 
     useEffect(() => {
-        fetchDocumentos();
+        const cargarDatos = async () => {
+            await fetchDocumentos();
+
+            if (documentos && documentos.length > 0) {
+                const docsAutoevaluacion = documentos.filter(doc => doc.tipo === "autoevaluacion");
+                if (docsAutoevaluacion.length > 0) {
+                    setCargandoAutoevaluaciones(true);
+                    await fetchAllAutoevaluacionesByEstudiante(docsAutoevaluacion);
+                    setCargandoAutoevaluaciones(false);
+                }
+            }
+        };
+
+        cargarDatos();
     }, []);
 
     useEffect(() => {
-        const cargarAutoevaluaciones = async () => {
-            if (!documentos || documentos.length === 0) return;
+        const actualizarAutoevaluacionesDesdeDocumentos = async () => {
+            if (!documentos || documentos.length === 0) {
+                setAutoevaluaciones([]);
+                return;
+            }
 
             const docsAutoevaluacion = documentos.filter(doc => doc.tipo === "autoevaluacion");
 
@@ -38,14 +54,12 @@ const DocsFinales = () => {
             }
 
             setCargandoAutoevaluaciones(true);
-
             try {
                 const promesas = docsAutoevaluacion.map(doc =>
                     fetchAutoevaluacionesByDocumento(doc.id_documento)
                 );
 
                 const resultados = await Promise.all(promesas);
-
                 const todasAutoevaluaciones = resultados.flat();
                 setAutoevaluaciones(todasAutoevaluaciones);
             } catch (error) {
@@ -55,7 +69,7 @@ const DocsFinales = () => {
             }
         };
 
-        cargarAutoevaluaciones();
+        actualizarAutoevaluacionesDesdeDocumentos();
     }, [documentos]);
 
     const actualizarAutoevaluaciones = useCallback(async (documentoId) => {
@@ -76,6 +90,15 @@ const DocsFinales = () => {
     const handleFileChange = (e, tipo) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        const validTypes = ['.pdf', '.docx'];
+        const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+        if (!validTypes.includes(fileExtension)) {
+            alert("Solo se permiten archivos PDF o DOCX");
+            e.target.value = ''; // Limpiar input
+            return;
+        }
 
         switch (tipo) {
             case "informe":
@@ -108,16 +131,21 @@ const DocsFinales = () => {
 
         try {
             const formData = new FormData();
-            if (informeFile) formData.append("informe", informeFile);
-            if (autoevaluacionFile) formData.append("autoevaluacion", autoevaluacionFile);
-            formData.append("id_practica", 1);
 
+            if (informeFile) {
+                formData.append("informe", informeFile);
+            }
+
+            if (autoevaluacionFile) {
+                formData.append("autoevaluacion", autoevaluacionFile);
+            }
+
+            formData.append("id_practica", 1)
             const result = await handleSubirDocumento(formData);
 
             if (result.success) {
                 setInformeFile(null);
                 setAutoevaluacionFile(null);
-                // Recargar documentos
                 await fetchDocumentos();
             }
         } catch (err) {
@@ -133,6 +161,11 @@ const DocsFinales = () => {
 
         if (!documentoSeleccionado) {
             alert("No hay documento seleccionado");
+            return;
+        }
+
+        if (documentoSeleccionado.tipo !== "autoevaluacion") {
+            alert("Solo puede evaluar documentos de autoevaluación");
             return;
         }
 
@@ -153,6 +186,8 @@ const DocsFinales = () => {
                 alert("Nota de autoevaluación enviada correctamente");
 
                 await actualizarAutoevaluaciones(documentoSeleccionado.id_documento);
+            } else if (result.error === 'Documento no es autoevaluación') {
+                alert("El documento seleccionado no es una autoevaluación válida");
             }
         } catch (err) {
             console.error("Error al enviar nota de autoevaluación:", err);
@@ -183,22 +218,10 @@ const DocsFinales = () => {
         return "-";
     }, [autoevaluaciones, documentos]);
 
-    const documentosCompletos = Array.isArray(documentos)
-        ? documentos.filter(d => d.tipo === "informe").length > 0 &&
-        documentos.filter(d => d.tipo === "autoevaluacion").length > 0
-        : false;
-
-    const tieneAutoevaluacionSubida = Array.isArray(documentos)
-        ? documentos.some(d => d.tipo === "autoevaluacion")
-        : false;
-
-    const getDocumentoAutoevaluacion = useCallback(() => {
-        return documentos.find(d => d.tipo === "autoevaluacion");
-    }, [documentos]);
-
-    const notaDocumentoAutoevaluacion = getDocumentoAutoevaluacion()
-        ? getNotaPorDocumento(getDocumentoAutoevaluacion().id_documento)
-        : "Pendiente";
+    const tieneInforme = documentos?.some(d => d.tipo === "informe");
+    const tieneAutoevaluacion = documentos?.some(d => d.tipo === "autoevaluacion");
+    const documentoAutoevaluacion = documentos?.find(d => d.tipo === "autoevaluacion");
+    const notaAutoevaluacionDoc = documentoAutoevaluacion ? getNotaPorDocumento(documentoAutoevaluacion.id_documento) : "Pendiente";
 
     return (
         <div className="documentos-container">
@@ -209,8 +232,9 @@ const DocsFinales = () => {
 
                 <div className="upload-section-main">
                     <div className="upload-buttons-row">
+                        {/* Sección Informe */}
                         <div className="file-slot">
-                            {documentos.some(d => d.tipo === "informe") ? (
+                            {tieneInforme ? (
                                 <button
                                     className="upload-btn"
                                     onClick={() => {
@@ -246,13 +270,14 @@ const DocsFinales = () => {
                             )}
                         </div>
 
+                        {/* Sección Autoevaluación */}
                         <div className="file-slot">
-                            {tieneAutoevaluacionSubida ? (
+                            {tieneAutoevaluacion ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                     <button
                                         className="upload-btn"
                                         onClick={() => {
-                                            const autoEval = getDocumentoAutoevaluacion();
+                                            const autoEval = documentoAutoevaluacion;
                                             if (autoEval) window.open(autoEval.ruta_archivo, "_blank");
                                         }}
                                         disabled={cargandoAutoevaluaciones}
@@ -260,22 +285,28 @@ const DocsFinales = () => {
                                         {cargandoAutoevaluaciones ? "Cargando..." : "Ver Autoevaluación"}
                                     </button>
 
-                                    <button
-                                        className="upload-btn"
-                                        onClick={() => {
-                                            const doc = getDocumentoAutoevaluacion();
-                                            setDocumentoSeleccionado(doc);
-                                            setMostrarFormNota(true);
-                                        }}
-                                        style={{ background: "#28a745" }}
-                                        disabled={cargandoAutoevaluaciones}
-                                    >
-                                        {cargandoAutoevaluaciones
-                                            ? "Cargando..."
-                                            : notaDocumentoAutoevaluacion === "Pendiente"
-                                                ? "Ingresar Nota Autoevaluación"
-                                                : "Modificar Nota Autoevaluación"}
-                                    </button>
+                                    {notaAutoevaluacionDoc === "Pendiente" || notaAutoevaluacionDoc === "-" ? (
+                                        <button
+                                            className="upload-btn"
+                                            onClick={() => {
+                                                setDocumentoSeleccionado(documentoAutoevaluacion);
+                                                setMostrarFormNota(true);
+                                            }}
+                                            style={{ background: "#28a745" }}
+                                            disabled={cargandoAutoevaluaciones}
+                                        >
+                                            {cargandoAutoevaluaciones ? "Cargando..." : "Ingresar Nota Autoevaluación"}
+                                        </button>
+                                    ) : (
+                                        <div style={{
+                                            padding: "10px",
+                                            background: "#f8f9fa",
+                                            borderRadius: "5px",
+                                            textAlign: "center"
+                                        }}>
+                                            <strong>Nota: {notaAutoevaluacionDoc}</strong>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <>
@@ -303,7 +334,8 @@ const DocsFinales = () => {
                             )}
                         </div>
 
-                        {!documentosCompletos && (
+                        {/* Botón Subir (solo si falta algún documento) */}
+                        {(!tieneInforme && informeFile) || (!tieneAutoevaluacion && autoevaluacionFile) ? (
                             <button
                                 onClick={handleSubirArchivos}
                                 className="btn-upload"
@@ -311,10 +343,10 @@ const DocsFinales = () => {
                             >
                                 {uploading ? "Subiendo..." : "Subir"}
                             </button>
-                        )}
+                        ) : null}
                     </div>
 
-                    {/* FORMULARIO MODAL PARA INGRESAR NOTA DE AUTOEVALUACIÓN */}
+                    {/* FORMULARIO PARA INGRESAR NOTA DE AUTOEVALUACIÓN */}
                     {mostrarFormNota && (
                         <div style={{
                             marginTop: "20px",
@@ -414,7 +446,7 @@ const DocsFinales = () => {
                     </div>
                 </div>
 
-                {/* Tabla */}
+                {/* Tabla de documentos */}
                 <div className="table-section">
                     <div className="top-bar-docs">
                         <div className="search-container">

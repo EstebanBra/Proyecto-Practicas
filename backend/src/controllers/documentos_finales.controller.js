@@ -17,10 +17,21 @@ export async function subirYRegistrarDocumento(req, res) {
     if (req.fileValidationError) {
       return handleErrorClient(res, 400, req.fileValidationError);
     }
-    const files = [
-      ...(req.files?.informe || []),
-      ...(req.files?.autoevaluacion || []),
-    ];
+
+    const files = [];
+    const tipos = [];
+
+    if (req.files?.informe && req.files.informe.length > 0) {
+      files.push(...req.files.informe);
+      tipos.push(...Array(req.files.informe.length).fill("informe"));
+    }
+
+    if (req.files?.autoevaluacion && req.files.autoevaluacion.length > 0) {
+      files.push(...req.files.autoevaluacion);
+      tipos.push(
+        ...Array(req.files.autoevaluacion.length).fill("autoevaluacion"),
+      );
+    }
 
     if (files.length === 0) {
       return handleErrorClient(
@@ -35,11 +46,12 @@ export async function subirYRegistrarDocumento(req, res) {
       return handleErrorClient(res, 400, "El campo id_practica es obligatorio");
     }
 
-    const extraUrls = {};
-
     const documentosRegistrados = [];
 
-    for (const file of files) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const tipo = tipos[i];
+
       const { filename, size, mimetype } = file;
       const publicUrl = `${req.protocol}://${req.get("host")}/uploads/documentos/${filename}`;
       const formato = mimetype.includes("pdf") ? "pdf" : "docx";
@@ -51,7 +63,7 @@ export async function subirYRegistrarDocumento(req, res) {
         ruta_archivo: publicUrl,
         formato,
         peso_mb,
-        ...extraUrls,
+        tipo: tipo,
       };
 
       const [documento, errorDoc] = await registrarDocumentoService(data);

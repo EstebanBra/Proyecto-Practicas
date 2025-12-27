@@ -23,9 +23,15 @@ const EvaluacionSchema = new EntitySchema({
       enum: ["docente", "estudiante"],
       nullable: false,
     },
+    tipo_evaluacion: {
+      type: "enum",
+      enum: ["evaluacion_docente", "autoevaluacion"],
+      default: "evaluacion_docente",
+      nullable: false,
+    },
     nota: {
       type: "float",
-      nullable: true,
+      nullable: false,
     },
     comentario: {
       type: "text",
@@ -51,6 +57,13 @@ const EvaluacionSchema = new EntitySchema({
       onDelete: "CASCADE",
     },
   },
+  indices: [
+    {
+      name: "IDX_EVALUACION_UNICA",
+      columns: ["id_documento", "id_usuario", "tipo_evaluacion"],
+      unique: true,
+    },
+  ],
 });
 
 export default EvaluacionSchema;

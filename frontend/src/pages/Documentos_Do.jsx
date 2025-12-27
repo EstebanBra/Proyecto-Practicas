@@ -1,3 +1,4 @@
+// Documentos_Do.jsx - CON MANEJO DE ERRORES
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Swal from "sweetalert2";
 import Search from "../components/Search";
@@ -21,11 +22,12 @@ const DocsEntregados = () => {
     const {
         evaluacionesDocente,
         loading: loadingEval,
+        error: errorEval,
         fetchEvaluacionesDocente,
         fetchEvaluacionesByDocumento
     } = useGetEvaluaciones();
 
-    const { updating: updatingEstado, handleUpdateEstado } = useUpdateEstadoDocumento(() => {
+    const { updating: updatingEstado, handleUpdateEstados } = useUpdateEstadoDocumento(() => {
         setShouldRefetch(true);
     });
 
@@ -65,6 +67,11 @@ const DocsEntregados = () => {
     };
 
     const handleAddNote = async (doc) => {
+        if (doc.tipo !== "informe") {
+            await Swal.fire('Error', 'Solo puede evaluar documentos de tipo informe', 'error');
+            return;
+        }
+
         const { value: formValues } = await Swal.fire({
             title: 'Agregar Evaluación',
             html: `
@@ -91,7 +98,11 @@ const DocsEntregados = () => {
         });
 
         if (formValues) {
-            const evaluacionExistente = evaluacionesDocente?.find(
+            const evaluacionesArray = Array.isArray(evaluacionesDocente)
+                ? evaluacionesDocente
+                : [];
+
+            const evaluacionExistente = evaluacionesArray.find(
                 e => e.id_documento === doc.id_documento
             );
 
@@ -103,27 +114,44 @@ const DocsEntregados = () => {
             };
 
             try {
+                const autoevaluacion = documentos.find(d =>
+                    d.id_practica === doc.id_practica &&
+                    d.tipo === "autoevaluacion"
+                );
+
                 if (evaluacionExistente) {
                     await handleUpdateEvaluacion([evaluacionExistente], evaluacionData);
                 } else {
                     await handleCrearEvaluacion(evaluacionData);
                 }
 
+                const documentosARevisar = [];
                 if (doc.estado_revision === "pendiente") {
-                    await handleUpdateEstado([doc], "revisado");
+                    documentosARevisar.push(doc);
                 }
-
+                if (autoevaluacion && autoevaluacion.estado_revision === "pendiente") {
+                    documentosARevisar.push(autoevaluacion);
+                }
+                if (documentosARevisar.length > 0) {
+                    await handleUpdateEstados(documentosARevisar, "revisado");
+                }
                 await Swal.fire('¡Éxito!', 'Evaluación guardada correctamente', 'success');
                 setShouldRefetch(true);
-                // eslint-disable-next-line no-unused-vars
+
             } catch (error) {
+                console.error('Error al guardar evaluación:', error);
                 await Swal.fire('Error', 'No se pudo guardar la evaluación', 'error');
             }
         }
     };
 
-    const handleUpdateEstadoWrapper = async (doc, nuevoEstado) => {
-        await handleUpdateEstado(doc, nuevoEstado);
+    const handleUpdateEstadoWrapper = async (docs, nuevoEstado) => {
+        const documentosArray = Array.isArray(docs) ? docs : [docs];
+        const documentosValidos = documentosArray.filter(doc => doc && doc.id_documento);
+
+        if (documentosValidos.length === 0) return;
+
+        await handleUpdateEstados(documentosValidos, nuevoEstado);
         setShouldRefetch(true);
     };
 
@@ -136,7 +164,10 @@ const DocsEntregados = () => {
     }, [documents, filter, estadoFiltro]);
 
     const getEvaluacionPorDocumento = (docId) => {
-        return evaluacionesDocente?.find(e => e.id_documento === docId);
+        if (!Array.isArray(evaluacionesDocente)) {
+            return null;
+        }
+        return evaluacionesDocente.find(e => e.id_documento === docId);
     };
 
     const indexOfLast = currentPage * docsPerPage;
@@ -153,9 +184,26 @@ const DocsEntregados = () => {
         setCurrentPage(1);
     };
 
+    if (errorEval) {
+        console.error('Error en evaluaciones:', errorEval);
+    }
+
     return (
         <div className="documentos-container">
             <div className="documentos-content">
+                {errorEval && (
+                    <div style={{
+                        background: '#ffe6e6',
+                        color: '#cc0000',
+                        padding: '10px',
+                        borderRadius: '5px',
+                        marginBottom: '15px',
+                        border: '1px solid #ff9999'
+                    }}>
+                        <strong>Error al cargar evaluaciones:</strong> {errorEval}
+                    </div>
+                )}
+
                 <div className="tabla-docs">
                     {loadingDocs || loadingEval ? (
                         <p>Cargando documentos...</p>
@@ -235,7 +283,6 @@ const DocsEntregados = () => {
                 </div>
 
                 <div className="paginacion">
-
                     <button
                         onClick={handleRefresh}
                         className="refresh-btn"
@@ -252,7 +299,6 @@ const DocsEntregados = () => {
                             placeholder="     Buscar documento..."
                         />
                     </div>
-
 
                     <div className="estado-buttons">
                         {["pendiente", "revisado", "todos"].map((estado) => (

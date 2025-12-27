@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { updateEvaluacion } from '@services/evaluaciones_finales.service.js';
+import { updateEvaluacion } from '@services/evaluaciones_finales_f.service.js';
 import { deleteDataAlert, showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
 
 const useUpdateEvaluacion = (fetchEvaluacionesByDocumento, setDataEvaluacion) => {
@@ -30,12 +30,10 @@ const useUpdateEvaluacion = (fetchEvaluacionesByDocumento, setDataEvaluacion) =>
                         'La evaluación ha sido actualizada correctamente.'
                     );
 
-                    // Refrescar evaluaciones del documento
                     if (fetchEvaluacionesByDocumento && dataEvaluacion[0].id_documento) {
                         await fetchEvaluacionesByDocumento(dataEvaluacion[0].id_documento);
                     }
 
-                    // Limpiar selección
                     if (setDataEvaluacion) {
                         setDataEvaluacion([]);
                     }

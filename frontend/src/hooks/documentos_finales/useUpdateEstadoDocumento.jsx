@@ -1,61 +1,50 @@
+// useUpdateEstadoDocumento.jsx - VERSIÓN SIMPLIFICADA
 import { useState } from 'react';
-import { updateEstadoDocumento } from '@services/documentos_finales.service.js';
-import { deleteDataAlert, showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
+import { updateEstadoDocumento } from '@services/documentos_finales_f.service.js';
 
 const useUpdateEstadoDocumento = (fetchDocumentos, setDataDocumento) => {
     const [updating, setUpdating] = useState(false);
 
-    const handleUpdateEstado = async (dataDocumento, nuevoEstado) => {
-        if (dataDocumento.length > 0) {
-            setUpdating(true);
-            try {
-                const result = await deleteDataAlert(
-                    'Cambiar estado del documento',
-                    `¿Está seguro de cambiar el estado a "${nuevoEstado}"?`
-                );
+    const handleUpdateEstados = async (documentosArray, nuevoEstado) => {
+        if (!documentosArray || documentosArray.length === 0) return false;
 
-                if (result.isConfirmed) {
-                    const response = await updateEstadoDocumento(
-                        dataDocumento[0].id_documento,
-                        nuevoEstado
-                    );
-
-                    if(response.error) {
-                        showErrorAlert('Error', response.details || response.error);
-                        return false;
-                    }
-
-                    showSuccessAlert(
-                        '¡Actualizado!',
-                        'El estado del documento ha sido actualizado correctamente.'
-                    );
-
-                    if (fetchDocumentos) {
-                        await fetchDocumentos();
-                    }
-
-                    if (setDataDocumento) {
-                        setDataDocumento([]);
-                    }
-
-                    return true;
-                } else {
-                    showErrorAlert('Cancelado', 'La operación ha sido cancelada.');
-                    return false;
+        setUpdating(true);
+        try {
+            const promises = documentosArray.map(doc => {
+                if (doc && doc.id_documento) {
+                    return updateEstadoDocumento(doc.id_documento, nuevoEstado);
                 }
-            } catch (error) {
-                console.error('Error al actualizar el estado:', error);
-                showErrorAlert('Error', 'Ocurrió un error al actualizar el estado.');
+                return Promise.resolve(null);
+            });
+
+            const responses = await Promise.all(promises);
+
+            const errores = responses.filter(r => r && r.error);
+            if (errores.length > 0) {
+                console.error('Errores al actualizar estados:', errores);
                 return false;
-            } finally {
-                setUpdating(false);
             }
+
+            if (fetchDocumentos) {
+                await fetchDocumentos();
+            }
+
+            if (setDataDocumento) {
+                setDataDocumento([]);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error al actualizar estados:', error);
+            return false;
+        } finally {
+            setUpdating(false);
         }
     };
 
     return {
         updating,
-        handleUpdateEstado
+        handleUpdateEstados
     };
 };
 

@@ -7,7 +7,9 @@ import {
 } from "../middlewares/authorization.middleware.js";
 
 import {
+  crearAutoevaluacion,
   crearEvaluacion,
+  getAutoevaluacionByEstudiante,
   getEvaluacionByDocumento,
   getEvaluacionesByDocente,
   updateEvaluacion,
@@ -18,11 +20,12 @@ const router = Router();
 router.use(authenticateJwt);
 
 router.post("/", isDocente, crearEvaluacion);
-router.post("/et/", isEstudiante, crearEvaluacion);
-
-router.get("/documento/:id_documento", isDocente, getEvaluacionByDocumento);
-router.get("/documento/et/:id_documento", isEstudiante, getEvaluacionByDocumento,);
 router.get("/docente", isDocente, getEvaluacionesByDocente);
 
-router.patch("/:id", isDocente, updateEvaluacion);
+router.post("/autoevaluacion", isEstudiante, crearAutoevaluacion);
+router.get("/estudiante", getAutoevaluacionByEstudiante);
+
+router.get("/documento/:id_documento", getEvaluacionByDocumento,);
+router.patch("/:id", updateEvaluacion);
+
 export default router;

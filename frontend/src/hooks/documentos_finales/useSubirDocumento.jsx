@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { subirDocumento } from '@services/documentos_finales.service.js';
+import { subirDocumento } from '@services/documentos_finales_f.service.js';
 import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
 
 const useSubirDocumento = (fetchDocumentos) => {
