@@ -1,0 +1,205 @@
+.documentos-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f7f9fb;
+    padding: 100px 10px;
+    overflow-y: auto;
+}
+
+.documentos-content {
+    width: 100%;
+    max-width: 1300px;
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tabla-docs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.doc-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 15px;
+    background: white;
+    transition: all 0.25s ease;
+    min-height: 140px;
+}
+
+.doc-card:hover {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.doc-nombre {
+    flex: 1;
+    margin: 0;
+    word-wrap: break-word;
+}
+
+.doc-nombre strong {
+    color: #003366;
+    font-size: 1.05rem;
+    line-height: 1.2;
+}
+
+.doc-estado {
+    font-weight: 300;
+    font-size: 0.9rem;
+    margin: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.doc-estado::before {
+    content: "Estado: ";
+    color: #ffae00;
+}
+
+.doc-estado.revisado::before {
+    color: #28a745;
+}
+
+.doc-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    color: #333;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.archivo-item {
+    margin: 2px 0;
+    word-wrap: break-word;
+    line-height: 1.3;
+}
+
+.comentario {
+    margin-top: 8px;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.3;
+}
+
+.doc-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.doc-acciones button {
+    background: #003366;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.doc-acciones button:hover {
+    background: #0055aa;
+}
+
+.paginacion {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.paginacion button {
+    background: white;
+    border: 1px solid #ccc;
+    color: #003366;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.paginacion button:hover {
+    background: #003366;
+    color: white;
+}
+
+.paginacion button.active {
+    background: #003366;
+    color: white;
+}
+
+.estado-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 0 15px;
+}
+
+.btn-action {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    color: #003366;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-action:hover,
+.btn-action.active {
+    background: #003366;
+    color: white;
+}
+
+.doc-alumno-info {
+    margin: 8px 0;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.doc-alumno-info p {
+    margin: 4px 0;
+    color: #555;
+}
+
+.nota {
+    margin-top: 8px;
+    font-weight: bold;
+    color: #003366;
+}

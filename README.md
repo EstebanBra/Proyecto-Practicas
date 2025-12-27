@@ -68,8 +68,8 @@ Este proyecto está dividido en dos partes principales: el Backend y el Frontend
 │   │   │   ├── configEnv.js
 │   │   │   └── initialSetup.js
 │   │   ├── controllers
-│   │   │   ├── auth.controller.js
-│   │   │   └── user.controller.js
+│   │   │   ├── auth.evaluaciones_finales.controller.js
+│   │   │   └── user.evaluaciones_finales.controller.js
 │   │   ├── entity
 │   │   │   └── user.entity.js
 │   │   ├── handlers

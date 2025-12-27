@@ -1,14 +1,17 @@
 "use strict";
 import { Router } from "express";
-import userRoutes from "./user.routes.js";
+
 import authRoutes from "./auth.routes.js";
-import comentarioRoutes from "./comentario.routes.js";
+import userRoutes from "./user.routes.js";
+import documentoRoutes from "./documentos_finales.routes.js";
+import evaluacionRoutes from "./evaluaciones_finales.routes.js";
 
 const router = Router();
 
 router
-    .use("/auth", authRoutes)
-    .use("/user", userRoutes)
-    .use("/comentario", comentarioRoutes);
+  .use("/auth", authRoutes)
+  .use("/user", userRoutes)
+  .use("/documentos", documentoRoutes)
+  .use("/evaluaciones", evaluacionRoutes);
 
 export default router;
