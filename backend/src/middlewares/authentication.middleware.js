@@ -22,4 +22,7 @@ export function authenticateJwt(req, res, next) {
     req.user = user;
     next();
   });
-};
+}
+
+// Alias para compatibilidad
+export const verificarToken = authenticateJwt;;

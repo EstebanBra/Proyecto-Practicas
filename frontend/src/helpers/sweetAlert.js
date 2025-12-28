@@ -27,3 +27,12 @@ export const showErrorAlert = (titleMessage, message) => {
     'error'
   );
 };
+
+export const showAlert = (title, message, icon) => {
+  Swal.fire({
+    title: title,
+    text: message,
+    icon: icon,
+    confirmButtonColor: '#3085d6'
+  });
+};

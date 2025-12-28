@@ -1,0 +1,509 @@
+import { useState, useEffect } from 'react';
+import '@styles/bitacoras.css';
+import {
+    useCreateBitacora,
+    useBitacoras,
+    useUltimaSemana,
+    useDocumentoBitacora,
+    useDocumentos,
+    useBuscarPorRut
+} from '../hooks/bitacora/useBitacora.jsx';
+import { useFileUpload } from '../hooks/files/useFileUpload.jsx';
+import FileUpload from '../components/FileUpload.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import { showAlert } from '../helpers/sweetAlert.js';
+
+const Bitacoras = () => {
+    const { user } = useAuth();
+    const userRole = user?.rol;
+    const isEstudiante = userRole === 'estudiante';
+    const isDocente = userRole === 'docente';
+    const isAdmin = userRole === 'administrador';
+
+    const [idPractica] = useState(() => user?.id_practica || 1);
+
+    // Hooks para bitácoras (estudiante)
+    const { createBitacora, loading: creatingBitacora } = useCreateBitacora();
+    const { bitacoras, loading: loadingBitacoras, fetchBitacoras } = useBitacoras(idPractica);
+    const { ultimaSemana, fetchUltimaSemana } = useUltimaSemana(idPractica);
+
+    // Hooks para documentos
+    const { subirArchivo, registrarDocumento, loading: uploadingFile } = useDocumentoBitacora();
+    const { documentos, fetchDocumentos } = useDocumentos(idPractica);
+    const { files, uploadError, addFile, removeFile, clearFiles, getFileToUpload } = useFileUpload();
+
+    // Hook para búsqueda por RUT (docente)
+    const { resultado: resultadoBusqueda, loading: buscando, error: errorBusqueda, buscarPorRut, limpiarBusqueda } = useBuscarPorRut();
+
+    // Estados del formulario (estudiante)
+    const [formData, setFormData] = useState({
+        semana: '',
+        descripcion_actividades: '',
+        resultados_aprendizajes: '',
+        horas_trabajadas: ''
+    });
+
+    const [archivoSubido, setArchivoSubido] = useState(null);
+    const [documentoId, setDocumentoId] = useState(null);
+
+    // Estado para búsqueda por RUT (docente)
+    const [rutBusqueda, setRutBusqueda] = useState('');
+
+    useEffect(() => {
+        if (isEstudiante) {
+            fetchBitacoras();
+            fetchUltimaSemana();
+            fetchDocumentos();
+        }
+    }, [idPractica, isEstudiante, fetchBitacoras, fetchUltimaSemana, fetchDocumentos]);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleFileAdd = (file) => {
+        const added = addFile(file);
+        if (!added && uploadError) {
+            showAlert('Error', uploadError, 'error');
+        }
+    };
+
+    // Subir archivo
+    const handleUploadFile = async () => {
+        if (files.length === 0) {
+            showAlert('Advertencia', 'Por favor selecciona un archivo primero', 'warning');
+            return;
+        }
+
+        try {
+            const fileToUpload = getFileToUpload();
+            if (!fileToUpload) {
+                showAlert('Error', 'No se pudo obtener el archivo', 'error');
+                return;
+            }
+
+            const { data, error } = await subirArchivo(fileToUpload);
+
+            if (error) {
+                showAlert('Error', error, 'error');
+                return;
+            }
+
+            const documentData = {
+                id_practica: idPractica,
+                ...data.data
+            };
+
+            const { data: docData, error: docError } = await registrarDocumento(documentData);
+
+            if (docError) {
+                showAlert('Error', docError, 'error');
+                return;
+            }
+
+            setDocumentoId(docData.data.id_documento);
+            setArchivoSubido({
+                nombre: data.data.nombre_archivo,
+                id: docData.data.id_documento
+            });
+            clearFiles();
+            fetchDocumentos();
+            showAlert('Éxito', 'Archivo subido correctamente', 'success');
+        } catch (error) {
+            showAlert('Error', error.message, 'error');
+        }
+    };
+
+    const handleRemoveUploadedFile = () => {
+        setArchivoSubido(null);
+        setDocumentoId(null);
+    };
+
+    // Enviar bitácora completa (estudiante)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const semanaNum = parseInt(formData.semana);
+        if (semanaNum <= ultimaSemana) {
+            showAlert('Error', `La semana debe ser mayor a ${ultimaSemana}`, 'error');
+            return;
+        }
+
+        if (formData.descripcion_actividades.length < 50) {
+            showAlert('Error', 'La descripción debe tener al menos 50 caracteres', 'error');
+            return;
+        }
+
+        if (formData.resultados_aprendizajes.length < 25) {
+            showAlert('Error', 'Los resultados deben tener al menos 25 caracteres', 'error');
+            return;
+        }
+
+        const bitacoraData = {
+            id_practica: idPractica,
+            semana: semanaNum,
+            descripcion_actividades: formData.descripcion_actividades,
+            resultados_aprendizajes: formData.resultados_aprendizajes,
+            horas_trabajadas: parseFloat(formData.horas_trabajadas),
+            ...(documentoId && { id_documento: documentoId })
+        };
+
+        const { error } = await createBitacora(bitacoraData);
+
+        if (error) {
+            showAlert('Error', error, 'error');
+            return;
+        }
+
+        showAlert('Éxito', 'Bitácora registrada correctamente', 'success');
+
+        setFormData({
+            semana: '',
+            descripcion_actividades: '',
+            resultados_aprendizajes: '',
+            horas_trabajadas: ''
+        });
+        setDocumentoId(null);
+        setArchivoSubido(null);
+        clearFiles();
+
+        fetchBitacoras();
+        fetchUltimaSemana();
+        fetchDocumentos();
+    };
+
+    // Búsqueda por RUT (docente)
+    const handleBuscarRut = async (e) => {
+        e.preventDefault();
+        if (!rutBusqueda.trim()) {
+            showAlert('Advertencia', 'Por favor ingresa un RUT', 'warning');
+            return;
+        }
+        await buscarPorRut(rutBusqueda.trim());
+    };
+
+    const handleLimpiarBusqueda = () => {
+        setRutBusqueda('');
+        limpiarBusqueda();
+    };
+
+    // Renderizar tarjeta de bitácora
+    const renderBitacoraCard = (bitacora, index) => (
+        <div key={bitacora.id_bitacora || index} className="bitacora-card">
+            <div className="bitacora-header-card">
+                <h3>Semana {bitacora.semana}</h3>
+                <span className={`estado-badge ${bitacora.estado_revision}`}>
+                    {bitacora.estado_revision === 'aprobado' && '✔ Aprobado'}
+                    {bitacora.estado_revision === 'rechazado' && '✗ Rechazado'}
+                    {bitacora.estado_revision === 'en_progreso' && '⧗ En Revisión'}
+                    {bitacora.estado_revision === 'pendiente' && '⏳ Pendiente'}
+                </span>
+            </div>
+
+            <div className="bitacora-content">
+                <div className="info-row">
+                    <span className="label">🕐 Horas:</span>
+                    <span className="value">{bitacora.horas_trabajadas}h</span>
+                </div>
+
+                <div className="info-row">
+                    <span className="label">📅 Fecha:</span>
+                    <span className="value">
+                        {new Date(bitacora.fecha_registro).toLocaleDateString('es-CL')}
+                    </span>
+                </div>
+
+                <div className="activities-section">
+                    <h4>Actividades:</h4>
+                    <p>{bitacora.descripcion_actividades}</p>
+                </div>
+
+                <div className="learnings-section">
+                    <h4>Aprendizajes:</h4>
+                    <p>{bitacora.resultados_aprendizajes}</p>
+                </div>
+
+                {bitacora.nombre_archivo && (
+                    <div className="document-attached">
+                        <span>📎 {bitacora.nombre_archivo}</span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    // ==================== VISTA ESTUDIANTE ====================
+    if (isEstudiante) {
+        return (
+            <div className="bitacoras-container">
+                <div className="bitacoras-header">
+                    <h1>📝 Gestión de Bitácoras</h1>
+                </div>
+
+                {/* Formulario completo con archivo - Una sola página */}
+                <form className="bitacora-form" onSubmit={handleSubmit}>
+                    <h2>Registrar Nueva Bitácora</h2>
+
+                    {/* Sección de datos */}
+                    <div className="form-section">
+                        <h3>📋 Información de la Bitácora</h3>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="semana">Semana *</label>
+                                <div className="semana-info">
+                                    <span className="badge-info">Última registrada: {ultimaSemana || 0}</span>
+                                </div>
+                                <input
+                                    type="number"
+                                    id="semana"
+                                    name="semana"
+                                    value={formData.semana}
+                                    onChange={handleInputChange}
+                                    min={ultimaSemana + 1}
+                                    max="20"
+                                    placeholder={`Semana ${ultimaSemana + 1} o mayor`}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="horas_trabajadas">Horas Trabajadas *</label>
+                                <p className="hint">En intervalos de 0.5</p>
+                                <input
+                                    type="number"
+                                    id="horas_trabajadas"
+                                    name="horas_trabajadas"
+                                    value={formData.horas_trabajadas}
+                                    onChange={handleInputChange}
+                                    step="0.5"
+                                    min="0.5"
+                                    max="40"
+                                    placeholder="Ej: 8"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="descripcion_actividades">Descripción de Actividades *</label>
+                            <p className="hint">Mínimo 50 caracteres</p>
+                            <textarea
+                                id="descripcion_actividades"
+                                name="descripcion_actividades"
+                                value={formData.descripcion_actividades}
+                                onChange={handleInputChange}
+                                placeholder="Describe las actividades realizadas durante esta semana..."
+                                rows="4"
+                                required
+                            />
+                            <span className={`char-count ${formData.descripcion_actividades.length >= 50 ? 'valid' : ''}`}>
+                                {formData.descripcion_actividades.length}/50 mín
+                            </span>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="resultados_aprendizajes">Resultados de Aprendizaje *</label>
+                            <p className="hint">Mínimo 25 caracteres</p>
+                            <textarea
+                                id="resultados_aprendizajes"
+                                name="resultados_aprendizajes"
+                                value={formData.resultados_aprendizajes}
+                                onChange={handleInputChange}
+                                placeholder="¿Qué aprendiste esta semana?"
+                                rows="3"
+                                required
+                            />
+                            <span className={`char-count ${formData.resultados_aprendizajes.length >= 25 ? 'valid' : ''}`}>
+                                {formData.resultados_aprendizajes.length}/25 mín
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Sección de documentos */}
+                    <div className="form-section document-section">
+                        <h3>📎 Adjuntar Documento (Opcional)</h3>
+                        <p className="section-description">
+                            Puedes adjuntar un archivo PDF, DOCX, ZIP o RAR (máx. 10 MB)
+                        </p>
+
+                        {archivoSubido ? (
+                            <div className="uploaded-file-preview">
+                                <div className="file-preview-info">
+                                    <span className="file-icon">📄</span>
+                                    <div className="file-preview-details">
+                                        <p className="file-preview-name">{archivoSubido.nombre}</p>
+                                        <p className="file-preview-status">✔ Listo para guardar</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="btn-remove-file"
+                                    onClick={handleRemoveUploadedFile}
+                                >
+                                    ✕ Quitar
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <FileUpload
+                                    files={files}
+                                    onAddFile={handleFileAdd}
+                                    onRemoveFile={removeFile}
+                                    error={uploadError}
+                                    label=""
+                                />
+
+                                {files.length > 0 && (
+                                    <button
+                                        type="button"
+                                        className="btn-upload-file"
+                                        onClick={handleUploadFile}
+                                        disabled={uploadingFile}
+                                    >
+                                        {uploadingFile ? '⏳ Subiendo...' : '📤 Subir Archivo'}
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
+
+                    {/* Botón de envío */}
+                    <div className="form-actions">
+                        <button type="submit" className="btn-submit" disabled={creatingBitacora}>
+                            {creatingBitacora ? '⏳ Guardando...' : '💾 Guardar Bitácora'}
+                        </button>
+                    </div>
+                </form>
+
+                {/* Lista de bitácoras del estudiante */}
+                <div className="bitacoras-section">
+                    <h2>📋 Mis Bitácoras ({bitacoras?.length || 0})</h2>
+                    
+                    {loadingBitacoras ? (
+                        <div className="loading">⏳ Cargando...</div>
+                    ) : bitacoras && bitacoras.length > 0 ? (
+                        <div className="bitacoras-grid">
+                            {bitacoras.map((bitacora, index) => renderBitacoraCard(bitacora, index))}
+                        </div>
+                    ) : (
+                        <div className="empty-state">
+                            <div className="empty-icon">📋</div>
+                            <h3>No hay bitácoras registradas</h3>
+                            <p>Completa el formulario para crear tu primera bitácora</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // ==================== VISTA DOCENTE / ADMIN ====================
+    if (isDocente || isAdmin) {
+        return (
+            <div className="bitacoras-container">
+                <div className="bitacoras-header">
+                    <h1>🔍 Revisar Bitácoras de Estudiantes</h1>
+                </div>
+
+                {/* Buscador por RUT */}
+                <div className="search-section">
+                    <form className="search-form" onSubmit={handleBuscarRut}>
+                        <div className="search-input-group">
+                            <label htmlFor="rutBusqueda">Buscar por RUT del Estudiante</label>
+                            <div className="search-row">
+                                <input
+                                    type="text"
+                                    id="rutBusqueda"
+                                    value={rutBusqueda}
+                                    onChange={(e) => setRutBusqueda(e.target.value)}
+                                    placeholder="Ej: 12345678-9 o 123456789"
+                                    className="search-input"
+                                />
+                                <button type="submit" className="btn-search" disabled={buscando}>
+                                    {buscando ? '⏳ Buscando...' : '🔍 Buscar'}
+                                </button>
+                                {resultadoBusqueda && (
+                                    <button type="button" className="btn-clear" onClick={handleLimpiarBusqueda}>
+                                        ✕ Limpiar
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </form>
+
+                    {errorBusqueda && (
+                        <div className="error-message">
+                            ⚠️ {errorBusqueda}
+                        </div>
+                    )}
+                </div>
+
+                {/* Resultados de búsqueda */}
+                {resultadoBusqueda && (
+                    <div className="search-results">
+                        {/* Info del estudiante */}
+                        <div className="estudiante-info">
+                            <h3>👤 Información del Estudiante</h3>
+                            <div className="info-card">
+                                <p><strong>Nombre:</strong> {resultadoBusqueda.estudiante?.nombre || 'No disponible'}</p>
+                                <p><strong>RUT:</strong> {resultadoBusqueda.estudiante?.rut}</p>
+                                <p><strong>Email:</strong> {resultadoBusqueda.estudiante?.email}</p>
+                                {resultadoBusqueda.practica && (
+                                    <p><strong>Estado Práctica:</strong> 
+                                        <span className={`estado-practica ${resultadoBusqueda.practica.estado}`}>
+                                            {resultadoBusqueda.practica.estado}
+                                        </span>
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Bitácoras del estudiante */}
+                        <div className="bitacoras-section">
+                            <h3>📋 Bitácoras del Estudiante ({resultadoBusqueda.bitacoras?.length || 0})</h3>
+                            
+                            {resultadoBusqueda.bitacoras && resultadoBusqueda.bitacoras.length > 0 ? (
+                                <div className="bitacoras-grid">
+                                    {resultadoBusqueda.bitacoras.map((bitacora, index) => renderBitacoraCard(bitacora, index))}
+                                </div>
+                            ) : (
+                                <div className="empty-state">
+                                    <div className="empty-icon">📋</div>
+                                    <h3>No hay bitácoras</h3>
+                                    <p>Este estudiante aún no ha registrado bitácoras</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Estado inicial - sin búsqueda */}
+                {!resultadoBusqueda && !buscando && !errorBusqueda && (
+                    <div className="empty-state initial-state">
+                        <div className="empty-icon">🔍</div>
+                        <h3>Buscar Bitácoras</h3>
+                        <p>Ingresa el RUT de un estudiante para ver sus bitácoras registradas</p>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // Vista por defecto (sin rol definido)
+    return (
+        <div className="bitacoras-container">
+            <div className="empty-state">
+                <div className="empty-icon">⚠️</div>
+                <h3>Acceso no autorizado</h3>
+                <p>No tienes permisos para ver esta página</p>
+            </div>
+        </div>
+    );
+};
+
+export default Bitacoras;

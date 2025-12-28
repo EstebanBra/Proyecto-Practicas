@@ -7,6 +7,7 @@ import Users from '@pages/Users';
 import Register from '@pages/Register';
 import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
+import Bitacoras from '@pages/Bitacoras';
 import ProtectedRoute from '@components/ProtectedRoute';
 import '@styles/styles.css';
 import OfertasPublicas from '@pages/OfertasPublicas';
@@ -45,7 +46,15 @@ const router = createBrowserRouter([
           <Users />
         </ProtectedRoute>
         ),
-      }
+      },
+      {
+        path: '/bitacoras',
+        element: (
+        <ProtectedRoute allowedRoles={['estudiante', 'docente', 'administrador']}>
+          <Bitacoras />
+        </ProtectedRoute>
+        ),
+        }
     ]
   },
   {
