@@ -54,8 +54,16 @@ export async function createComentario(req, res) { //Esta funcion crea un nuevo 
 
 export async function getComentarios(req, res) {
   try {
-    const { query } = req; // esta linea obtiene los parametros de consulta de la solicitud
-    const comentarios = await getComentariosService(query); // Obtiene todos los comentarios
+    const { user } = req;
+    if (!user || !user.rol || !user.id) {
+      return handleErrorClient(res, 400, "Token inválido: falta información de usuario");
+    }
+
+    // Estudiantes: solo sus propios comentarios. Docentes: todos los comentarios.
+    const comentarios = user.rol === "estudiante"
+      ? await getComentariosByUsuarioIdService(user.id)
+      : await getallComentariosService();
+
     handleSuccess(res, 200, "Comentarios obtenidos exitosamente", comentarios);
   } catch (error) {
     handleErrorClient(res, 500, "Error obteniendo los comentarios", error);
@@ -119,6 +127,17 @@ export async function getComentariosByUsuarioId(req, res) {
   try {
     // Si no se pasa un ID en la URL, se usa el ID del usuario autenticado.
     const usuarioId = req.params.usuarioId || req.user.id;
+
+    // Un estudiante solo puede consultar sus propios comentarios
+    if (req.user?.rol === "estudiante" && Number(usuarioId) !== Number(req.user.id)) {
+      return handleErrorClient(
+        res,
+        403,
+        "Acceso denegado",
+        "Un estudiante solo puede ver sus propios comentarios"
+      );
+    }
+
     await comentarioIdValidation.validateAsync({ id: usuarioId });
     const comentarios = await getComentariosByUsuarioIdService(usuarioId);
     handleSuccess(res, 200, "Comentarios del usuario obtenidos exitosamente", comentarios);

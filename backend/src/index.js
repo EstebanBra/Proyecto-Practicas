@@ -55,11 +55,10 @@ async function setupServer() {
       }),
     );
 
+    
     app.use(passport.initialize());
-    app.use(passport.session());
-
-    passportJwtSetup();
-
+    // app.use(passport.session()); 
+    passportJwtSetup();             
     app.use("/api", indexRoutes);
 
     app.listen(PORT, () => {

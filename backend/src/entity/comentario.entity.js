@@ -14,6 +14,11 @@ const ComentarioSchema = new EntitySchema({
             type: String,
             length: 500
         },
+        respuesta: {
+            type: String,
+            length: 500,
+            nullable: true
+        },
         fechaCreacion: {
             type: Date,
             default: () => "CURRENT_TIMESTAMP"
