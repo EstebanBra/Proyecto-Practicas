@@ -39,24 +39,38 @@ const FileDrop = ({ onChange, accept = ".pdf,.doc,.docx", files = [] }) => {
         });
 
         if (filteredFiles.length > 0) {
-            onChange({ target: { files: filteredFiles } });
+            const combinedFiles = [...files, ...filteredFiles];
+            const fakeEvent = {
+                target: {
+                    files: combinedFiles
+                }
+            };
+            onChange(fakeEvent);
         }
     };
 
     const handleFileInput = (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length > 0) {
-            onChange(e);
+            const combinedFiles = [...files, ...selectedFiles];
+            const fakeEvent = {
+                target: {
+                    files: combinedFiles
+                }
+            };
+            onChange(fakeEvent);
+            e.target.value = '';
         }
     };
 
     const removeFile = (index) => {
         const updatedFiles = files.filter((_, i) => i !== index);
-        onChange({ 
-            target: { 
-                files: updatedFiles 
-            } 
-        });
+        const fakeEvent = {
+            target: {
+                files: updatedFiles
+            }
+        };
+        onChange(fakeEvent);
     };
 
     return (
@@ -79,8 +93,8 @@ const FileDrop = ({ onChange, accept = ".pdf,.doc,.docx", files = [] }) => {
                 <label htmlFor="file-input" className="filedrop-label">
                     <div className="filedrop-icon">📁</div>
                     <div className="filedrop-text">
-                        <p className="filedrop-main">arrastra archivos aqui</p>
-                        <p className="filedrop-sub">o haz clic para seleccionar</p>
+                        <p className="filedrop-main">Arrastra tus archivos aqui (Documento de Postulacion, Curriculum)</p>
+                        <p className="filedrop-sub">O haz clic para seleccionar tus archivos</p>
                     </div>
                 </label>
             </div>
@@ -92,14 +106,16 @@ const FileDrop = ({ onChange, accept = ".pdf,.doc,.docx", files = [] }) => {
                         {files.map((file, index) => (
                             <li key={index} className="file-item">
                                 <span className="file-name">
-                                    📄 {file.name}
+                                    {typeof file === 'string' ? file : file?.name || 'archivo'}
                                 </span>
                                 <button
                                     type="button"
                                     className="remove-btn"
                                     onClick={() => removeFile(index)}
+                                    title="Eliminar este archivo"
+                                    aria-label="Eliminar archivo"
                                 >
-                                    ✕
+                                    &#10005;
                                 </button>
                             </li>
                         ))}

@@ -11,16 +11,19 @@ const CrearPractica = () => {
 
     const handleSubmit = async (data) => {
         try {
-            const practicaData = {
-                ...data,
-                documentos: files.map(file => ({
-                    nombre: file.name,
-                    url: file.url,
-                    tipo: 'carta_aceptacion'
-                }))
-            };
+            const formData = new FormData();
+            
+            Object.keys(data).forEach(key => {
+                formData.append(key, data[key]);
+            });
 
-            const response = await instance.post('/practicas/crear', practicaData);
+            files.forEach((file) => {
+                formData.append('documentos', file);
+            });
+
+            const response = await instance.post('/practicas/crear', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
 
             if (response.data.status === 'Success') {
                 showSuccessAlert('Éxito', 'Práctica creada sin problemas');
@@ -35,23 +38,23 @@ const CrearPractica = () => {
     };
 
     const handleFileChange = (e) => {
-        const selectedFiles = Array.from(e.target.files);
-        const newFiles = selectedFiles.map(file => ({
-            name: file.name,
-            url: URL.createObjectURL(file),
-            type: 'carta_aceptacion'
-        }));
-        setFiles(newFiles);
+        let selectedFiles = [];
+        if (e.target.files instanceof FileList) {
+            selectedFiles = Array.from(e.target.files);
+        } else if (Array.isArray(e.target.files)) {
+            selectedFiles = e.target.files;
+        }
+        setFiles(selectedFiles);
     };
 
    return (
         <main className="container">
             <Form
-                title="Registrar Práctica Externa"
+                title="Registrar Practica Externa"
                 fields={[
                     {
                         label: "Empresa",
-                        name: "Empresa",
+                        name: "empresa",
                         placeholder: "Nombre de la Empresa",
                         fieldType: 'input',
                         type: "text",
@@ -60,18 +63,8 @@ const CrearPractica = () => {
                         maxLength: 255
                     },
                     {
-                        label: "Tipo de Practica",
-                        name: "tipo_practica",
-                        fieldType: 'select',
-                        options: [
-                            { value: "Propia", label: "Propia" },
-                            { value: "Publicada", label: "Publicada" }
-                        ],
-                        required: true
-                    },
-                    {
                         label: "Tipo de Presencia",
-                        name: "Tipo_presencia",
+                        name: "tipo_presencia",
                         fieldType: 'select',
                         options: [
                             { value: "Presencial", label: "Presencial" },
@@ -151,7 +144,7 @@ const CrearPractica = () => {
                         files: files
                     }
                 ]}
-                buttonText="registrar practica"
+                buttonText="Registrar Practica"
                 onSubmit={handleSubmit}
             />
         </main>
