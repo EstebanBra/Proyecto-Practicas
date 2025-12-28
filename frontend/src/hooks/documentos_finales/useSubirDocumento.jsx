@@ -10,8 +10,6 @@ const useSubirDocumento = (fetchDocumentos) => {
             showErrorAlert('Error', 'Datos incompletos para subir documento');
             return { success: false, error: 'Datos incompletos' };
         }
-
-        // Verificar que al menos haya un archivo
         const hasInforme = formData.has('informe');
         const hasAutoevaluacion = formData.has('autoevaluacion');
 
@@ -40,8 +38,8 @@ const useSubirDocumento = (fetchDocumentos) => {
             }
 
             return { success: true, data: response };
+            // eslint-disable-next-line no-unused-vars
         } catch (error) {
-            console.error('Error al subir el documento:', error);
             showErrorAlert('Error', 'No se pudo subir el documento');
             return { success: false, data: { error: 'Error en la subida' } };
         } finally {

@@ -40,6 +40,7 @@ const useUpdateEvaluacion = (fetchEvaluacionByDocumento, fetchEvaluacionesDocent
             }
 
             return true;
+            // eslint-disable-next-line no-unused-vars
         } catch (error) {
             showErrorAlert('Error', 'Error inesperado al actualizar evaluación');
             return false;

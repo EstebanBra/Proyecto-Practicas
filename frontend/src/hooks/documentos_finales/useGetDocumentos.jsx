@@ -10,14 +10,24 @@ const useGetDocumentos = () => {
     const fetchDocumentos = useCallback(async () => {
         setLoading(true);
         setError(null);
-        const response = await getDocumentos();
-        if (response?.error) {
-            setError(response.error);
+        try {
+            const response = await getDocumentos();
+            if (response?.error) {
+                setError(response.error);
+                setDocumentos([]);
+            } else if (Array.isArray(response)) {
+                setDocumentos(response);
+            } else {
+                setError("Formato de respuesta inválido");
+                setDocumentos([]);
+            }
+            // eslint-disable-next-line no-unused-vars
+        } catch (error) {
+            setError("Error al cargar documentos");
             setDocumentos([]);
-        } else {
-            setDocumentos(response);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }, []);
 
     const fetchDocumentoById = async (id) => {

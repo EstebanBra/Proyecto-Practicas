@@ -55,8 +55,8 @@ const useUpdateEstadoDocumento = (fetchDocumentos, setDataDocumento) => {
             }
 
             return true;
+            // eslint-disable-next-line no-unused-vars
         } catch (error) {
-            console.error('Error al actualizar estados:', error);
             showErrorAlert('Error', 'Ocurrió un error al actualizar los estados');
             return false;
         } finally {

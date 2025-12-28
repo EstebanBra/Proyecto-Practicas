@@ -30,6 +30,7 @@ const useCrearEvaluacion = (fetchEvaluacionByDocumento, fetchEvaluacionesDocente
             }
 
             return true;
+            // eslint-disable-next-line no-unused-vars
         } catch (error) {
             showErrorAlert('Error', 'Error inesperado al crear evaluación');
             return false;

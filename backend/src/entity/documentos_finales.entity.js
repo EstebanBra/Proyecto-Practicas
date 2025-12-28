@@ -51,7 +51,7 @@ const DocumentoSchema = new EntitySchema({
     },
     estado_revision: {
       type: "enum",
-      enum: ["pendiente", "revisado", "calificado"],
+      enum: ["pendiente", "revisado"],
       default: "pendiente",
     },
     nota_revision: {

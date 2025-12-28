@@ -3,9 +3,16 @@ import axios from './root.service.js';
 export async function getDocumentos() {
     try {
         const { data } = await axios.get('/documentos/');
+        if (data.success === false) {
+            return { error: data.message || "Error al obtener documentos" };
+        }
         return data.data || [];
     } catch (error) {
-        return error.response?.data || { error: "Error al obtener documentos" };
+        return {
+            error: error.response?.data?.message ||
+                error.response?.data?.error ||
+                "Error al obtener documentos"
+        };
     }
 }
 

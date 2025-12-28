@@ -186,7 +186,6 @@ const DocsFinales = () => {
                             )}
                         </div>
 
-                        {/* Sección Autoevaluación */}
                         <div className="file-slot">
                             {tieneAutoevaluacion ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
