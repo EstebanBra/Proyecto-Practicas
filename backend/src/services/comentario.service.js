@@ -25,7 +25,10 @@ export async function getComentariosService() {
 export async function getComentarioByIdService(id) {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const comentario = await comentarioRepository.findOneBy({ id });
+    const comentario = await comentarioRepository.findOne({
+      where: { id },
+      relations: ["usuario"]
+    });
     return comentario;
   } catch (error) {
     throw new Error("Error al obtener el comentario por ID");

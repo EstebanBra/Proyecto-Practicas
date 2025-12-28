@@ -113,14 +113,20 @@ export async function updateComentario(req, res) {
         return handleErrorClient(res, 404, "Comentario no encontrado");
       }
 
+      // Fusionar archivos: mantener los del estudiante y agregar los del docente
+      let archivosFinales = existente.archivos || [];
+      if (archivosData && archivosData.length > 0) {
+        archivosFinales = [...archivosFinales, ...archivosData];
+      }
+
       const payloadDocente = {
         mensaje: existente.mensaje,
         estado: "Respondido",
         nivelUrgencia: existente.nivelUrgencia || "normal",
         tipoProblema: existente.tipoProblema || "General",
         respuesta: body.respuesta,
-        usuarioId: user.id,
-        ...(archivosData && { archivos: archivosData })
+        usuarioId: existente.usuarioId,
+        ...(archivosFinales && archivosFinales.length > 0 && { archivos: archivosFinales })
       };
 
       await comentarioBodyValidation.validateAsync(payloadDocente);
@@ -184,5 +190,45 @@ export async function getAllComentarios(req, res) {
     handleSuccess(res, 200, "Todos los comentarios obtenidos exitosamente", comentarios);
   } catch (error) {
     handleErrorClient(res, 500, "Error obteniendo todos los comentarios", error);
+  }
+};
+
+export async function downloadArchivoComentario(req, res) {
+  try {
+    const { id, archivoIndex } = req.params;
+    const { user } = req;
+    
+    await comentarioIdValidation.validateAsync({ id });
+    const comentario = await getComentarioByIdService(id);
+    
+    if (!comentario) {
+      return handleErrorClient(res, 404, "Comentario no encontrado");
+    }
+    
+    // Verificar permisos: estudiante solo puede descargar archivos de sus propios comentarios
+    if (user.rol === "estudiante" && Number(comentario.usuarioId) !== Number(user.id)) {
+      return handleErrorClient(res, 403, "Acceso denegado", "No tienes permiso para descargar este archivo");
+    }
+    
+    if (!comentario.archivos || comentario.archivos.length === 0) {
+      return handleErrorClient(res, 404, "Este comentario no tiene archivos adjuntos");
+    }
+    
+    const index = parseInt(archivoIndex);
+    if (isNaN(index) || index < 0 || index >= comentario.archivos.length) {
+      return handleErrorClient(res, 400, "Índice de archivo inválido");
+    }
+    
+    const archivo = comentario.archivos[index];
+    const filePath = archivo.ruta;
+    
+    // Enviar el archivo
+    res.download(filePath, archivo.nombre, (err) => {
+      if (err) {
+        handleErrorClient(res, 500, "Error descargando el archivo", err);
+      }
+    });
+  } catch (error) {
+    handleErrorClient(res, 500, "Error descargando el archivo del comentario", error);
   }
 };
