@@ -50,9 +50,9 @@ const CrearPractica = () => {
                 title="Registrar Práctica"
                 fields={[
                     {
-                        label: "Empresa",
+                        label: "empresa",
                         name: "empresa",
-                        placeholder: "Nombre de la empresa",
+                        placeholder: "nombre de la empresa",
                         fieldType: 'input',
                         type: "text",
                         required: true,
@@ -60,30 +60,37 @@ const CrearPractica = () => {
                         maxLength: 255
                     },
                     {
-                        label: "Tipo de Práctica",
+                        label: "tipo practica",
                         name: "tipo_practica",
                         fieldType: 'select',
                         options: [
-                            { value: "propia", label: "Propia" },
-                            { value: "publicada", label: "Publicada" }
+                            { value: "propia", label: "propia" },
+                            { value: "publicada", label: "publicada" }
                         ],
                         required: true
                     },
                     {
-                        label: "Tipo de Presencia",
+                        label: "tipo presencia",
                         name: "tipo_presencia",
                         fieldType: 'select',
                         options: [
-                            { value: "presencial", label: "Presencial" },
-                            { value: "virtual", label: "Virtual" },
-                            { value: "hibrido", label: "Híbrido" }
+                            { value: "presencial", label: "presencial" },
+                            { value: "virtual", label: "virtual" },
+                            { value: "hibrido", label: "hibrido" }
                         ],
                         required: true
                     },
                     {
-                        label: "Nombre del Supervisor",
+                        label: "fecha inicio",
+                        name: "fecha_inicio",
+                        fieldType: 'input',
+                        type: "date",
+                        required: true
+                    },
+                    {
+                        label: "nombre supervisor",
                         name: "supervisor_nombre",
-                        placeholder: "Nombre completo",
+                        placeholder: "nombre completo",
                         fieldType: 'input',
                         type: "text",
                         required: true,
@@ -91,7 +98,7 @@ const CrearPractica = () => {
                         maxLength: 255
                     },
                     {
-                        label: "Email del Supervisor",
+                        label: "email supervisor",
                         name: "supervisor_email",
                         placeholder: "correo@empresa.com",
                         fieldType: 'input',
@@ -99,31 +106,24 @@ const CrearPractica = () => {
                         required: true
                     },
                     {
-                        label: "Teléfono del Supervisor",
+                        label: "telefono supervisor",
                         name: "supervisor_telefono",
                         placeholder: "+56912345678",
                         fieldType: 'input',
                         type: "text",
                         required: true,
                         pattern: /^\+?[\d\s-]{8,20}$/,
-                        patternMessage: "Número válido requerido"
+                        patternMessage: "numero valido requerido"
                     },
                     {
-                        label: "Fecha de Inicio",
-                        name: "fecha_inicio",
-                        fieldType: 'input',
-                        type: "date",
-                        required: true
-                    },
-                    {
-                        label: "Fecha de Término",
+                        label: "fecha termino",
                         name: "fecha_fin",
                         fieldType: 'input',
                         type: "date",
                         required: true
                     },
                     {
-                        label: "Horas de Práctica",
+                        label: "horas practica",
                         name: "horas_practicas",
                         placeholder: "360",
                         fieldType: 'input',
@@ -132,7 +132,7 @@ const CrearPractica = () => {
                         min: 1
                     },
                     {
-                        label: "Semanas",
+                        label: "semanas",
                         name: "semanas",
                         placeholder: "12",
                         fieldType: 'input',
@@ -141,7 +141,7 @@ const CrearPractica = () => {
                         min: 1
                     },
                     {
-                        label: "Documentos",
+                        label: "documentos requeridos",
                         name: "documentos",
                         fieldType: 'filedrop',
                         required: true,
@@ -151,7 +151,7 @@ const CrearPractica = () => {
                         files: files
                     }
                 ]}
-                buttonText="Registrar Práctica"
+                buttonText="registrar practica"
                 onSubmit={handleSubmit}
             />
         </main>
