@@ -100,7 +100,7 @@ const handleVerPostulantes = async (ofertaId) => {
             width: '800px',
             showConfirmButton: true,
             confirmButtonText: 'Cerrar',
-            // MAGIA AQUÍ: didOpen se ejecuta cuando el popup se abre
+            // didOpen se ejecuta cuando el popup se abre
             didOpen: () => {
                 alumnos.forEach(alumno => {
                     const btn = document.getElementById(`btn-aceptar-${alumno.id}`);
@@ -117,9 +117,6 @@ const handleVerPostulantes = async (ofertaId) => {
 
 // Función auxiliar para manejar el click en "Aceptar"
 const confirmarAceptacion = async (ofertaId, alumno) => {
-    // Cerramos el modal de la lista temporalmente
-    // Swal.close(); 
-
     const result = await Swal.fire({
         title: `¿Aceptar a ${alumno.nombreCompleto}?`,
         text: "Esto iniciará su práctica oficialmente y podrá subir bitácoras.",

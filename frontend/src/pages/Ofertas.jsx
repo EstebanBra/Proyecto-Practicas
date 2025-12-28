@@ -10,7 +10,7 @@ const Ofertas = () => {
     const [formKey, setFormKey] = useState(0);
     const [isAuthorized, setIsAuthorized] = useState(false); // Estado para saber si mostramos el form
 
-    // 1. VERIFICACIÓN DE SEGURIDAD AL CARGAR
+    //  VERIFICACIÓN DE SEGURIDAD AL CARGAR
     useEffect(() => {
         const userStored = sessionStorage.getItem('usuario');
         
@@ -58,7 +58,7 @@ const Ofertas = () => {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // 2. Si no está autorizado, no mostramos nada (para evitar parpadeos antes de redirigir)
+    // Si no está autorizado, no mostramos nada (para evitar parpadeos antes de redirigir)
     if (!isAuthorized) return null;
 
     return (

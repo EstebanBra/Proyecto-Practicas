@@ -56,7 +56,7 @@ export async function getPostulantes(idOferta) {
     }
 }
 
-// --- ESTA ES LA FUNCIÓN QUE TE FALTABA ---
+// Aceptar a un postulante (Convertirlo en practicante)
 export async function aceptarPostulante(idOferta, idEstudiante) {
     try {
         const response = await api.post(`${BASE}/aceptar-postulante`, { idOferta, idEstudiante });

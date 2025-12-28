@@ -5,13 +5,12 @@ import { useFileUpload } from '../hooks/files/useFileUpload.jsx';
 import FileUpload from '../components/FileUpload.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { showAlert } from '../helpers/sweetAlert.js';
-// IMPORTANTE: Importamos el servicio aquí
 import { bitacoraService } from '../services/bitacora.service.js';
 
 const BitacoraDocumentos = () => {
     const { user } = useAuth();
     
-    // 1. Iniciamos en NULL para esperar a cargar el ID real
+    // Iniciamos en NULL para esperar a cargar el ID real
     const [idPractica, setIdPractica] = useState(null);
 
     const { documentos, loading: loadingDocs, fetchDocumentos } = useDocumentos(idPractica);
@@ -20,7 +19,7 @@ const BitacoraDocumentos = () => {
 
     const [showUploadForm, setShowUploadForm] = useState(false);
 
-    // 2. Efecto para cargar el ID de la práctica real
+    // Efecto para cargar el ID de la práctica real
     useEffect(() => {
         const cargarIDPractica = async () => {
             // Si el usuario es estudiante, buscamos SU práctica activa
@@ -41,7 +40,7 @@ const BitacoraDocumentos = () => {
         cargarIDPractica();
     }, [user]);
 
-    // 3. Efecto para cargar documentos (SOLO si ya tenemos ID)
+    // Efecto para cargar documentos (SOLO si ya tenemos ID)
     useEffect(() => {
         if (idPractica) {
             fetchDocumentos();

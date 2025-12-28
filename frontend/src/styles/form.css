@@ -241,8 +241,8 @@ input {
 	object-fit: contain;
 }
 
-/* Adjust the form title size */
+
 .form h1 {
-    font-size: 24px; /* Reduced size to prevent overlap */
-    margin-top: 20px; /* Add margin to separate from navbar */
+    font-size: 24px; 
+    margin-top: 20px; 
 }

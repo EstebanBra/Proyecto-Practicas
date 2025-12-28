@@ -2,7 +2,6 @@ import axios from './root.service.js';
 
 // Servicio para Bitácoras
 export const bitacoraService = {
-    // --- NUEVA FUNCIÓN NECESARIA ---
     async obtenerMiPractica() {
         try {
             const response = await axios.get('/bitacora/mi-practica');
@@ -64,7 +63,7 @@ export const bitacoraService = {
     }
 };
 
-// Servicio para Documentos de Bitácora (Se mantiene igual)
+// Servicio para Documentos de Bitácora
 export const documentoService = {
     async subirArchivo(file) {
         try {

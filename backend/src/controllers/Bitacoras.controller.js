@@ -179,12 +179,7 @@ export async function buscarBitacorasPorRut(req, res) {
         const { rut } = req.params;
         if (!rut) {
             return handleErrorClient(res, 400, "El RUT es requerido");
-        }
-
-        // --- CORRECCIÓN AQUÍ ---
-        // Eliminamos la limpieza para que busque el RUT tal cual está en la BD (con puntos y guion)
-        // Antes tenías: const rutLimpio = rut.replace(/\./g, "").replace(/-/g, "");
-        
+        }      
         // Usamos el RUT directo
         const resultado = await bitacoraService.obtenerBitacorasPorRut(rut); 
         

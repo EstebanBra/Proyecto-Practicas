@@ -52,6 +52,7 @@ export const isDocenteOrAdmin = (req, res, next) => {
  * @param {string[]} rolesPermitidos - Array con los roles permitidos
  * @returns {Function} Middleware de Express
  */
+
 export function verificarRol(rolesPermitidos) {
   return async (req, res, next) => {
     try {

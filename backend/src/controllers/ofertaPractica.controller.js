@@ -21,7 +21,7 @@ import Practica from "../entity/practica.entity.js";
 export async function createOfertaPractica(req, res) {
   try {
     const { body } = req;
-    // 1. Buscamos al usuario en la BD usando el email que viene en el token
+    // Buscamos al usuario en la BD usando el email que viene en el token
     const userRepository = AppDataSource.getRepository(User);
     const userFound = await userRepository.findOneBy({ email: req.user.email });
 
@@ -29,7 +29,7 @@ export async function createOfertaPractica(req, res) {
       return handleErrorClient(res, 404, "Usuario no encontrado", "Usuario del token no existe en la base de datos.");
     }
 
-    // 2. Ahora sí tenemos el ID numérico real (ej: 1, 5, 20)
+    // Ahora sí tenemos el ID numérico real (ej: 1, 5, 20)
     const idEncargado = userFound.id;
 
     const { error } = ofertaPracticaValidation.validate(body);
@@ -130,7 +130,7 @@ export async function postularOferta(req, res) {
     const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
     const userRepo = AppDataSource.getRepository(User); // Repositorio de usuarios
 
-    // 1. Buscamos al estudiante REAL en la base de datos usando el email del token
+    // Buscamos al estudiante REAL en la base de datos usando el email del token
     // Esto trae el objeto completo (con ID, password encriptada, etc.)
     const estudianteReal = await userRepo.findOne({
         where: { email: userToken.email }
@@ -140,7 +140,7 @@ export async function postularOferta(req, res) {
         return handleErrorClient(res, 404, "Estudiante no encontrado en la base de datos.");
     }
 
-    // 2. Buscamos la oferta y sus postulantes
+    // Buscamos la oferta y sus postulantes
     const oferta = await ofertaRepo.findOne({
       where: { id: parseInt(id) },
       relations: ["encargado", "postulantes"], 
@@ -150,19 +150,19 @@ export async function postularOferta(req, res) {
       return handleErrorClient(res, 404, "Oferta no encontrada");
     }
 
-    // 3. Verificamos si YA postuló usando el ID del estudiante real
+    // Verificamos si YA postuló usando el ID del estudiante real
     const yaPostulo = oferta.postulantes.some(p => p.id === estudianteReal.id);
 
     if (yaPostulo) {
       return handleErrorClient(res, 400, "Ya has postulado a esta oferta anteriormente.");
     }
 
-    // 4. Verificar cupos
+    // Verificar cupos
     if (oferta.cupos <= 0) {
       return handleErrorClient(res, 400, "Lo sentimos, ya no quedan cupos disponibles.");
     }
 
-    // 5. Enviar correo (usando datos del usuario real o del token, da igual aquí)
+    // Enviar correo (usando datos del usuario real o del token, da igual aquí)
     const emailProfesor = oferta.encargado.email;
     const asunto = `Nueva Postulación: ${oferta.titulo}`;
     const mensajeHtml = `
@@ -251,8 +251,7 @@ export async function aceptarPostulante(req, res) {
     const userRepo = AppDataSource.getRepository(User);
     const practicaRepo = AppDataSource.getRepository("Practica"); 
 
-    // 1. Validaciones básicas
-    // IMPORTANTE: Agregamos relations: ["encargado"] para obtener al profesor dueño de la oferta
+    // Validaciones básicas
     const oferta = await ofertaRepo.findOne({ 
         where: { id: parseInt(idOferta) },
         relations: ["encargado"] 
@@ -264,7 +263,7 @@ export async function aceptarPostulante(req, res) {
     const estudianteEncontrado = await userRepo.findOne({ where: { id: parseInt(idEstudiante) } });
     if (!estudianteEncontrado) return handleErrorClient(res, 404, "Estudiante no encontrado");
 
-    // 2. Verificar duplicados
+    // Verificar duplicados
     const practicaExistente = await practicaRepo.findOne({
         where: { 
             estudiante: { id: estudianteEncontrado.id }, 
@@ -276,13 +275,13 @@ export async function aceptarPostulante(req, res) {
         return handleErrorClient(res, 400, "El estudiante ya tiene una práctica en curso.");
     }
 
-    // 3. CREAR LA PRÁCTICA
+    // CREAR LA PRÁCTICA
     const nuevaPractica = practicaRepo.create({
         estudiante: estudianteEncontrado,
-        docente: oferta.encargado, // <--- SOLUCIÓN: Asignamos el docente de la oferta
+        docente: oferta.encargado,
         fecha_inicio: new Date(),
         estado: "en_progreso",     // Para que coincida con el enum de la entity
-        horas_practicas: 0,        // Corregido: nombre según la entity (era horas_totales)
+        horas_practicas: 0,        // nombre según la entity (era horas_totales)
         tipo_presencia: oferta.modalidad === "online" ? "virtual" : "presencial" // Mapeamos la modalidad
     });
 

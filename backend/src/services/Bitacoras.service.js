@@ -55,7 +55,7 @@ export async function obtenerUltimaSemana(id_practica) {
 export async function obtenerBitacorasPorRut(rut) {
     const userRepository = AppDataSource.getRepository("User");
     
-    // 1. Buscar el usuario por RUT
+    // Buscar el usuario por RUT
     const usuario = await userRepository.findOne({
         where: { rut: rut }
     });
@@ -64,9 +64,9 @@ export async function obtenerBitacorasPorRut(rut) {
         return { error: "No se encontró un estudiante con ese RUT", bitacoras: [] };
     }
 
-    // 2. Buscar la práctica del estudiante
+    // Buscar la práctica del estudiante
     const practica = await practicaRepository.findOne({
-        // --- CORRECCIÓN AQUÍ: Usamos 'id_estudiante' en lugar de 'id_usuario' ---
+        // ---  Usamos 'id_estudiante' en lugar de 'id_usuario' ---
         where: { id_estudiante: usuario.id }
     });
 
@@ -74,7 +74,7 @@ export async function obtenerBitacorasPorRut(rut) {
         return { error: "El estudiante no tiene una práctica asignada", bitacoras: [], estudiante: usuario };
     }
 
-    // 3. Obtener las bitácoras de la práctica
+    //  Obtener las bitácoras de la práctica
     const bitacoras = await bitacoraRepository.find({
         where: { id_practica: practica.id_practica },
         order: { semana: "ASC" }
