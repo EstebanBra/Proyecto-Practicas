@@ -34,7 +34,7 @@ const CrearPractica = () => {
         }
     };
 
-const handleFileChange = (e) => {
+    const handleFileChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
         const newFiles = selectedFiles.map(file => ({
             name: file.name,
@@ -143,12 +143,12 @@ const handleFileChange = (e) => {
                     {
                         label: "Documentos",
                         name: "documentos",
-                        fieldType: 'input',
-                        type: "file",
+                        fieldType: 'filedrop',
                         required: true,
                         onChange: handleFileChange,
                         accept: ".pdf,.doc,.docx",
-                        fullWidth: true
+                        fullWidth: true,
+                        files: files
                     }
                 ]}
                 buttonText="Registrar Práctica"

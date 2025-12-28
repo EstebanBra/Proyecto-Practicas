@@ -3,6 +3,7 @@ import { useState } from 'react';
 import '@styles/form.css';
 import HideIcon from '../assets/HideIcon.svg';
 import ViewIcon from '../assets/ViewIcon.svg';
+import FileDrop from './FileDrop';
 
 const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundColor }) => {
     const { register, handleSubmit, formState: { errors } } = useForm();
@@ -85,6 +86,13 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
                                 </option>
                             ))}
                         </select>
+                    )}
+                    {field.fieldType === 'filedrop' && (
+                        <FileDrop
+                            onChange={field.onChange}
+                            accept={field.accept}
+                            files={field.files || []}
+                        />
                     )}
                     {field.type === 'password' && field.name === 'password' && (
                         <span className="toggle-password-icon" onClick={togglePasswordVisibility}>
