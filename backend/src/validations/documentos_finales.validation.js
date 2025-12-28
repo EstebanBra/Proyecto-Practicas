@@ -1,12 +1,13 @@
 "use strict";
 
 import Joi from "joi";
+
 export const documentoEstadoValidation = Joi.object({
   estado_revision: Joi.string()
-    .valid("pendiente", "revisado")
+    .valid("pendiente", "revisado", "calificado")
     .required()
     .messages({
       "any.required": "Debe indicar el nuevo estado del documento",
-      "any.only": "El estado de revisión debe ser 'pendiente', 'revisado'",
+      "any.only": "El estado debe ser 'pendiente', 'revisado' o 'calificado'",
     }),
 });

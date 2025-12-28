@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getDocumentoById, getDocumentos } from '@services/documentos_finales_f.service.js';
+import { getDocumentos, getDocumentoById } from '@services/documentos_finales_f.service.js';
 
 const useGetDocumentos = () => {
     const [documentos, setDocumentos] = useState([]);
@@ -10,59 +10,27 @@ const useGetDocumentos = () => {
     const fetchDocumentos = useCallback(async () => {
         setLoading(true);
         setError(null);
-
-        try {
-            const response = await getDocumentos();
-
-            if (response && response.error) {
-                setError(response.error);
-                setDocumentos([]);
-                return;
-            }
-
-            let documentosData = [];
-
-            if (Array.isArray(response)) {
-                documentosData = response;
-            } else if (response && response.data) {
-                if (Array.isArray(response.data)) {
-                    documentosData = response.data;
-                } else if (response.data) {
-                    documentosData = [response.data];
-                }
-            } else if (response === '' || response === null) {
-                documentosData = [];
-            }
-
-            setDocumentos(documentosData || []);
-
-            // eslint-disable-next-line no-unused-vars
-        } catch (error) {
-            setError("Error de conexión con el servidor");
+        const response = await getDocumentos();
+        if (response?.error) {
+            setError(response.error);
             setDocumentos([]);
-        } finally {
-            setLoading(false);
+        } else {
+            setDocumentos(response);
         }
+        setLoading(false);
     }, []);
 
     const fetchDocumentoById = async (id) => {
         setLoading(true);
-        setError(null);
-        try {
-            const response = await getDocumentoById(id);
-            if (response && response.error) {
-                setError(response.error);
-                return null;
-            }
+        const response = await getDocumentoById(id);
+        if (response?.error) {
+            setError(response.error);
+            setDocumentoActual(null);
+        } else {
             setDocumentoActual(response);
-            return response;
-            // eslint-disable-next-line no-unused-vars
-        } catch (error) {
-            setError("Error al obtener documento específico");
-            return null;
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
+        return response;
     };
 
     useEffect(() => {

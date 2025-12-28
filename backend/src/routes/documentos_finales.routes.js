@@ -26,15 +26,12 @@ router.use(authenticateJwt);
 
 router.use("/uploads", express.static(uploadsPath));
 
-router.post("/subir", uploadFields, isEstudiante, subirYRegistrarDocumento);
-
+router.post("/subir", uploadFields, subirYRegistrarDocumento);
 router.patch("/:id/estado", isDocente, updateEstadoDocumento);
 
-router.get("/", isDocente, getDocumentos);
-router.get("/et/", isEstudiante, getDocumentos);
+router.get("/", getDocumentos);
 
-router.get("/:id", isDocente, getDocumentoById);
-router.get("/et/:id", isEstudiante, getDocumentoById);
+router.get("/:id", getDocumentoById);
 
 
 export default router;

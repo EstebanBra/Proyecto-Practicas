@@ -14,6 +14,10 @@ const DocumentoSchema = new EntitySchema({
       type: "int",
       nullable: false,
     },
+    id_usuario: {
+      type: "int",
+      nullable: false,
+    },
     nombre_archivo: {
       type: "varchar",
       length: 255,
@@ -47,7 +51,7 @@ const DocumentoSchema = new EntitySchema({
     },
     estado_revision: {
       type: "enum",
-      enum: ["pendiente", "revisado"],
+      enum: ["pendiente", "revisado", "calificado"],
       default: "pendiente",
     },
   },
@@ -56,6 +60,12 @@ const DocumentoSchema = new EntitySchema({
       target: "Practica",
       type: "many-to-one",
       joinColumn: { name: "id_practica" },
+      onDelete: "CASCADE",
+    },
+    usuario: {
+      target: "User",
+      type: "many-to-one",
+      joinColumn: { name: "id_usuario" },
       onDelete: "CASCADE",
     },
   },

@@ -11,6 +11,15 @@ const useSubirDocumento = (fetchDocumentos) => {
             return { success: false, error: 'Datos incompletos' };
         }
 
+        // Verificar que al menos haya un archivo
+        const hasInforme = formData.has('informe');
+        const hasAutoevaluacion = formData.has('autoevaluacion');
+
+        if (!hasInforme && !hasAutoevaluacion) {
+            showErrorAlert('Error', 'Debe seleccionar al menos un archivo');
+            return { success: false, error: 'No hay archivos' };
+        }
+
         setUploading(true);
         try {
             const response = await subirDocumento(formData);
@@ -20,7 +29,11 @@ const useSubirDocumento = (fetchDocumentos) => {
                 return { success: false, data: response };
             }
 
-            showSuccessAlert('¡Éxito!', 'Documento subido correctamente');
+            const successMessage = Array.isArray(response)
+                ? `${response.length} documento(s) subido(s) correctamente`
+                : 'Documento subido correctamente';
+
+            showSuccessAlert('¡Éxito!', successMessage);
 
             if (fetchDocumentos) {
                 await fetchDocumentos();

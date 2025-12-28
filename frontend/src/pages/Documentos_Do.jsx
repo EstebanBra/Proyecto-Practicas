@@ -1,4 +1,4 @@
-// Documentos_Do.jsx - CON MANEJO DE ERRORES
+// Documentos_Do.jsx - VERSIÓN ACTUALIZADA PARA DOCENTE
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Swal from "sweetalert2";
 import Search from "../components/Search";
@@ -67,16 +67,12 @@ const DocsEntregados = () => {
     };
 
     const handleAddNote = async (doc) => {
-        if (doc.tipo !== "informe") {
-            await Swal.fire('Error', 'Solo puede evaluar documentos de tipo informe', 'error');
-            return;
-        }
-
         const { value: formValues } = await Swal.fire({
-            title: 'Agregar Evaluación',
+            title: `Evaluar ${doc.tipo === 'informe' ? 'Informe' : 'Autoevaluación'}`,
             html: `
                 <input id="swal-nota" class="swal2-input" placeholder="Nota (1.0 - 7.0)" type="number" step="0.1" min="1" max="7">
                 <textarea id="swal-comentario" class="swal2-textarea" placeholder="Comentario (opcional)"></textarea>
+                <input type="hidden" id="swal-tipo" value="${doc.tipo}">
             `,
             focusConfirm: false,
             showCancelButton: true,
@@ -93,7 +89,11 @@ const DocsEntregados = () => {
                     return false;
                 }
 
-                return { nota: parseFloat(nota), comentario };
+                return {
+                    nota: parseFloat(nota),
+                    comentario,
+                    tipo: doc.tipo
+                };
             }
         });
 
@@ -103,38 +103,44 @@ const DocsEntregados = () => {
                 : [];
 
             const evaluacionExistente = evaluacionesArray.find(
-                e => e.id_documento === doc.id_documento
+                e => e.id_documento === doc.id_documento && e.tipo_documento === doc.tipo
             );
 
             const evaluacionData = {
                 id_documento: doc.id_documento,
+                tipo_documento: doc.tipo,
                 nota: formValues.nota,
                 comentario: formValues.comentario || "",
                 id_usuario: JSON.parse(sessionStorage.getItem('usuario'))?.id
             };
 
             try {
-                const autoevaluacion = documentos.find(d =>
-                    d.id_practica === doc.id_practica &&
-                    d.tipo === "autoevaluacion"
-                );
-
                 if (evaluacionExistente) {
                     await handleUpdateEvaluacion([evaluacionExistente], evaluacionData);
                 } else {
                     await handleCrearEvaluacion(evaluacionData);
                 }
 
-                const documentosARevisar = [];
+                // Si el documento está pendiente, marcarlo como revisado
                 if (doc.estado_revision === "pendiente") {
-                    documentosARevisar.push(doc);
+                    await handleUpdateEstados([doc], "revisado");
                 }
-                if (autoevaluacion && autoevaluacion.estado_revision === "pendiente") {
-                    documentosARevisar.push(autoevaluacion);
+
+                // Si ambos documentos de la práctica están evaluados, marcar como calificado
+                const docsDePractica = documentos.filter(d =>
+                    d.id_practica === doc.id_practica
+                );
+
+                const evaluacionesDePractica = evaluacionesArray.filter(e =>
+                    docsDePractica.some(d => d.id_documento === e.id_documento)
+                );
+
+                // Si hay 2 documentos (informe + autoevaluacion) y ambos tienen evaluación
+                if (docsDePractica.length === 2 && evaluacionesDePractica.length === 2) {
+                    // Marcar ambos documentos como calificados
+                    await handleUpdateEstados(docsDePractica, "calificado");
                 }
-                if (documentosARevisar.length > 0) {
-                    await handleUpdateEstados(documentosARevisar, "revisado");
-                }
+
                 await Swal.fire('¡Éxito!', 'Evaluación guardada correctamente', 'success');
                 setShouldRefetch(true);
 
@@ -163,11 +169,13 @@ const DocsEntregados = () => {
         });
     }, [documents, filter, estadoFiltro]);
 
-    const getEvaluacionPorDocumento = (docId) => {
+    const getEvaluacionPorDocumento = (docId, docTipo) => {
         if (!Array.isArray(evaluacionesDocente)) {
             return null;
         }
-        return evaluacionesDocente.find(e => e.id_documento === docId);
+        return evaluacionesDocente.find(e =>
+            e.id_documento === docId && e.tipo_documento === docTipo
+        );
     };
 
     const indexOfLast = currentPage * docsPerPage;
@@ -209,12 +217,12 @@ const DocsEntregados = () => {
                         <p>Cargando documentos...</p>
                     ) : currentDocs.length > 0 ? (
                         currentDocs.map((doc) => {
-                            const evaluacion = getEvaluacionPorDocumento(doc.id_documento);
+                            const evaluacion = getEvaluacionPorDocumento(doc.id_documento, doc.tipo);
 
                             return (
                                 <div key={doc.id_documento} className="doc-card">
                                     <div className="doc-header">
-                                        <p className={`doc-estado ${doc.estado_revision === "revisado" ? "revisado" : ""}`}>
+                                        <p className={`doc-estado ${doc.estado_revision}`}>
                                             {doc.estado_revision || "pendiente"}
                                         </p>
                                         <p className="doc-nombre">
@@ -263,7 +271,7 @@ const DocsEntregados = () => {
                                             onClick={() => handleAddNote(doc)}
                                             disabled={updatingEstado || creatingEval || updatingEval}
                                         >
-                                            {evaluacion ? "Editar Nota" : "Agregar Nota"}
+                                            {evaluacion ? "Editar Nota" : "Evaluar"}
                                         </button>
                                         <button
                                             onClick={() => handleUpdateEstadoWrapper([doc],
@@ -301,7 +309,7 @@ const DocsEntregados = () => {
                     </div>
 
                     <div className="estado-buttons">
-                        {["pendiente", "revisado", "todos"].map((estado) => (
+                        {["pendiente", "revisado", "calificado", "todos"].map((estado) => (
                             <button
                                 key={estado}
                                 className={`btn-action ${estadoFiltro === estado ? "active" : ""}`}

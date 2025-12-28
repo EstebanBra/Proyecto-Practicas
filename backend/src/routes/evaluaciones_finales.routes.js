@@ -3,13 +3,10 @@ import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import {
   isDocente,
-  isEstudiante,
 } from "../middlewares/authorization.middleware.js";
 
 import {
-  crearAutoevaluacion,
   crearEvaluacion,
-  getAutoevaluacionByEstudiante,
   getEvaluacionByDocumento,
   getEvaluacionesByDocente,
   updateEvaluacion,
@@ -22,10 +19,7 @@ router.use(authenticateJwt);
 router.post("/", isDocente, crearEvaluacion);
 router.get("/docente", isDocente, getEvaluacionesByDocente);
 
-router.post("/autoevaluacion", isEstudiante, crearAutoevaluacion);
-router.get("/estudiante", getAutoevaluacionByEstudiante);
-
-router.get("/documento/:id_documento", getEvaluacionByDocumento,);
-router.patch("/:id", updateEvaluacion);
+router.get("/documento/:id_documento", getEvaluacionByDocumento);
+router.patch("/:id", isDocente, updateEvaluacion);
 
 export default router;

@@ -18,15 +18,9 @@ const EvaluacionSchema = new EntitySchema({
       type: "int",
       nullable: false,
     },
-    rol_usuario: {
+    tipo_documento: {
       type: "enum",
-      enum: ["docente", "estudiante"],
-      nullable: false,
-    },
-    tipo_evaluacion: {
-      type: "enum",
-      enum: ["evaluacion_docente", "autoevaluacion"],
-      default: "evaluacion_docente",
+      enum: ["informe", "autoevaluacion"],
       nullable: false,
     },
     nota: {
@@ -60,7 +54,7 @@ const EvaluacionSchema = new EntitySchema({
   indices: [
     {
       name: "IDX_EVALUACION_UNICA",
-      columns: ["id_documento", "id_usuario", "tipo_evaluacion"],
+      columns: ["id_documento", "tipo_documento"],
       unique: true,
     },
   ],

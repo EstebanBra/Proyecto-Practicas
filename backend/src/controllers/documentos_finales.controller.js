@@ -1,4 +1,5 @@
 "use strict";
+
 import {
   getDocumentoByIdService,
   getDocumentosService,
@@ -21,19 +22,17 @@ export async function subirYRegistrarDocumento(req, res) {
     const files = [];
     const tipos = [];
 
-    if (req.files?.informe && req.files.informe.length > 0) {
+    if (req.files?.informe?.length) {
       files.push(...req.files.informe);
-      tipos.push(...Array(req.files.informe.length).fill("informe"));
+      tipos.push("informe");
     }
 
-    if (req.files?.autoevaluacion && req.files.autoevaluacion.length > 0) {
+    if (req.files?.autoevaluacion?.length) {
       files.push(...req.files.autoevaluacion);
-      tipos.push(
-        ...Array(req.files.autoevaluacion.length).fill("autoevaluacion"),
-      );
+      tipos.push("autoevaluacion");
     }
 
-    if (files.length === 0) {
+    if (!files.length) {
       return handleErrorClient(
         res,
         400,
@@ -42,8 +41,10 @@ export async function subirYRegistrarDocumento(req, res) {
     }
 
     const { id_practica } = req.body;
-    if (!id_practica) {
-      return handleErrorClient(res, 400, "El campo id_practica es obligatorio");
+    const id_usuario = req.user.id;
+
+    if (!id_practica || !id_usuario) {
+      return handleErrorClient(res, 400, "Datos incompletos");
     }
 
     const documentosRegistrados = [];
@@ -52,66 +53,53 @@ export async function subirYRegistrarDocumento(req, res) {
       const file = files[i];
       const tipo = tipos[i];
 
-      const { filename, size, mimetype } = file;
-      const publicUrl = `${req.protocol}://${req.get("host")}/uploads/documentos/${filename}`;
-      const formato = mimetype.includes("pdf") ? "pdf" : "docx";
-      const peso_mb = parseFloat((size / (1024 * 1024)).toFixed(2));
+      const publicUrl = `${req.protocol}://${req.get("host")}/uploads/documentos/${file.filename}`;
+      const formato = file.mimetype.includes("pdf") ? "pdf" : "docx";
+      const peso_mb = Number((file.size / (1024 * 1024)).toFixed(2));
 
       const data = {
         id_practica,
-        nombre_archivo: filename,
+        id_usuario,
+        nombre_archivo: file.filename,
         ruta_archivo: publicUrl,
         formato,
         peso_mb,
-        tipo: tipo,
+        tipo,
       };
 
-      const [documento, errorDoc] = await registrarDocumentoService(data);
-      if (errorDoc) {
-        console.warn(
-          `No se pudo registrar el documento ${filename}:`,
-          errorDoc,
-        );
-        continue;
-      }
-
-      documentosRegistrados.push(documento);
+      const [documento] = await registrarDocumentoService(data);
+      if (documento) documentosRegistrados.push(documento);
     }
 
-    if (documentosRegistrados.length === 0) {
+    if (!documentosRegistrados.length) {
       return handleErrorClient(
         res,
         400,
-        "Ningún documento fue registrado correctamente",
+        "No se pudo registrar ningún documento",
       );
     }
 
     handleSuccess(
       res,
       201,
-      "Archivo subido correctamente",
+      "Archivo(s) subido(s) correctamente",
       documentosRegistrados,
     );
   } catch (error) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return handleErrorClient(
-        res,
-        400,
-        "El archivo excede los 10 MB permitidos",
-      );
-    }
     handleErrorServer(res, 500, error.message);
   }
 }
 
 export async function getDocumentos(req, res) {
   try {
-    const [documentos, errorDocs] = await getDocumentosService();
-    if (errorDocs) return handleErrorClient(res, 404, errorDocs);
+    const filtros = {};
 
-    if (documentos.length === 0) {
-      return res.status(204).send();
+    if (req.user.rol === "estudiante") {
+      filtros.id_usuario = req.user.id;
     }
+
+    const [documentos, error] = await getDocumentosService(filtros);
+    if (error) return handleErrorClient(res, 400, error);
 
     handleSuccess(res, 200, "Documentos encontrados", documentos);
   } catch (error) {
@@ -122,9 +110,14 @@ export async function getDocumentos(req, res) {
 export async function getDocumentoById(req, res) {
   try {
     const { id } = req.params;
-    const [documento, errorDoc] = await getDocumentoByIdService(id);
+    const [documento, error] = await getDocumentoByIdService(id);
 
-    if (errorDoc) return handleErrorClient(res, 404, errorDoc);
+    if (error) return handleErrorClient(res, 404, error);
+
+    if (req.user.rol === "estudiante" && documento.id_usuario !== req.user.id) {
+      return handleErrorClient(res, 403, "Acceso denegado");
+    }
+
     handleSuccess(res, 200, "Documento encontrado", documento);
   } catch (error) {
     handleErrorServer(res, 500, error.message);

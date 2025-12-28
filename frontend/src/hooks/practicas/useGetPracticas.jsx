@@ -19,16 +19,6 @@ const useGetPractica = () => {
         supervisor_email: "jperez@empresa.com",
         supervisor_telefono: "+56 9 1234 5678",
         documentos: [
-            {
-                nombre: "Contrato de Práctica",
-                url: "/documentos/contrato.pdf",
-                tipo: "contrato"
-            },
-            {
-                nombre: "Plan de Trabajo",
-                url: "/documentos/plan.pdf",
-                tipo: "plan"
-            }
         ],
         estado: "Finalizada",
         observaciones: "Práctica completada satisfactoriamente",

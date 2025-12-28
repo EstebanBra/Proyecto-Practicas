@@ -28,20 +28,19 @@ export async function registrarDocumentoService(data) {
       ];
     }
 
-    if (data.tipo) {
-      const documentoExistente = await documentoRepository.findOne({
-        where: {
-          id_practica: data.id_practica,
-          tipo: data.tipo,
-        },
-      });
+    const documentoExistente = await documentoRepository.findOne({
+      where: {
+        id_practica: data.id_practica,
+        id_usuario: data.id_usuario,
+        tipo: data.tipo,
+      },
+    });
 
-      if (documentoExistente) {
-        return [
-          null,
-          `Ya existe un ${data.tipo === "informe" ? "informe" : "autoevaluación"} para esta práctica`,
-        ];
-      }
+    if (documentoExistente) {
+      return [
+        null,
+        `Ya existe un ${data.tipo === "informe" ? "informe" : "autoevaluación"} para esta práctica`,
+      ];
     }
 
     const documentoData = {
@@ -65,7 +64,8 @@ export async function getDocumentosService(filtros = {}) {
 
     const query = documentoRepository
       .createQueryBuilder("documento")
-      .leftJoinAndSelect("documento.practica", "practica");
+      .leftJoinAndSelect("documento.practica", "practica")
+      .leftJoinAndSelect("documento.usuario", "usuario");
 
     if (filtros.tipo) {
       query.andWhere("documento.tipo = :tipo", { tipo: filtros.tipo });
@@ -74,6 +74,18 @@ export async function getDocumentosService(filtros = {}) {
     if (filtros.id_practica) {
       query.andWhere("documento.id_practica = :id_practica", {
         id_practica: filtros.id_practica,
+      });
+    }
+
+    if (filtros.id_usuario) {
+      query.andWhere("documento.id_usuario = :id_usuario", {
+        id_usuario: filtros.id_usuario,
+      });
+    }
+
+    if (filtros.estado_revision) {
+      query.andWhere("documento.estado_revision = :estado_revision", {
+        estado_revision: filtros.estado_revision,
       });
     }
 
@@ -90,7 +102,7 @@ export async function getDocumentoByIdService(id_documento) {
     const documentoRepository = AppDataSource.getRepository(Documento);
     const documento = await documentoRepository.findOne({
       where: { id_documento },
-      relations: ["practica"],
+      relations: ["practica", "usuario"],
     });
 
     if (!documento) return [null, "Documento no encontrado"];
@@ -109,6 +121,10 @@ export async function updateEstadoDocumentoService(id_documento, estado) {
     });
 
     if (!documento) return [null, "Documento no encontrado"];
+
+    if (documento.estado_revision === "calificado") {
+      return [null, "No se puede modificar un documento ya calificado"];
+    }
 
     documento.estado_revision = estado;
     await documentoRepository.save(documento);

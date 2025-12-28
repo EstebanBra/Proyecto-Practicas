@@ -1,72 +1,66 @@
 "use strict";
 
 import Evaluacion from "../entity/evaluaciones_finales.entity.js";
+import Documento from "../entity/documentos_finales.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 
-export async function crearEvaluacionService(
-  data,
-  tipo = "evaluacion_docente",
-) {
+export async function crearEvaluacionService(data) {
   try {
     const repo = AppDataSource.getRepository(Evaluacion);
+    const docRepo = AppDataSource.getRepository(Documento);
+    const documento = await docRepo.findOne({
+      where: { id_documento: data.id_documento },
+    });
 
+    if (!documento) {
+      return [null, "Documento no encontrado"];
+    }
+    if (documento.tipo !== data.tipo_documento) {
+      return [null, `El documento no es del tipo ${data.tipo_documento}`];
+    }
     const evaluacionExistente = await repo.findOne({
       where: {
         id_documento: data.id_documento,
-        id_usuario: data.id_usuario,
-        tipo_evaluacion: tipo,
+        tipo_documento: data.tipo_documento,
       },
     });
 
     if (evaluacionExistente) {
       return [
         null,
-        `Ya existe una ${tipo === "autoevaluacion" ? "autoevaluación" : "evaluación"} para este documento`,
+        `Ya existe una evaluación para este ${data.tipo_documento}`,
       ];
     }
 
-    const evaluacionData = {
-      ...data,
-      tipo_evaluacion: tipo,
-      rol_usuario: tipo === "autoevaluacion" ? "estudiante" : "docente",
-    };
-
-    const nuevaEvaluacion = repo.create(evaluacionData);
+    const nuevaEvaluacion = repo.create(data);
     await repo.save(nuevaEvaluacion);
+    documento.estado_revision = "calificado";
+    await docRepo.save(documento);
+
     return [nuevaEvaluacion, null];
   } catch (error) {
-    console.error(`Error al registrar ${tipo}:`, error);
-    return [
-      null,
-      `Error al guardar la ${tipo === "autoevaluacion" ? "autoevaluación" : "evaluación"} en la base de datos`,
-    ];
+    console.error("Error al registrar evaluación:", error);
+    return [null, "Error al guardar la evaluación en la base de datos"];
   }
 }
 
-export async function getEvaluacionByDocumentoService(
-  id_documento,
-  tipo_evaluacion = null,
-) {
+export async function getEvaluacionByDocumentoService(id_documento) {
   try {
     const repo = AppDataSource.getRepository(Evaluacion);
 
-    const whereClause = { id_documento };
-    if (tipo_evaluacion) {
-      whereClause.tipo_evaluacion = tipo_evaluacion;
-    }
-
-    const evaluaciones = await repo.find({
-      where: whereClause,
+    const evaluacion = await repo.findOne({
+      where: { id_documento },
       relations: ["documento", "usuario"],
     });
 
-    if (!evaluaciones || evaluaciones.length === 0) {
-      return [[], "No hay evaluaciones registradas para este documento"];
+    if (!evaluacion) {
+      return [null, "No hay evaluación registrada para este documento"];
     }
-    return [evaluaciones, null];
+
+    return [evaluacion, null];
   } catch (error) {
-    console.error("Error al obtener evaluaciones:", error);
-    return [null, "Error al consultar las evaluaciones"];
+    console.error("Error al obtener evaluación:", error);
+    return [null, "Error al consultar la evaluación"];
   }
 }
 
@@ -82,6 +76,10 @@ export async function updateEvaluacionService(id_evaluacion, data) {
 
     if (data.nota !== undefined) evaluacion.nota = data.nota;
     if (data.comentario !== undefined) evaluacion.comentario = data.comentario;
+    if (data.tipo_documento !== undefined) {
+      evaluacion.tipo_documento = data.tipo_documento;
+    }
+
     evaluacion.fecha_registro = new Date();
 
     await repo.save(evaluacion);
@@ -96,11 +94,8 @@ export async function getEvaluacionesByDocenteService(id_usuario) {
   try {
     const repo = AppDataSource.getRepository(Evaluacion);
     const evaluaciones = await repo.find({
-      where: {
-        id_usuario,
-        tipo_evaluacion: "evaluacion_docente",
-      },
-      relations: ["documento"],
+      where: { id_usuario },
+      relations: ["documento", "documento.usuario"],
       order: { fecha_registro: "DESC" },
     });
 
@@ -111,49 +106,5 @@ export async function getEvaluacionesByDocenteService(id_usuario) {
   } catch (error) {
     console.error("Error al obtener evaluaciones del docente:", error);
     return [null, error.message];
-  }
-}
-
-export async function getAutoevaluacionByEstudianteService(id_usuario) {
-  try {
-    const repo = AppDataSource.getRepository(Evaluacion);
-    const autoevaluaciones = await repo.find({
-      where: {
-        id_usuario,
-        tipo_evaluacion: "autoevaluacion",
-      },
-      relations: ["documento"],
-      order: { fecha_registro: "DESC" },
-    });
-
-    if (!autoevaluaciones || autoevaluaciones.length === 0)
-      return [[], "No hay autoevaluaciones registradas por este estudiante"];
-
-    return [autoevaluaciones, null];
-  } catch (error) {
-    console.error("Error al obtener autoevaluaciones:", error);
-    return [null, error.message];
-  }
-}
-
-export async function crearAutoevaluacionService(data) {
-  try {
-    const repo = AppDataSource.getRepository(Evaluacion);
-
-    const autoevaluacionExistente = await repo.findOne({
-      where: {
-        id_documento: data.id_documento,
-        tipo_evaluacion: "autoevaluacion",
-      },
-    });
-
-    if (autoevaluacionExistente) {
-      return [null, "Ya existe una autoevaluación para este documento"];
-    }
-
-    return await crearEvaluacionService(data, "autoevaluacion");
-  } catch (error) {
-    console.error("Error al registrar autoevaluación:", error);
-    return [null, "Error al guardar la autoevaluación"];
   }
 }
