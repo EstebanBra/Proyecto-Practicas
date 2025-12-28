@@ -22,7 +22,7 @@ router
   .get("/todos", [authenticateJwt, isDocente], getAllComentarios)
   .get("/usuario/:usuarioId", [authenticateJwt, isDocenteOrEstudiante], getComentariosByUsuarioId)
   .get("/:id", [authenticateJwt, isDocenteOrEstudiante], getComentarioById)
-  .put("/:id", [authenticateJwt, isEstudiante, uploadOptionalFiles, handleMulterErrors], updateComentario)
+  .put("/:id", [authenticateJwt, isDocenteOrEstudiante, uploadOptionalFiles, handleMulterErrors], updateComentario)
   .delete("/:id", [authenticateJwt, isDocenteOrEstudiante], deleteComentario);
 
 export default router;

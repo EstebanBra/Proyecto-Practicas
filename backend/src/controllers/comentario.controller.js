@@ -92,8 +92,6 @@ export async function updateComentario(req, res) {
     const { id } = req.params;
     const { body, user, files } = req;
     await comentarioIdValidation.validateAsync({ id });
-    await comentarioBodyValidation.validateAsync(body);
-    
     // Procesar archivos si existen
     let archivosData = null;
     if (files && files.length > 0) {
@@ -105,12 +103,40 @@ export async function updateComentario(req, res) {
         filename: file.filename
       }));
     }
-    
-    // Si el usuario es docente, cambiar estado a "Respondido"
-    const comentarioDataActualizado = user.rol === "profesor" 
-      ? { ...body, estado: "Respondido", ...(archivosData && { archivos: archivosData }) }
-      : { ...body, ...(archivosData && { archivos: archivosData }) };
-    
+
+    let comentarioDataActualizado;
+
+    if (user.rol === "docente") {
+      // Traer comentario existente para completar campos requeridos y forzar estado Respondido
+      const existente = await getComentarioByIdService(id);
+      if (!existente) {
+        return handleErrorClient(res, 404, "Comentario no encontrado");
+      }
+
+      const payloadDocente = {
+        mensaje: existente.mensaje,
+        estado: "Respondido",
+        nivelUrgencia: existente.nivelUrgencia || "normal",
+        tipoProblema: existente.tipoProblema || "General",
+        respuesta: body.respuesta,
+        usuarioId: user.id,
+        ...(archivosData && { archivos: archivosData })
+      };
+
+      await comentarioBodyValidation.validateAsync(payloadDocente);
+      comentarioDataActualizado = payloadDocente;
+    } else {
+      // Estudiante edita su propio comentario
+      const bodyConUsuario = { ...body, usuarioId: user.id };
+      await comentarioBodyValidation.validateAsync(bodyConUsuario);
+
+      comentarioDataActualizado = {
+        ...body,
+        usuarioId: user.id,
+        ...(archivosData && { archivos: archivosData })
+      };
+    }
+
     const updatedComentario = await updateComentarioService(id, comentarioDataActualizado);
     handleSuccess(res, 200, "Comentario actualizado exitosamente", updatedComentario);
   } catch (error) {
