@@ -5,9 +5,22 @@ const practicaController = {
     // Crear solicitud de práctica
     crearPractica: async (req, res) => {
         try {
+            // Normalizar tipo_presencia a minúsculas para la BD
+            let tipo_presencia = req.body.tipo_presencia;
+            if (tipo_presencia) {
+                const mapa = {
+                    "Presencial": "presencial",
+                    "Virtual": "virtual",
+                    "Hibrido": "hibrido"
+                };
+                tipo_presencia = mapa[tipo_presencia] || tipo_presencia.toLowerCase();
+            }
+            
             const datosPractica = {
                 ...req.body,
+                tipo_presencia: tipo_presencia,
                 id_estudiante: req.user.id,
+                tipo_practica: "propia",
                 estado: "Revision_Pendiente"
             };
             const result = await practicaService.crearPractica(datosPractica);
