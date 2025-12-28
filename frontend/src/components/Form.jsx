@@ -53,7 +53,6 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
         <form
             className="form"
             style={{ backgroundColor: backgroundColor }}
-            // Agregamos onError para ver por qué falla
             onSubmit={handleSubmit(onFormSubmit, onError)} 
             autoComplete="off"
         >

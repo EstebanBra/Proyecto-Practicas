@@ -85,6 +85,14 @@ const Navbar = () => {
                         </NavLink>
                     </li>
                     )}
+                    {/* Visible solo para ESTUDIANTES */}
+                    {userRole === 'estudiante' && (
+                    <li>
+                        <NavLink to="/mis-postulaciones" onClick={() => setMenuOpen(false)}>
+                            Mis Postulaciones
+                        </NavLink>
+                    </li>
+                    )}
 
                     {/* Visible para TODOS */}
                     <li>

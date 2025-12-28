@@ -10,6 +10,7 @@ import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
 import '@styles/styles.css';
 import OfertasPublicas from '@pages/OfertasPublicas';
+import MisPostulaciones from '@pages/MisPostulaciones';
 
 const router = createBrowserRouter([
   {
@@ -30,13 +31,21 @@ const router = createBrowserRouter([
         element: <OfertasPublicas />
       },
       {
+        path: '/mis-postulaciones',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <MisPostulaciones />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: '/users',
         element: (
         <ProtectedRoute allowedRoles={['administrador']}>
           <Users />
         </ProtectedRoute>
         ),
-    }
+      }
     ]
   },
   {

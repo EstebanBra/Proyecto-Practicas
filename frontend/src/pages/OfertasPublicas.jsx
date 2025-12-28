@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getOfertas, deleteOferta, updateOferta, postularOferta } from '@services/ofertaPractica.service.js';
+import { getOfertas, deleteOferta, updateOferta, postularOferta, getPostulantes } from '@services/ofertaPractica.service.js';
 import OfertaCard from '@components/OfertaCard';
 import Form from '@components/Form';
 import { deleteDataAlert, showSuccessAlert, showErrorAlert } from '@helpers/sweetAlert.js';
@@ -10,6 +10,10 @@ const OfertasPublicas = () => {
     const [ofertas, setOfertas] = useState([]);
     const [ofertaAEditar, setOfertaAEditar] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
+    
+    // --- ESTADO PARA PAGINACIÓN  ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // Mostraremos 6 ofertas por página
 
     useEffect(() => {
         const fetchOfertas = async () => {
@@ -29,7 +33,71 @@ const OfertasPublicas = () => {
         fetchOfertas();
     }, []);
 
-    // --- LÓGICA DE GESTIÓN (Admin/Docente) ---
+    // --- LÓGICA DE PAGINACIÓN ---
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentOfertas = ofertas.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(ofertas.length / itemsPerPage);
+
+    const nextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+
+    const prevPage = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
+    // --- LÓGICA: VER POSTULANTES (Solo Docente) ---
+const handleVerPostulantes = async (ofertaId) => {
+        Swal.fire({ title: 'Cargando postulantes...', didOpen: () => Swal.showLoading() });
+        
+        const response = await getPostulantes(ofertaId);
+        
+        if (response.status === 'Success' && response.data) {
+            const alumnos = response.data;
+            if (alumnos.length === 0) {
+                Swal.fire('Info', 'Aún no hay postulantes para esta oferta.', 'info');
+                return;
+            }
+
+            let htmlTable = `
+                <div style="overflow-x: auto;">
+                    <table style="width:100%; text-align:left; border-collapse: collapse; font-family: sans-serif;">
+                        <thead>
+                            <tr style="background:#f8f9fa; border-bottom:2px solid #dee2e6; color: #495057;">
+                                <th style="padding:12px 15px;">Nombre Completo</th>
+                                <th style="padding:12px 15px;">RUT</th>
+                                <th style="padding:12px 15px;">Correo Electrónico</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            alumnos.forEach(alumno => {
+                htmlTable += `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:12px 15px; color: #333;">${alumno.nombreCompleto}</td>
+                        <td style="padding:12px 15px; white-space: nowrap; font-weight: bold; color: #555;">${alumno.rut}</td>
+                        <td style="padding:12px 15px; color: #007bff;">${alumno.email}</td>
+                    </tr>
+                `;
+            });
+
+            htmlTable += `</tbody></table></div>`;
+
+            Swal.fire({
+                title: `Postulantes (${alumnos.length})`,
+                html: htmlTable,
+                width: '900px',
+                padding: '2em',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Cerrar'
+            });
+        } else {
+            showErrorAlert('Error', 'No se pudo cargar la lista.');
+        }
+    };
+
     const handleDelete = async (id) => {
         const result = await deleteDataAlert();
         if (result.isConfirmed) {
@@ -54,15 +122,9 @@ const OfertasPublicas = () => {
 
     const handleUpdateSubmit = async (data) => {
         const dataFormatted = {
-            titulo: data.titulo,
-            descripcion_cargo: data.descripcion_cargo,
-            requisitos: data.requisitos,
+            ...data,
             duracion: Number(data.duracion),
-            modalidad: data.modalidad,
-            jornada: data.jornada,
-            ubicacion: data.ubicacion,
-            cupos: Number(data.cupos),
-            fecha_limite: data.fecha_limite
+            cupos: Number(data.cupos)
         };
 
         try {
@@ -81,11 +143,10 @@ const OfertasPublicas = () => {
         }
     };
 
-    // --- LÓGICA DE POSTULACIÓN (Estudiante) ---
     const handlePostular = async (id) => {
         const result = await Swal.fire({
             title: "¿Deseas postular?",
-            text: "Se enviará un correo al profesor encargado con tus datos.",
+            text: "Se enviará un correo al profesor encargado.",
             icon: "question",
             showCancelButton: true,
             confirmButtonText: "Sí, postular",
@@ -100,15 +161,8 @@ const OfertasPublicas = () => {
                 
                 if (response.status === 'Success' || response.data) {
                     showSuccessAlert('¡Postulado!', 'Tu postulación ha sido enviada exitosamente.');
-
-                    // Buscamos la oferta en la lista local y le restamos 1 a los cupos
-                    setOfertas(prevOfertas => prevOfertas.map(oferta => {
-                        if (oferta.id === id) {
-                            return { ...oferta, cupos: oferta.cupos - 1 };
-                        }
-                        return oferta;
-                    }));
-
+                    // Actualización visual instantánea de cupos
+                    setOfertas(prev => prev.map(o => o.id === id ? { ...o, cupos: o.cupos - 1 } : o));
                 } else {
                     showErrorAlert('Error', response.message || 'No se pudo postular.');
                 }
@@ -157,18 +211,49 @@ const OfertasPublicas = () => {
                 <>
                     <h1>Ofertas de Práctica Disponibles</h1>
                     <div className="ofertas-list">
-                        {ofertas.map((oferta) => (
-                            <OfertaCard
-                                key={oferta.id}
-                                oferta={oferta}
-                                canManage={canManage}
-                                canApply={canApply}
-                                onDelete={() => handleDelete(oferta.id)}
-                                onEdit={() => handleEditClick(oferta)}
-                                onApply={() => handlePostular(oferta.id)}
-                            />
+                        {currentOfertas.map((oferta) => (
+                            <div key={oferta.id} style={{position: 'relative'}}>
+                                <OfertaCard
+                                    oferta={oferta}
+                                    canManage={canManage}
+                                    canApply={canApply}
+                                    onDelete={() => handleDelete(oferta.id)}
+                                    onEdit={() => handleEditClick(oferta)}
+                                    onApply={() => handlePostular(oferta.id)}
+                                />
+                                {/* BOTÓN EXTRA: VER POSTULANTES */}
+                                {currentUser && (
+                                        currentUser.rol === 'administrador' || 
+                                        (currentUser.rol === 'docente' && currentUser.email === oferta.encargado?.email)
+                                    ) && (
+                                        <button 
+                                            onClick={() => handleVerPostulantes(oferta.id)}
+                                            style={{ 
+                                                width: '100%', marginTop: '5px', padding: '8px', 
+                                                backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' 
+                                            }}
+                                        >
+                                            👥 Ver Postulantes
+                                        </button>
+                                    )}
+                            </div>
                         ))}
                     </div>
+
+                    {/* CONTROLES DE PAGINACIÓN */}
+                    {totalPages > 1 && (
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '30px', paddingBottom: '20px' }}>
+                            <button onClick={prevPage} disabled={currentPage === 1} style={{padding: '10px 20px', cursor: 'pointer'}}>
+                                &laquo; Anterior
+                            </button>
+                            <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>
+                                Página {currentPage} de {totalPages}
+                            </span>
+                            <button onClick={nextPage} disabled={currentPage === totalPages} style={{padding: '10px 20px', cursor: 'pointer'}}>
+                                Siguiente &raquo;
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
         </div>

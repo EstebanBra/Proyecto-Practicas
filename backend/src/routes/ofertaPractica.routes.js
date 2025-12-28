@@ -5,8 +5,10 @@ import { isDocenteOrAdmin, isEstudiante } from "../middlewares/authorization.mid
 import {
   createOfertaPractica,
   deleteOfertaPractica,
+  getMisPostulaciones,
   getOfertaPracticaById,
   getOfertasPractica,
+  getPostulantesPorOferta,
   postularOferta,
   updateOfertaPractica,
 } from "../controllers/ofertaPractica.controller.js";
@@ -15,6 +17,12 @@ const router = Router();
 
 // Todas las rutas requieren estar logueado
 router.use(authenticateJwt);
+
+// Ruta para que el estudiante vea sus postulaciones
+router.get("/mis-postulaciones", isEstudiante, getMisPostulaciones);
+
+// Ruta para que el docente vea quién postuló a su oferta específica
+router.get("/:id/postulantes", isDocenteOrAdmin, getPostulantesPorOferta);
 
 // Rutas públicas (para cualquier usuario logueado)
 router.get("/", getOfertasPractica);

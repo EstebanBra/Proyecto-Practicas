@@ -36,6 +36,26 @@ export async function postularOferta(id) {
   }
 }
 
+// Obtener historial de postulaciones (Estudiante)
+export async function getMisPostulaciones() {
+    try {
+        const response = await api.get(`${BASE}/mis-postulaciones`);
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { status: 'Error', message: 'Error de conexión' };
+    }
+}
+
+// Obtener lista de alumnos (Docente)
+export async function getPostulantes(idOferta) {
+    try {
+        const response = await api.get(`${BASE}/${idOferta}/postulantes`);
+        return response.data; 
+    } catch (error) {
+        return error.response?.data || { status: 'Error', message: 'Error al obtener postulantes' };
+    }
+}
+
 export default {
   getOfertas,
   getOfertaById,
@@ -43,4 +63,5 @@ export default {
   updateOferta,
   postularOferta,
   deleteOferta,
+  getMisPostulaciones,
 };

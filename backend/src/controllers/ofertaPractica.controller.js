@@ -190,3 +190,54 @@ export async function postularOferta(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
+
+// --- Ver Mis Postulaciones (Estudiante) ---
+export async function getMisPostulaciones(req, res) {
+  try {
+    // Usamos el email para buscar al usuario real en la BD.
+    const emailEstudiante = req.user.email; 
+    const userRepo = AppDataSource.getRepository(User);
+    
+    const estudiante = await userRepo.findOneBy({ email: emailEstudiante });
+
+    if (!estudiante) {
+        return handleErrorClient(res, 404, "Usuario no encontrado");
+    }
+
+    const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
+
+    const misOfertas = await ofertaRepo.find({
+      where: {
+        postulantes: { id: estudiante.id }
+      },
+      relations: ["encargado"]
+    });
+
+    handleSuccess(res, 200, "Historial recuperado", misOfertas);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+// --- Ver Postulantes de una Oferta (Docente) ---
+export async function getPostulantesPorOferta(req, res) {
+  try {
+    const { id } = req.params;
+    const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
+
+    const oferta = await ofertaRepo.findOne({
+      where: { id: parseInt(id) },
+      relations: ["postulantes"] 
+    });
+
+    if (!oferta) {
+      return handleErrorClient(res, 404, "Oferta no encontrada");
+    }
+    // Agregamos el texto "Lista de postulantes" como tercer argumento.
+    // Así 'oferta.postulantes' pasa a ser el cuarto argumento (data).
+    handleSuccess(res, 200, "Lista de postulantes", oferta.postulantes);
+    
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}

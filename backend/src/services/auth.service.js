@@ -51,7 +51,6 @@ export async function registerService(user) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    //Extraemos el rol
     const { nombreCompleto, rut, email, rol } = user;
 
     const createErrorMessage = (dataInfo, message) => ({
@@ -71,7 +70,6 @@ export async function registerService(user) {
 
     if (existingRutUser) return [null, createErrorMessage("rut", "Rut ya asociado a una cuenta")];
 
-    //Creamos el usuario usando el rol que viene del frontend (o estudiante por defecto)
     const newUser = userRepository.create({
       nombreCompleto,
       email,

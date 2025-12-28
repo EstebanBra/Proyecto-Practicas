@@ -11,7 +11,6 @@ export default function useGetOfertas() {
     setError(null);
     try {
       const data = await getOfertas();
-      // backend returns [ofertas, null] according to controller
       const items = Array.isArray(data) && data.length > 0 && data[0] !== undefined ? data[0] : data;
       setOfertas(items || []);
     } catch (err) {
