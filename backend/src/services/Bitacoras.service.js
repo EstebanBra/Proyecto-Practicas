@@ -55,7 +55,7 @@ export async function obtenerUltimaSemana(id_practica) {
 export async function obtenerBitacorasPorRut(rut) {
     const userRepository = AppDataSource.getRepository("User");
     
-    // Buscar el usuario por RUT
+    // 1. Buscar el usuario por RUT
     const usuario = await userRepository.findOne({
         where: { rut: rut }
     });
@@ -64,16 +64,17 @@ export async function obtenerBitacorasPorRut(rut) {
         return { error: "No se encontró un estudiante con ese RUT", bitacoras: [] };
     }
 
-    // Buscar la práctica del estudiante
+    // 2. Buscar la práctica del estudiante
     const practica = await practicaRepository.findOne({
-        where: { id_usuario: usuario.id }
+        // --- CORRECCIÓN AQUÍ: Usamos 'id_estudiante' en lugar de 'id_usuario' ---
+        where: { id_estudiante: usuario.id }
     });
 
     if (!practica) {
         return { error: "El estudiante no tiene una práctica asignada", bitacoras: [], estudiante: usuario };
     }
 
-    // Obtener las bitácoras de la práctica
+    // 3. Obtener las bitácoras de la práctica
     const bitacoras = await bitacoraRepository.find({
         where: { id_practica: practica.id_practica },
         order: { semana: "ASC" }
@@ -82,7 +83,7 @@ export async function obtenerBitacorasPorRut(rut) {
     return { 
         bitacoras, 
         estudiante: {
-            nombre: usuario.nombreCompleto || `${usuario.nombre || ''} ${usuario.apellido || ''}`.trim(),
+            nombre: usuario.nombreCompleto || `${usuario.nombre || " "} ${usuario.apellido || " "}`.trim(),
             rut: usuario.rut,
             email: usuario.email
         },
@@ -91,4 +92,14 @@ export async function obtenerBitacorasPorRut(rut) {
             estado: practica.estado
         }
     };
+}
+
+export async function obtenerPracticaPorEstudiante(idEstudiante) {
+    return await practicaRepository.findOne({
+        where: { 
+            // Usamos id_estudiante porque así se llama la columna en tu entity
+            id_estudiante: idEstudiante, 
+            estado: "en_progreso" 
+        }
+    });
 }

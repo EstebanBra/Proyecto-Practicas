@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getOfertas, deleteOferta, updateOferta, postularOferta, getPostulantes } from '@services/ofertaPractica.service.js';
+import { aceptarPostulante, getOfertas, deleteOferta, updateOferta, postularOferta, getPostulantes } from '@services/ofertaPractica.service.js';
 import OfertaCard from '@components/OfertaCard';
 import Form from '@components/Form';
 import { deleteDataAlert, showSuccessAlert, showErrorAlert } from '@helpers/sweetAlert.js';
@@ -49,54 +49,100 @@ const OfertasPublicas = () => {
 
     // --- LÓGICA: VER POSTULANTES (Solo Docente) ---
 const handleVerPostulantes = async (ofertaId) => {
-        Swal.fire({ title: 'Cargando postulantes...', didOpen: () => Swal.showLoading() });
-        
-        const response = await getPostulantes(ofertaId);
-        
-        if (response.status === 'Success' && response.data) {
-            const alumnos = response.data;
-            if (alumnos.length === 0) {
-                Swal.fire('Info', 'Aún no hay postulantes para esta oferta.', 'info');
-                return;
-            }
-
-            let htmlTable = `
-                <div style="overflow-x: auto;">
-                    <table style="width:100%; text-align:left; border-collapse: collapse; font-family: sans-serif;">
-                        <thead>
-                            <tr style="background:#f8f9fa; border-bottom:2px solid #dee2e6; color: #495057;">
-                                <th style="padding:12px 15px;">Nombre Completo</th>
-                                <th style="padding:12px 15px;">RUT</th>
-                                <th style="padding:12px 15px;">Correo Electrónico</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            alumnos.forEach(alumno => {
-                htmlTable += `
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:12px 15px; color: #333;">${alumno.nombreCompleto}</td>
-                        <td style="padding:12px 15px; white-space: nowrap; font-weight: bold; color: #555;">${alumno.rut}</td>
-                        <td style="padding:12px 15px; color: #007bff;">${alumno.email}</td>
-                    </tr>
-                `;
-            });
-
-            htmlTable += `</tbody></table></div>`;
-
-            Swal.fire({
-                title: `Postulantes (${alumnos.length})`,
-                html: htmlTable,
-                width: '900px',
-                padding: '2em',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'Cerrar'
-            });
-        } else {
-            showErrorAlert('Error', 'No se pudo cargar la lista.');
+    Swal.fire({ title: 'Cargando postulantes...', didOpen: () => Swal.showLoading() });
+    
+    const response = await getPostulantes(ofertaId);
+    
+    if (response.status === 'Success' && response.data) {
+        const alumnos = response.data;
+        if (alumnos.length === 0) {
+            Swal.fire('Info', 'Aún no hay postulantes para esta oferta.', 'info');
+            return;
         }
-    };
+
+        // Generamos la tabla HTML
+        let htmlTable = `
+            <div style="overflow-x: auto;">
+                <table style="width:100%; text-align:left; border-collapse: collapse; font-family: sans-serif;">
+                    <thead>
+                        <tr style="background:#f8f9fa; border-bottom:2px solid #dee2e6; color: #495057;">
+                            <th style="padding:12px 15px;">Nombre</th>
+                            <th style="padding:12px 15px;">RUT</th>
+                            <th style="padding:12px 15px;">Acción</th> 
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        alumnos.forEach(alumno => {
+            htmlTable += `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:12px 15px;">${alumno.nombreCompleto}</td>
+                    <td style="padding:12px 15px;">${alumno.rut}</td>
+                    <td style="padding:12px 15px;">
+                        <button 
+                            id="btn-aceptar-${alumno.id}"
+                            class="swal-btn-aceptar"
+                            style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;"
+                        >
+                            ✔ Aceptar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        htmlTable += `</tbody></table></div>`;
+
+        Swal.fire({
+            title: `Postulantes (${alumnos.length})`,
+            html: htmlTable,
+            width: '800px',
+            showConfirmButton: true,
+            confirmButtonText: 'Cerrar',
+            // MAGIA AQUÍ: didOpen se ejecuta cuando el popup se abre
+            didOpen: () => {
+                alumnos.forEach(alumno => {
+                    const btn = document.getElementById(`btn-aceptar-${alumno.id}`);
+                    if (btn) {
+                        btn.onclick = () => confirmarAceptacion(ofertaId, alumno);
+                    }
+                });
+            }
+        });
+    } else {
+        showErrorAlert('Error', 'No se pudo cargar la lista.');
+    }
+};
+
+// Función auxiliar para manejar el click en "Aceptar"
+const confirmarAceptacion = async (ofertaId, alumno) => {
+    // Cerramos el modal de la lista temporalmente
+    // Swal.close(); 
+
+    const result = await Swal.fire({
+        title: `¿Aceptar a ${alumno.nombreCompleto}?`,
+        text: "Esto iniciará su práctica oficialmente y podrá subir bitácoras.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, aceptar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+        Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
+        
+        const resp = await aceptarPostulante(ofertaId, alumno.id);
+        
+        if (resp.status === 'Success' || resp.data) {
+            await Swal.fire('¡Éxito!', 'El estudiante ha sido aceptado correctamente.', 'success');
+            // Opcional: Volver a abrir la lista de postulantes
+            handleVerPostulantes(ofertaId); 
+        } else {
+            Swal.fire('Error', resp.message || 'No se pudo aceptar al estudiante', 'error');
+        }
+    }
+};
 
     const handleDelete = async (id) => {
         const result = await deleteDataAlert();

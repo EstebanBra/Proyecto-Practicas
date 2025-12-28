@@ -97,3 +97,13 @@ export async function deleteOfertaPracticaService(id) {
     return [null, "Error interno del servidor"];
   }
 }
+
+// Aceptar a un postulante (Convertirlo en practicante)
+export async function aceptarPostulante(idOferta, idEstudiante) {
+    try {
+        const response = await api.post(`${BASE}/aceptar-postulante`, { idOferta, idEstudiante });
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { status: "Error", message: "Error al aceptar estudiante" };
+    }
+}

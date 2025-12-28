@@ -5,10 +5,14 @@ import { useFileUpload } from '../hooks/files/useFileUpload.jsx';
 import FileUpload from '../components/FileUpload.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { showAlert } from '../helpers/sweetAlert.js';
+// IMPORTANTE: Importamos el servicio aquí
+import { bitacoraService } from '../services/bitacora.service.js';
 
 const BitacoraDocumentos = () => {
     const { user } = useAuth();
-    const [idPractica] = useState(() => user?.id_practica || 1);
+    
+    // 1. Iniciamos en NULL para esperar a cargar el ID real
+    const [idPractica, setIdPractica] = useState(null);
 
     const { documentos, loading: loadingDocs, fetchDocumentos } = useDocumentos(idPractica);
     const { subirArchivo, registrarDocumento, loading: uploadingFile } = useDocumentoBitacora();
@@ -16,8 +20,32 @@ const BitacoraDocumentos = () => {
 
     const [showUploadForm, setShowUploadForm] = useState(false);
 
+    // 2. Efecto para cargar el ID de la práctica real
     useEffect(() => {
-        fetchDocumentos();
+        const cargarIDPractica = async () => {
+            // Si el usuario es estudiante, buscamos SU práctica activa
+            if (user?.rol === 'estudiante') {
+                try {
+                    const { data } = await bitacoraService.obtenerMiPractica();
+                    if (data && data.data) {
+                        setIdPractica(data.data.id_practica);
+                    }
+                } catch {
+                    console.log("No se encontró práctica activa.");
+                }
+            } else if (user?.id_practica) {
+                // Fallback por si viene en el token o es otro rol
+                setIdPractica(user.id_practica);
+            }
+        };
+        cargarIDPractica();
+    }, [user]);
+
+    // 3. Efecto para cargar documentos (SOLO si ya tenemos ID)
+    useEffect(() => {
+        if (idPractica) {
+            fetchDocumentos();
+        }
     }, [idPractica, fetchDocumentos]);
 
     const handleFileAdd = (file) => {
@@ -28,20 +56,24 @@ const BitacoraDocumentos = () => {
     };
 
     const handleUpload = async () => {
+        // Validación extra: No dejar subir si no hay práctica identificada
+        if (!idPractica) {
+            showAlert('Error', 'No se ha detectado una práctica activa. Debes ser aceptado en una oferta primero.', 'error');
+            return;
+        }
+
         if (files.length === 0) {
             showAlert('Advertencia', 'Por favor selecciona un archivo', 'warning');
             return;
         }
 
         try {
-            // Obtener el archivo original para subir
             const fileToUpload = getFileToUpload();
             if (!fileToUpload) {
                 showAlert('Error', 'No se pudo obtener el archivo', 'error');
                 return;
             }
 
-            // Subir el archivo
             const { data, error } = await subirArchivo(fileToUpload);
 
             if (error) {
@@ -49,9 +81,8 @@ const BitacoraDocumentos = () => {
                 return;
             }
 
-            // Registrar el documento
             const documentData = {
-                id_practica: idPractica,
+                id_practica: idPractica, // Usamos el ID real obtenido
                 ...data.data
             };
 

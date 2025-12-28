@@ -1,11 +1,12 @@
 "use strict";
 import { Router } from "express";
 import {
+    buscarBitacorasPorRut,
     obtenerBitacora,
     obtenerBitacorasPorPractica,
+    obtenerMiPractica,
     obtenerUltimaSemana,
-    registrarBitacora,
-    buscarBitacorasPorRut
+    registrarBitacora
 } from "../controllers/Bitacoras.controller.js";
 import { verificarToken } from "../middlewares/authentication.middleware.js";
 import { verificarRol } from "../middlewares/authorization.middleware.js";
@@ -24,6 +25,11 @@ router
         uploadBitacora.any(),
         validarRegistroBitacora,
         registrarBitacora)
+
+    //  El estudiante consulta su propia práctica
+    .get("/mi-practica", 
+        verificarRol(["estudiante"]), 
+        obtenerMiPractica)
 
     // Ruta para buscar bitácoras por RUT (solo docentes y administradores)
     .get("/buscar-rut/:rut",

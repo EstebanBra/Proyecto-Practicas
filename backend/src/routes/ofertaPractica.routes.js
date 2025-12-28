@@ -3,6 +3,7 @@ import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import { isDocenteOrAdmin, isEstudiante } from "../middlewares/authorization.middleware.js";
 import {
+  aceptarPostulante,
   createOfertaPractica,
   deleteOfertaPractica,
   getMisPostulaciones,
@@ -35,5 +36,6 @@ router.post("/:id/postular", isEstudiante, postularOferta);
 router.post("/", isDocenteOrAdmin, createOfertaPractica);
 router.put("/:id", isDocenteOrAdmin, updateOfertaPractica);
 router.delete("/:id", isDocenteOrAdmin, deleteOfertaPractica);
+router.post("/aceptar-postulante", isDocenteOrAdmin, aceptarPostulante);
 
 export default router;

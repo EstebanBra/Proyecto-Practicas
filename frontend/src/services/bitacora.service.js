@@ -2,7 +2,17 @@ import axios from './root.service.js';
 
 // Servicio para Bitácoras
 export const bitacoraService = {
-    // Crear una nueva bitácora
+    // --- NUEVA FUNCIÓN NECESARIA ---
+    async obtenerMiPractica() {
+        try {
+            const response = await axios.get('/bitacora/mi-practica');
+            return { data: response.data, error: null };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'No se encontró práctica';
+            return { data: null, error: errorMessage };
+        }
+    },
+
     async crearBitacora(bitacoraData) {
         try {
             const response = await axios.post('/bitacora/registrar', bitacoraData);
@@ -13,7 +23,6 @@ export const bitacoraService = {
         }
     },
 
-    // Obtener una bitácora por ID
     async obtenerBitacora(id) {
         try {
             const response = await axios.get(`/bitacora/${id}`);
@@ -24,7 +33,6 @@ export const bitacoraService = {
         }
     },
 
-    // Obtener todas las bitácoras de una práctica
     async obtenerBitacoras(idPractica) {
         try {
             const response = await axios.get(`/bitacora/practica/${idPractica}`);
@@ -35,7 +43,6 @@ export const bitacoraService = {
         }
     },
 
-    // Obtener la última semana registrada
     async obtenerUltimaSemana(idPractica) {
         try {
             const response = await axios.get(`/bitacora/ultima-semana/${idPractica}`);
@@ -46,7 +53,6 @@ export const bitacoraService = {
         }
     },
 
-    // Buscar bitácoras por RUT del estudiante (para docentes)
     async buscarPorRut(rut) {
         try {
             const response = await axios.get(`/bitacora/buscar-rut/${rut}`);
@@ -58,18 +64,15 @@ export const bitacoraService = {
     }
 };
 
-// Servicio para Documentos de Bitácora
+// Servicio para Documentos de Bitácora (Se mantiene igual)
 export const documentoService = {
-    // Subir archivo
     async subirArchivo(file) {
         try {
             const formData = new FormData();
             formData.append('archivo', file);
 
             const response = await axios.post('/bitacoradocumento/subir', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             return { data: response.data, error: null };
         } catch (error) {
@@ -78,7 +81,6 @@ export const documentoService = {
         }
     },
 
-    // Registrar documento
     async registrarDocumento(documentoData) {
         try {
             const response = await axios.post('/bitacoradocumento/registrar', documentoData);
@@ -89,7 +91,6 @@ export const documentoService = {
         }
     },
 
-    // Obtener documentos de una práctica
     async obtenerDocumentos(idPractica) {
         try {
             const response = await axios.get(`/bitacoradocumento/practica/${idPractica}`);
@@ -100,7 +101,6 @@ export const documentoService = {
         }
     },
 
-    // Actualizar estado del documento
     async actualizarEstadoDocumento(idDocumento, estadoRevision) {
         try {
             const response = await axios.put(
@@ -114,3 +114,5 @@ export const documentoService = {
         }
     }
 };
+
+export default { bitacoraService, documentoService };

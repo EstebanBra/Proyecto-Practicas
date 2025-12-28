@@ -181,12 +181,14 @@ export async function buscarBitacorasPorRut(req, res) {
             return handleErrorClient(res, 400, "El RUT es requerido");
         }
 
-        // Limpiar el RUT (quitar puntos y guiones si los tiene)
-        const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '');
-
-        const resultado = await bitacoraService.obtenerBitacorasPorRut(rutLimpio);
+        // --- CORRECCIÓN AQUÍ ---
+        // Eliminamos la limpieza para que busque el RUT tal cual está en la BD (con puntos y guion)
+        // Antes tenías: const rutLimpio = rut.replace(/\./g, "").replace(/-/g, "");
         
-        if (resultado.error && resultado.bitacoras.length === 0) {
+        // Usamos el RUT directo
+        const resultado = await bitacoraService.obtenerBitacorasPorRut(rut); 
+        
+        if (resultado.error && (!resultado.bitacoras || resultado.bitacoras.length === 0)) {
             return handleErrorClient(res, 404, resultado.error);
         }
 
@@ -194,5 +196,24 @@ export async function buscarBitacorasPorRut(req, res) {
     } catch (error) {
         console.error("Error al buscar bitácoras por RUT:", error);
         return handleErrorServer(res, 500, error.message);
+    }
+}
+
+export async function obtenerMiPractica(req, res) {
+    try {
+        // Obtenemos el ID del token (que corresponde al estudiante logueado)
+        const idEstudiante = req.user.id; 
+        
+        // Llamamos al servicio con el nuevo nombre
+        const practica = await bitacoraService.obtenerPracticaPorEstudiante(idEstudiante);
+
+        if (!practica) {
+            return handleErrorClient(res, 404, "No tienes una práctica activa en este momento.");
+        }
+
+        handleSuccess(res, 200, "Práctica encontrada", practica);
+    } catch (error) {
+        console.error("Error al obtener mi práctica:", error);
+        handleErrorServer(res, 500, error.message);
     }
 }

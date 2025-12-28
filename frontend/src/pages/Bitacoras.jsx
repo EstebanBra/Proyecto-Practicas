@@ -12,6 +12,8 @@ import { useFileUpload } from '../hooks/files/useFileUpload.jsx';
 import FileUpload from '../components/FileUpload.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { showAlert } from '../helpers/sweetAlert.js';
+// Importamos el servicio
+import { bitacoraService } from '../services/bitacora.service.js';
 
 const Bitacoras = () => {
     const { user } = useAuth();
@@ -20,22 +22,25 @@ const Bitacoras = () => {
     const isDocente = userRole === 'docente';
     const isAdmin = userRole === 'administrador';
 
-    const [idPractica] = useState(() => user?.id_practica || 1);
+    // 1. Estado para el ID
+    const [idPractica, setIdPractica] = useState(null);
 
-    // Hooks para bitácoras (estudiante)
+    // 2. DEFINICIÓN DE TODOS LOS HOOKS (Deben ir PRIMERO)
+    
+    // Hooks de bitácoras
     const { createBitacora, loading: creatingBitacora } = useCreateBitacora();
     const { bitacoras, loading: loadingBitacoras, fetchBitacoras } = useBitacoras(idPractica);
     const { ultimaSemana, fetchUltimaSemana } = useUltimaSemana(idPractica);
 
-    // Hooks para documentos
+    // Hooks de documentos (Aquí está fetchDocumentos)
     const { subirArchivo, registrarDocumento, loading: uploadingFile } = useDocumentoBitacora();
-    const { documentos, fetchDocumentos } = useDocumentos(idPractica);
+    const { fetchDocumentos } = useDocumentos(idPractica);
     const { files, uploadError, addFile, removeFile, clearFiles, getFileToUpload } = useFileUpload();
 
-    // Hook para búsqueda por RUT (docente)
+    // Hook de búsqueda
     const { resultado: resultadoBusqueda, loading: buscando, error: errorBusqueda, buscarPorRut, limpiarBusqueda } = useBuscarPorRut();
 
-    // Estados del formulario (estudiante)
+    // Estados locales
     const [formData, setFormData] = useState({
         semana: '',
         descripcion_actividades: '',
@@ -45,18 +50,35 @@ const Bitacoras = () => {
 
     const [archivoSubido, setArchivoSubido] = useState(null);
     const [documentoId, setDocumentoId] = useState(null);
-
-    // Estado para búsqueda por RUT (docente)
     const [rutBusqueda, setRutBusqueda] = useState('');
 
+    // 3. AHORA SÍ VAN LOS USE-EFFECT (Porque fetchDocumentos ya existe arriba)
+
+    // Efecto A: Obtener el ID Real de la práctica
     useEffect(() => {
         if (isEstudiante) {
+            const cargarPractica = async () => {
+                const { data } = await bitacoraService.obtenerMiPractica();
+                if (data && data.data) {
+                    setIdPractica(data.data.id_practica);
+                }
+            };
+            cargarPractica();
+        }
+    }, [isEstudiante]);
+
+    // Efecto B: Cargar datos cuando ya tenemos el ID
+    useEffect(() => {
+        if (isEstudiante && idPractica) {
             fetchBitacoras();
             fetchUltimaSemana();
-            fetchDocumentos();
+            fetchDocumentos(); // <--- Ahora sí funciona porque useDocumentos se declaró arriba
         }
     }, [idPractica, isEstudiante, fetchBitacoras, fetchUltimaSemana, fetchDocumentos]);
 
+    // ... (El resto de tus funciones handleInputChange, handleSubmit, render, etc. siguen igual)
+    // COPIA AQUÍ EL RESTO DEL COMPONENTE IGUAL QUE ANTES
+    
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -72,7 +94,6 @@ const Bitacoras = () => {
         }
     };
 
-    // Subir archivo
     const handleUploadFile = async () => {
         if (files.length === 0) {
             showAlert('Advertencia', 'Por favor selecciona un archivo primero', 'warning');
@@ -123,7 +144,6 @@ const Bitacoras = () => {
         setDocumentoId(null);
     };
 
-    // Enviar bitácora completa (estudiante)
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -176,7 +196,6 @@ const Bitacoras = () => {
         fetchDocumentos();
     };
 
-    // Búsqueda por RUT (docente)
     const handleBuscarRut = async (e) => {
         e.preventDefault();
         if (!rutBusqueda.trim()) {
@@ -191,7 +210,6 @@ const Bitacoras = () => {
         limpiarBusqueda();
     };
 
-    // Renderizar tarjeta de bitácora
     const renderBitacoraCard = (bitacora, index) => (
         <div key={bitacora.id_bitacora || index} className="bitacora-card">
             <div className="bitacora-header-card">
@@ -236,7 +254,6 @@ const Bitacoras = () => {
         </div>
     );
 
-    // ==================== VISTA ESTUDIANTE ====================
     if (isEstudiante) {
         return (
             <div className="bitacoras-container">
@@ -244,11 +261,9 @@ const Bitacoras = () => {
                     <h1>📝 Gestión de Bitácoras</h1>
                 </div>
 
-                {/* Formulario completo con archivo - Una sola página */}
                 <form className="bitacora-form" onSubmit={handleSubmit}>
                     <h2>Registrar Nueva Bitácora</h2>
 
-                    {/* Sección de datos */}
                     <div className="form-section">
                         <h3>📋 Información de la Bitácora</h3>
 
@@ -324,7 +339,6 @@ const Bitacoras = () => {
                         </div>
                     </div>
 
-                    {/* Sección de documentos */}
                     <div className="form-section document-section">
                         <h3>📎 Adjuntar Documento (Opcional)</h3>
                         <p className="section-description">
@@ -372,7 +386,6 @@ const Bitacoras = () => {
                         )}
                     </div>
 
-                    {/* Botón de envío */}
                     <div className="form-actions">
                         <button type="submit" className="btn-submit" disabled={creatingBitacora}>
                             {creatingBitacora ? '⏳ Guardando...' : '💾 Guardar Bitácora'}
@@ -380,7 +393,6 @@ const Bitacoras = () => {
                     </div>
                 </form>
 
-                {/* Lista de bitácoras del estudiante */}
                 <div className="bitacoras-section">
                     <h2>📋 Mis Bitácoras ({bitacoras?.length || 0})</h2>
                     
@@ -402,7 +414,6 @@ const Bitacoras = () => {
         );
     }
 
-    // ==================== VISTA DOCENTE / ADMIN ====================
     if (isDocente || isAdmin) {
         return (
             <div className="bitacoras-container">
@@ -410,7 +421,6 @@ const Bitacoras = () => {
                     <h1>🔍 Revisar Bitácoras de Estudiantes</h1>
                 </div>
 
-                {/* Buscador por RUT */}
                 <div className="search-section">
                     <form className="search-form" onSubmit={handleBuscarRut}>
                         <div className="search-input-group">
@@ -421,7 +431,7 @@ const Bitacoras = () => {
                                     id="rutBusqueda"
                                     value={rutBusqueda}
                                     onChange={(e) => setRutBusqueda(e.target.value)}
-                                    placeholder="Ej: 12345678-9 o 123456789"
+                                    placeholder="12.345.678-9 (Con puntos y guión)"
                                     className="search-input"
                                 />
                                 <button type="submit" className="btn-search" disabled={buscando}>
@@ -443,10 +453,8 @@ const Bitacoras = () => {
                     )}
                 </div>
 
-                {/* Resultados de búsqueda */}
                 {resultadoBusqueda && (
                     <div className="search-results">
-                        {/* Info del estudiante */}
                         <div className="estudiante-info">
                             <h3>👤 Información del Estudiante</h3>
                             <div className="info-card">
@@ -463,7 +471,6 @@ const Bitacoras = () => {
                             </div>
                         </div>
 
-                        {/* Bitácoras del estudiante */}
                         <div className="bitacoras-section">
                             <h3>📋 Bitácoras del Estudiante ({resultadoBusqueda.bitacoras?.length || 0})</h3>
                             
@@ -482,7 +489,6 @@ const Bitacoras = () => {
                     </div>
                 )}
 
-                {/* Estado inicial - sin búsqueda */}
                 {!resultadoBusqueda && !buscando && !errorBusqueda && (
                     <div className="empty-state initial-state">
                         <div className="empty-icon">🔍</div>
@@ -494,7 +500,6 @@ const Bitacoras = () => {
         );
     }
 
-    // Vista por defecto (sin rol definido)
     return (
         <div className="bitacoras-container">
             <div className="empty-state">

@@ -16,7 +16,7 @@ import { AppDataSource } from "../config/configDb.js";
 import User from "../entity/user.entity.js";
 import { sendEmail } from "../helpers/email.helper.js";
 import OfertaPractica from "../entity/ofertaPractica.entity.js";
-
+import Practica from "../entity/practica.entity.js";
 
 export async function createOfertaPractica(req, res) {
   try {
@@ -238,6 +238,60 @@ export async function getPostulantesPorOferta(req, res) {
     handleSuccess(res, 200, "Lista de postulantes", oferta.postulantes);
     
   } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+// --- Aceptar Estudiante y Crear Práctica ---
+export async function aceptarPostulante(req, res) {
+  try {
+    const { idOferta, idEstudiante } = req.body; 
+
+    const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
+    const userRepo = AppDataSource.getRepository(User);
+    const practicaRepo = AppDataSource.getRepository("Practica"); 
+
+    // 1. Validaciones básicas
+    // IMPORTANTE: Agregamos relations: ["encargado"] para obtener al profesor dueño de la oferta
+    const oferta = await ofertaRepo.findOne({ 
+        where: { id: parseInt(idOferta) },
+        relations: ["encargado"] 
+    });
+    
+    if (!oferta) return handleErrorClient(res, 404, "Oferta no encontrada");
+    if (!oferta.encargado) return handleErrorClient(res, 400, "La oferta no tiene un docente encargado asignado");
+
+    const estudianteEncontrado = await userRepo.findOne({ where: { id: parseInt(idEstudiante) } });
+    if (!estudianteEncontrado) return handleErrorClient(res, 404, "Estudiante no encontrado");
+
+    // 2. Verificar duplicados
+    const practicaExistente = await practicaRepo.findOne({
+        where: { 
+            estudiante: { id: estudianteEncontrado.id }, 
+            estado: "en_progreso" 
+        }
+    });
+
+    if (practicaExistente) {
+        return handleErrorClient(res, 400, "El estudiante ya tiene una práctica en curso.");
+    }
+
+    // 3. CREAR LA PRÁCTICA
+    const nuevaPractica = practicaRepo.create({
+        estudiante: estudianteEncontrado,
+        docente: oferta.encargado, // <--- SOLUCIÓN: Asignamos el docente de la oferta
+        fecha_inicio: new Date(),
+        estado: "en_progreso",     // Para que coincida con el enum de la entity
+        horas_practicas: 0,        // Corregido: nombre según la entity (era horas_totales)
+        tipo_presencia: oferta.modalidad === "online" ? "virtual" : "presencial" // Mapeamos la modalidad
+    });
+
+    await practicaRepo.save(nuevaPractica);
+    
+    handleSuccess(res, 201, "Estudiante aceptado. Práctica iniciada correctamente.", nuevaPractica);
+
+  } catch (error) {
+    console.error("Error al aceptar postulante:", error);
     handleErrorServer(res, 500, error.message);
   }
 }

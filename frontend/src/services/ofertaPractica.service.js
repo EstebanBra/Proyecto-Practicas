@@ -56,6 +56,16 @@ export async function getPostulantes(idOferta) {
     }
 }
 
+// --- ESTA ES LA FUNCIÓN QUE TE FALTABA ---
+export async function aceptarPostulante(idOferta, idEstudiante) {
+    try {
+        const response = await api.post(`${BASE}/aceptar-postulante`, { idOferta, idEstudiante });
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { status: 'Error', message: 'Error al aceptar estudiante' };
+    }
+}
+
 export default {
   getOfertas,
   getOfertaById,
@@ -64,4 +74,6 @@ export default {
   postularOferta,
   deleteOferta,
   getMisPostulaciones,
+  getPostulantes,
+  aceptarPostulante,
 };
