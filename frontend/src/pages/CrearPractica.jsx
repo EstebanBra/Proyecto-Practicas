@@ -70,6 +70,17 @@ const handleFileChange = (e) => {
                         required: true
                     },
                     {
+                        label: "Tipo de Presencia",
+                        name: "tipo_presencia",
+                        fieldType: 'select',
+                        options: [
+                            { value: "presencial", label: "Presencial" },
+                            { value: "virtual", label: "Virtual" },
+                            { value: "hibrido", label: "Híbrido" }
+                        ],
+                        required: true
+                    },
+                    {
                         label: "Nombre del Supervisor",
                         name: "supervisor_nombre",
                         placeholder: "Nombre completo",
@@ -96,17 +107,6 @@ const handleFileChange = (e) => {
                         required: true,
                         pattern: /^\+?[\d\s-]{8,20}$/,
                         patternMessage: "Número válido requerido"
-                    },
-                    {
-                        label: "Tipo de Presencia",
-                        name: "tipo_presencia",
-                        fieldType: 'select',
-                        options: [
-                            { value: "presencial", label: "Presencial" },
-                            { value: "virtual", label: "Virtual" },
-                            { value: "hibrido", label: "Híbrido" }
-                        ],
-                        required: true
                     },
                     {
                         label: "Fecha de Inicio",
