@@ -10,10 +10,18 @@ import { cookieKey, HOST, PORT } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
 import { createUsers } from "./config/initialSetup.js";
 import { passportJwtSetup } from "./auth/passport.auth.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function setupServer() {
   try {
     const app = express();
+
+    const uploadsPath = path.resolve(__dirname, "../../uploads");
+    app.use("/uploads", express.static(uploadsPath));
 
     app.disable("x-powered-by");
 

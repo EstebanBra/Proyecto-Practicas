@@ -1,4 +1,3 @@
-// Documentos_Es.jsx - VERSIÓN CON NOTA_REVISION Y COMENTARIO
 import { useState, useEffect } from "react";
 import "@styles/docs_finales.css";
 
@@ -131,14 +130,10 @@ const DocsFinales = () => {
             <div className="documentos-content">
                 <div className="documentos-header">
                     <h2 className="documentos-title">Subida de Documentos Finales</h2>
-                    <p className="documentos-subtitle">
-                        Sube tu informe final y autoevaluación. El docente calificará ambos documentos.
-                    </p>
                 </div>
 
                 <div className="upload-section-main">
                     <div className="upload-buttons-row">
-                        {/* Sección Informe */}
                         <div className="file-slot">
                             {tieneInforme ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
