@@ -63,7 +63,10 @@ export async function deleteComentarioService(id) {
 export async function getComentariosByUsuarioIdService(usuarioId) {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const comentarios = await comentarioRepository.findBy({ usuarioId });
+    const comentarios = await comentarioRepository.find({
+      where: { usuarioId },
+      relations: ["usuario"]
+    });
     return comentarios;
   } catch (error) {
     throw new Error("Error al obtener los comentarios por ID de usuario");
@@ -73,7 +76,9 @@ export async function getComentariosByUsuarioIdService(usuarioId) {
 export async function getallComentariosService() {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const comentarios = await comentarioRepository.find();
+    const comentarios = await comentarioRepository.find({
+      relations: ["usuario"]
+    });
     return comentarios;
   } catch (error) {
     throw new Error("Error al obtener todos los comentarios");

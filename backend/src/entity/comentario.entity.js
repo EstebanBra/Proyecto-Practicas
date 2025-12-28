@@ -46,6 +46,15 @@ const ComentarioSchema = new EntitySchema({
             nullable: true,
             comment: "Array de objetos con información de archivos {nombre, ruta, tipo, tamaño}"
         }
+    },
+    relations: {
+        usuario: {
+            type: "many-to-one",
+            target: "User",
+            joinColumn: {
+                name: "usuarioId"
+            }
+        }
     }
 });
 
