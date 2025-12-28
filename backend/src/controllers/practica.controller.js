@@ -75,12 +75,20 @@ const practicaController = {
         try {
             const { id } = req.params;
             const datosActualizacion = req.body;
-            
+            //verificar que la practica exista y pertenezca al estudiante
+            const practicaExistente = await practicaService.obtenerPracticaPorId(id);
+            if (!practicaExistente) {
+                return error(res, 404, "Practica no encontrada");
+            }
+            if (practicaExistente.id_estudiante !== req.user.id) {
+                return error(res, 403, "No tiene permiso para actualizar esta práctica");
+            }
+
             const practica = await practicaService.actualizarPractica(id, datosActualizacion);
             if (!practica) {
-                return error(res, 404, "Práctica no encontrada o no se puede actualizar en su estado actual");
+                return error(res, 400, "Practica no posible de actualizar");
             }
-            return success(res, 200, "Práctica actualizada con éxito", practica);
+            return success(res, 200, "Practica actualizada con éxito", practica);
         } catch (err) {
             return error(res, 500, "Error al actualizar la práctica", err);
         }

@@ -42,7 +42,7 @@ const practicaService = {
     },
 
     async obtenerPracticasEstudiante(idEstudiante) {
-        const practicaRepository = getRepository(Practica);
+        const practicaRepository = AppDataSource.getRepository(Practica);
         return await practicaRepository.find({
             where: { id_estudiante: idEstudiante },
             relations: ["docente"]
@@ -50,7 +50,7 @@ const practicaService = {
     },
 
     async obtenerPracticaPorId(id) {
-        const practicaRepository = getRepository(Practica);
+        const practicaRepository = AppDataSource.getRepository(Practica);
         return await practicaRepository.findOne({
             where: { id_practica: id },
             relations: ["estudiante", "docente"]
@@ -58,7 +58,7 @@ const practicaService = {
     },
 
     async actualizarEstadoPractica(id, estado, observaciones) {
-        const practicaRepository = getRepository(Practica);
+        const practicaRepository = AppDataSource.getRepository(Practica);
         const practica = await practicaRepository.findOne({
             where: { id_practica: id }
         });
@@ -75,7 +75,7 @@ const practicaService = {
     },
 
     async actualizarPractica(id, datosActualizacion) {
-        const practicaRepository = getRepository(Practica);
+        const practicaRepository = AppDataSource.getRepository(Practica);
         const practica = await practicaRepository.findOne({
             where: { id_practica: id }
         });

@@ -23,14 +23,14 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
 
     return (
         <form
-            className="form"
+            className={`form ${backgroundColor ? '' : ''} ${Array.isArray(fields) && fields.length > 6 ? 'form-grid' : ''}`}
             style={{ backgroundColor: backgroundColor }}
             onSubmit={handleSubmit(onFormSubmit)}
             autoComplete="off"
         >
             <h1>{title}</h1>
             {fields.map((field, index) => (
-                <div className="container_inputs" key={index}>
+                <div className={`container_inputs ${field.fullWidth ? 'full-width' : ''}`} key={index}>
                     {field.label && <label htmlFor={field.name}>{field.label}</label>}
                     {field.fieldType === 'input' && (
                         <input

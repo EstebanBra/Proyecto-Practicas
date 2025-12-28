@@ -3,25 +3,31 @@
         padding-left: 2px;
 		padding-right: 2px;
         width: 90%;
+        padding: 1.5vh;
+    }
+
+    .form.form-grid {
+        grid-template-columns: 1fr;
+        gap: 1vh 0;
     }
 
     .form h1 {
-        font-size: 24px;
-        margin-bottom: 2vh;
+        font-size: 22px;
+        margin-bottom: 1.5vh;
     }
 
     .form input, .form select {
-        padding: 10px;
-        font-size: 14px;
+        padding: 6px;
+        font-size: 13px;
     }
 
     .form button {
-        padding: 10px;
-        font-size: 16px;
+        padding: 8px;
+        font-size: 14px;
     }
 
     .form .footerContent {
-        font-size: 12px;
+        font-size: 11px;
     }
     
     .container {
@@ -29,25 +35,27 @@
     }
     
     .toggle-password-icon {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
     }
 }
 
 
 .form {
 	background-color: #eef7ff; /*Color del formulario*/
-	padding: 7vh;
+	padding: 3vh;
 	display: flex;
 	flex-direction: column;
 	border-radius: 24px;
 	align-items: center;
+	max-width: 1000px;
+	margin: 0 auto;
 	h1 {
 		color: #003366; /*Color del titulo del formulario*/
-		font-size: 30px;
+		font-size: 26px;
 		font-weight: bold;
 		margin: 0;
-		margin-bottom: 4vh;
+		margin-bottom: 2vh;
 	}
 	div {
 		width: 100%;
@@ -56,27 +64,29 @@
 	label {
 		color: #003366; /*Color label de inputs del formulario*/
 		font-weight: bold;
-		margin-bottom: 0.7vh;
+		margin-bottom: 0.4vh;
+		font-size: 14px;
 	}
 	input {
 		display: flex;
-		border: 3px solid #003366; /*Color del borde de inputs del formulario*/
-		border-radius: 12px;
-		padding: 8px 5px;
+		border: 2px solid #003366; /*Color del borde de inputs del formulario*/
+		border-radius: 10px;
+		padding: 6px 4px;
 		background-repeat: no-repeat;
-		margin-bottom: 0.8vh;
+		margin-bottom: 0.5vh;
 		background-color: #eef7ff;
 		font-weight: regular;
-		font-size: 16px;
+		font-size: 14px;
 		color: #003366;
-		border-radius: 12px;
-		background-position: right 10px center;
-		background-size: 25px 25px;
+		border-radius: 10px;
+		background-position: right 8px center;
+		background-size: 20px 20px;
 		box-sizing: border-box;
 	}
 	input::placeholder {
 		color: rgba(0, 51, 102, 0.3);
 		font-weight: light;
+		font-size: 13px;
 	}
 	input:focus {
 		background-color: rgba(0, 110, 223, 0.14);
@@ -84,22 +94,22 @@
 	}
 	select {
 		display: flex;
-		border: 3px solid #003366; /*Color del borde de selects del formulario*/
-		border-radius: 12px;
-		padding: 8px 5px;
+		border: 2px solid #003366; /*Color del borde de selects del formulario*/
+		border-radius: 10px;
+		padding: 6px 4px;
 		background-repeat: no-repeat;
-		margin-bottom: 0.8vh;
+		margin-bottom: 0.5vh;
 		background-color: #eef7ff;
 		font-weight: regular;
-		font-size: 16px;
+		font-size: 14px;
 		color: #003366;
-		border-radius: 12px;
-		background-position: right 30px center;
-		background-size: 25px 25px;
+		border-radius: 10px;
+		background-position: right 10px center;
+		background-size: 20px 20px;
 		box-sizing: border-box;
 		background-image: url('../assets/ChevronDownIcon.svg');
 		background-repeat: no-repeat;
-		background-position: calc(100% - 12px) center;
+		background-position: calc(100% - 8px) center;
 		-webkit-appearance: none;
 		-moz-appearance: none;
 		appearance: none;
@@ -114,18 +124,18 @@
 	}
 	textarea {
 		display: flex;
-		border: 3px solid #003366; /*Color del borde de textareas del formulario*/
-		border-radius: 12px;
-		padding: 8px 5px;
+		border: 2px solid #003366; /*Color del borde de textareas del formulario*/
+		border-radius: 10px;
+		padding: 6px 4px;
 		background-repeat: no-repeat;
-		margin-bottom: 0.8vh;
+		margin-bottom: 0.5vh;
 		background-color: #eef7ff;
 		font-weight: regular;
-		font-size: 16px;
+		font-size: 14px;
 		color: #003366;
-		border-radius: 12px;
-		background-position: right 10px center;
-		background-size: 25px 25px;
+		border-radius: 10px;
+		background-position: right 8px center;
+		background-size: 20px 20px;
 		box-sizing: border-box;
 	}
 	textarea::placeholder {
@@ -140,19 +150,19 @@
 		padding: auto;
 		display: flex;
 		justify-content: center;
-		padding: 1.2vh 0;
-		border-radius: 12px;
+		padding: 0.9vh 0;
+		border-radius: 10px;
 		border: none;
 		width: 100%;
 		background-color: #003366; /*Color del boton del formulario*/
 		color: #eef7ff;
 		font-weight: bold;
-		font-size: 16px;
-		border: 3px solid #003366; /*Color del borde del boton*/
-		margin-top: 10px;
+		font-size: 15px;
+		border: 2px solid #003366; /*Color del borde del boton*/
+		margin-top: 8px;
 	}
 	button:hover{
-		border: 3px solid #003366;
+		border: 2px solid #003366;
 		background-color: #eef7ff;
 		color: #003366;
 		transition: .3s ease-out;
@@ -170,18 +180,44 @@
 }
 .form .error-message {
     visibility: hidden;
-    height: 20px;
+    height: 18px;
     color: red;
-    font-size: 13px;
-	padding-left: 5px;
+    font-size: 12px;
+	padding-left: 3px;
 }
 .form .error-message.visible {
     visibility: visible;
 }
 
+/*2 columnas para formulario de práctica*/
+.form.form-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 2vh 2vw;
+	align-items: start;
+}
+
+.form.form-grid > h1 {
+	grid-column: 1 / -1;
+}
+
+.form.form-grid > button {
+	grid-column: 1 / -1;
+	margin-top: 2vh;
+}
+
+.form.form-grid > .footerContent {
+	grid-column: 1 / -1;
+}
+
+/*campos de columna completa*/
+.form.form-grid .container_inputs.full-width {
+	grid-column: 1 / -1;
+}
+
 .container {
 	height: 100vh;	
-	background: linear-gradient(90deg, #003366, #001a33); /*Color principal para login (gradiente)*/
+	background: linear-gradient(90deg, #003366, #001a33); /*color principal para login*/
 	display: flex;
 	justify-content: center;
 	align-items: center;

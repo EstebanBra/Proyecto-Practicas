@@ -60,9 +60,19 @@ const handleFileChange = (e) => {
                         maxLength: 255
                     },
                     {
+                        label: "Tipo de Práctica",
+                        name: "tipo_practica",
+                        fieldType: 'select',
+                        options: [
+                            { value: "propia", label: "Propia" },
+                            { value: "publicada", label: "Publicada" }
+                        ],
+                        required: true
+                    },
+                    {
                         label: "Nombre del Supervisor",
                         name: "supervisor_nombre",
-                        placeholder: "Nombre completo del supervisor",
+                        placeholder: "Nombre completo",
                         fieldType: 'input',
                         type: "text",
                         required: true,
@@ -85,7 +95,18 @@ const handleFileChange = (e) => {
                         type: "text",
                         required: true,
                         pattern: /^\+?[\d\s-]{8,20}$/,
-                        patternMessage: "Ingrese un número de teléfono válido"
+                        patternMessage: "Número válido requerido"
+                    },
+                    {
+                        label: "Tipo de Presencia",
+                        name: "tipo_presencia",
+                        fieldType: 'select',
+                        options: [
+                            { value: "presencial", label: "Presencial" },
+                            { value: "virtual", label: "Virtual" },
+                            { value: "hibrido", label: "Híbrido" }
+                        ],
+                        required: true
                     },
                     {
                         label: "Fecha de Inicio",
@@ -120,34 +141,14 @@ const handleFileChange = (e) => {
                         min: 1
                     },
                     {
-                        label: "Tipo de Presencia",
-                        name: "tipo_presencia",
-                        fieldType: 'select',
-                        options: [
-                            { value: "presencial", label: "Presencial" },
-                            { value: "virtual", label: "Virtual" },
-                            { value: "hibrido", label: "Híbrido" }
-                        ],
-                        required: true
-                    },
-                    {
-                        label: "Tipo de Práctica",
-                        name: "tipo_practica",
-                        fieldType: 'select',
-                        options: [
-                            { value: "propia", label: "Propia" },
-                            { value: "publicada", label: "Publicada" }
-                        ],
-                        required: true
-                    },
-                    {
                         label: "Documentos",
                         name: "documentos",
                         fieldType: 'input',
                         type: "file",
                         required: true,
                         onChange: handleFileChange,
-                        accept: ".pdf,.doc,.docx"
+                        accept: ".pdf,.doc,.docx",
+                        fullWidth: true
                     }
                 ]}
                 buttonText="Registrar Práctica"
