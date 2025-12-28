@@ -1,0 +1,39 @@
+"use strict";
+import { Router } from "express";
+import {
+    actualizarEstadoDocumento,
+    obtenerDocumentosPractica,
+    registrarDocumento,
+    subirArchivo
+} from "../controllers/bitacoradocumento.controller.js";
+import { verificarToken } from "../middlewares/authentication.middleware.js";
+import { verificarRol } from "../middlewares/authorization.middleware.js";
+import { uploadDocument } from "../middlewares/upload.middleware.js";
+
+const router = Router();
+
+router
+    // Middleware de autenticación para todas las rutas
+    .use(verificarToken)
+
+    // Subir archivo (estudiantes)
+    .post("/subir",
+        verificarRol(["estudiante"]),
+        uploadDocument.any(),
+        subirArchivo)
+
+    // Registrar documento en base de datos (estudiantes)
+    .post("/registrar",
+        verificarRol(["estudiante"]),
+        registrarDocumento)
+
+    // Obtener documentos de una práctica
+    .get("/practica/:id_practica",
+        obtenerDocumentosPractica)
+
+    // Actualizar estado de documento (profesores y coordinadores)
+    .put("/:id_documento/estado",
+        verificarRol(["profesor", "coordinador"]),
+        actualizarEstadoDocumento);
+
+export default router;

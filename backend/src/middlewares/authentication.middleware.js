@@ -28,3 +28,6 @@ export function authenticateJwt(req, res, next) {
     next();
   })(req, res, next);
 }
+
+// Alias para compatibilidad
+export const verificarToken = authenticateJwt;
