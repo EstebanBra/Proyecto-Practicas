@@ -11,7 +11,8 @@ import {
 
 import {
   comentarioBodyValidation,
-  comentarioIdValidation
+  comentarioIdValidation,
+  ComentarioqueryValidation
 } from "../validations/comentario.validation.js";
 
 import {
@@ -54,10 +55,15 @@ export async function createComentario(req, res) { //Esta funcion crea un nuevo 
 
 export async function getComentarios(req, res) {
   try {
-    const { user } = req;
+    const { user, query } = req;
+    
+    // Validar que el usuario tenga información requerida
     if (!user || !user.rol || !user.id) {
       return handleErrorClient(res, 400, "Token inválido: falta información de usuario");
     }
+
+    // Validar los query parameters si existen
+    await ComentarioqueryValidation.validateAsync(query);
 
     // Estudiantes: solo sus propios comentarios. Docentes: todos los comentarios.
     const comentarios = user.rol === "estudiante"
