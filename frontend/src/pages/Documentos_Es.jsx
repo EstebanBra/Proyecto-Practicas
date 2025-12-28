@@ -1,4 +1,4 @@
-// Documentos_Es.jsx - VERSIÓN SIN EVALUACIONES
+// Documentos_Es.jsx - VERSIÓN CON NOTA_REVISION Y COMENTARIO
 import { useState, useEffect } from "react";
 import "@styles/docs_finales.css";
 
@@ -9,6 +9,7 @@ const DocsFinales = () => {
     const [informeFile, setInformeFile] = useState(null);
     const [autoevaluacionFile, setAutoevaluacionFile] = useState(null);
     const [filter, setFilter] = useState("");
+    const [selectedDoc, setSelectedDoc] = useState(null); // Para mostrar comentario
 
     const { documentos, loading: loadingDocs, fetchDocumentos } = useGetDocumentos();
     const { uploading, handleSubirDocumento } = useSubirDocumento(fetchDocumentos);
@@ -90,14 +91,36 @@ const DocsFinales = () => {
         )
         : [];
 
-    // Función simplificada - solo ver estado
-    const getEstadoDocumento = (doc) => {
-        if (doc.estado_revision === "calificado") {
-            return "Calificado";
+    const getEstadoConNota = (doc) => {
+        if (doc.estado_revision === "calificado" && doc.nota_revision) {
+            return `Calificado: ${doc.nota_revision}`;
         } else if (doc.estado_revision === "revisado") {
             return "Revisado";
+        } else if (doc.estado_revision === "pendiente") {
+            return "Pendiente";
         }
         return "Pendiente";
+    };
+
+    const mostrarNota = (doc) => {
+        if (doc.nota_revision !== null && doc.nota_revision !== undefined) {
+            return doc.nota_revision;
+        }
+        return "-";
+    };
+
+    const mostrarComentario = (doc) => {
+        if (doc.comentario && doc.comentario.trim() !== "") {
+            return "-";
+        }
+        return "-";
+    };
+
+    const mostrarComentarioCompleto = (doc) => {
+        if (doc.comentario && doc.comentario.trim() !== "") {
+            return doc.comentario;
+        }
+        return "Sin comentarios";
     };
 
     const tieneInforme = documentos?.some(d => d.tipo === "informe");
@@ -130,7 +153,11 @@ const DocsFinales = () => {
                                     </button>
                                     <div className="nota-display">
                                         <strong>Estado: </strong>
-                                        {getEstadoDocumento(documentos.find(d => d.tipo === "informe"))}
+                                        {getEstadoConNota(documentos.find(d => d.tipo === "informe"))}
+                                    </div>
+                                    <div className="comentario-display">
+                                        <strong>Comentario: </strong>
+                                        {mostrarComentarioCompleto(documentos.find(d => d.tipo === "informe"))}
                                     </div>
                                 </div>
                             ) : (
@@ -174,7 +201,11 @@ const DocsFinales = () => {
                                     </button>
                                     <div className="nota-display">
                                         <strong>Estado: </strong>
-                                        {getEstadoDocumento(documentos.find(d => d.tipo === "autoevaluacion"))}
+                                        {getEstadoConNota(documentos.find(d => d.tipo === "autoevaluacion"))}
+                                    </div>
+                                    <div className="comentario-display">
+                                        <strong>Comentario: </strong>
+                                        {mostrarComentarioCompleto(documentos.find(d => d.tipo === "autoevaluacion"))}
                                     </div>
                                 </div>
                             ) : (
@@ -203,7 +234,6 @@ const DocsFinales = () => {
                             )}
                         </div>
 
-                        {/* Botón Subir */}
                         {(!tieneInforme && informeFile) || (!tieneAutoevaluacion && autoevaluacionFile) ? (
                             <button
                                 onClick={handleSubirArchivos}
@@ -221,7 +251,6 @@ const DocsFinales = () => {
                     </div>
                 </div>
 
-                {/* Tabla de documentos */}
                 <div className="table-section">
                     <div className="top-bar-docs">
                         <div className="search-container">
@@ -240,7 +269,8 @@ const DocsFinales = () => {
                             <div>Fecha entrega</div>
                             <div>Estado</div>
                             <div>Tipo</div>
-                            <div>Estado</div> {/* Cambiado de "Nota" a "Estado" */}
+                            <div>Nota</div>
+                            <div>Comentario</div>
                         </div>
 
                         {loadingDocs && (
@@ -252,7 +282,12 @@ const DocsFinales = () => {
                         )}
 
                         {!loadingDocs && filteredDocs.map((doc) => (
-                            <div key={doc.id_documento} className="document-row">
+                            <div
+                                key={doc.id_documento}
+                                className="document-row"
+                                onClick={() => setSelectedDoc(doc)}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <div className="row-main">
                                     <div title={doc.nombre_archivo}>
                                         {doc.nombre_archivo?.length > 30
@@ -269,13 +304,33 @@ const DocsFinales = () => {
                                     </div>
                                     <div>{doc.tipo === "informe" ? "Informe" : "Autoevaluación"}</div>
                                     <div className="nota-columna">
-                                        {getEstadoDocumento(doc)}
+                                        {mostrarNota(doc)}
+                                    </div>
+                                    <div className="comentario-columna" title={doc.comentario || "Sin comentarios"}>
+                                        {mostrarComentario(doc)}
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
+
+                {selectedDoc && selectedDoc.comentario && (
+                    <div className="modal-overlay" onClick={() => setSelectedDoc(null)}>
+                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3>Comentario del docente</h3>
+                                <button className="modal-close" onClick={() => setSelectedDoc(null)}>×</button>
+                            </div>
+                            <div className="modal-body">
+                                <p>{selectedDoc.comentario}</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button onClick={() => setSelectedDoc(null)}>Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

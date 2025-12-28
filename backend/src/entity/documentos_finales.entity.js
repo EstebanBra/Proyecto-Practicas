@@ -54,6 +54,15 @@ const DocumentoSchema = new EntitySchema({
       enum: ["pendiente", "revisado", "calificado"],
       default: "pendiente",
     },
+    nota_revision: {
+      type: "float",
+      nullable: true,
+      default: null,
+    },
+    comentario: {
+      type: "text",
+      nullable: true,
+    },
   },
   relations: {
     practica: {

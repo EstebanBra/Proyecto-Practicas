@@ -1,28 +1,41 @@
 import { useState } from 'react';
 import { crearEvaluacion } from '@services/evaluaciones_finales_f.service.js';
-import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
+import { showErrorAlert } from '@helpers/sweetAlert.js';
 
-const useCrearEvaluacion = (fetchEvaluacionByDocumento) => {
+const useCrearEvaluacion = (fetchEvaluacionByDocumento, fetchEvaluacionesDocente) => {
     const [submitting, setSubmitting] = useState(false);
 
     const handleCrearEvaluacion = async (evaluacionData) => {
         setSubmitting(true);
-        const response = await crearEvaluacion(evaluacionData);
 
-        if (response?.error) {
-            showErrorAlert('Error', response.error);
-            setSubmitting(false);
+        try {
+            const dataConComentario = {
+                ...evaluacionData,
+                comentario: evaluacionData.comentario || ""
+            };
+
+            const response = await crearEvaluacion(dataConComentario);
+
+            if (response?.error) {
+                showErrorAlert('Error', response.error);
+                return false;
+            }
+
+            if (fetchEvaluacionByDocumento) {
+                await fetchEvaluacionByDocumento(evaluacionData.id_documento);
+            }
+
+            if (fetchEvaluacionesDocente) {
+                await fetchEvaluacionesDocente();
+            }
+
+            return true;
+        } catch (error) {
+            showErrorAlert('Error', 'Error inesperado al crear evaluación');
             return false;
+        } finally {
+            setSubmitting(false);
         }
-
-        showSuccessAlert('Éxito', 'Evaluación creada correctamente');
-
-        if (fetchEvaluacionByDocumento) {
-            await fetchEvaluacionByDocumento(evaluacionData.id_documento);
-        }
-
-        setSubmitting(false);
-        return true;
     };
 
     return { submitting, handleCrearEvaluacion };

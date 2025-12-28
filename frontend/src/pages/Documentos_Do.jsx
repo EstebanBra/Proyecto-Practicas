@@ -70,10 +70,10 @@ const DocsEntregados = () => {
         const { value: formValues } = await Swal.fire({
             title: `Evaluar ${doc.tipo === 'informe' ? 'Informe' : 'Autoevaluación'}`,
             html: `
-                <input id="swal-nota" class="swal2-input" placeholder="Nota (1.0 - 7.0)" type="number" step="0.1" min="1" max="7">
-                <textarea id="swal-comentario" class="swal2-textarea" placeholder="Comentario (opcional)"></textarea>
-                <input type="hidden" id="swal-tipo" value="${doc.tipo}">
-            `,
+            <input id="swal-nota" class="swal2-input" placeholder="Nota (1.0 - 7.0)" type="number" step="0.1" min="1" max="7">
+            <textarea id="swal-comentario" class="swal2-textarea" placeholder="Comentario (opcional)"></textarea>
+            <input type="hidden" id="swal-tipo" value="${doc.tipo}">
+        `,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: 'Guardar',
@@ -116,17 +116,15 @@ const DocsEntregados = () => {
 
             try {
                 if (evaluacionExistente) {
-                    await handleUpdateEvaluacion([evaluacionExistente], evaluacionData);
+                    await handleUpdateEvaluacion(evaluacionExistente, evaluacionData);
                 } else {
                     await handleCrearEvaluacion(evaluacionData);
                 }
 
-                // Si el documento está pendiente, marcarlo como revisado
                 if (doc.estado_revision === "pendiente") {
                     await handleUpdateEstados([doc], "revisado");
                 }
 
-                // Si ambos documentos de la práctica están evaluados, marcar como calificado
                 const docsDePractica = documentos.filter(d =>
                     d.id_practica === doc.id_practica
                 );
@@ -135,9 +133,7 @@ const DocsEntregados = () => {
                     docsDePractica.some(d => d.id_documento === e.id_documento)
                 );
 
-                // Si hay 2 documentos (informe + autoevaluacion) y ambos tienen evaluación
                 if (docsDePractica.length === 2 && evaluacionesDePractica.length === 2) {
-                    // Marcar ambos documentos como calificados
                     await handleUpdateEstados(docsDePractica, "calificado");
                 }
 
@@ -150,7 +146,6 @@ const DocsEntregados = () => {
             }
         }
     };
-
     const handleUpdateEstadoWrapper = async (docs, nuevoEstado) => {
         const documentosArray = Array.isArray(docs) ? docs : [docs];
         const documentosValidos = documentosArray.filter(doc => doc && doc.id_documento);

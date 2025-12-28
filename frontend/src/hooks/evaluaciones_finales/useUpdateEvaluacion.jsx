@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { updateEvaluacion } from '@services/evaluaciones_finales_f.service.js';
-import { deleteDataAlert, showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
+import { deleteDataAlert, showErrorAlert } from '@helpers/sweetAlert.js';
 
-const useUpdateEvaluacion = (fetchEvaluacionByDocumento) => {
+const useUpdateEvaluacion = (fetchEvaluacionByDocumento, fetchEvaluacionesDocente) => {
     const [updating, setUpdating] = useState(false);
 
     const handleUpdateEvaluacion = async (evaluacion, updateData) => {
@@ -14,22 +14,38 @@ const useUpdateEvaluacion = (fetchEvaluacionByDocumento) => {
         if (!result.isConfirmed) return false;
 
         setUpdating(true);
-        const response = await updateEvaluacion(evaluacion.id_evaluacion, updateData);
 
-        if (response?.error) {
-            showErrorAlert('Error', response.error);
-            setUpdating(false);
+        try {
+            const dataConComentario = {
+                ...updateData,
+                comentario: updateData.comentario || ""
+            };
+
+            const response = await updateEvaluacion(
+                evaluacion.id_evaluacion,
+                dataConComentario
+            );
+
+            if (response?.error) {
+                showErrorAlert('Error', response.error);
+                return false;
+            }
+
+            if (fetchEvaluacionByDocumento) {
+                await fetchEvaluacionByDocumento(evaluacion.id_documento);
+            }
+
+            if (fetchEvaluacionesDocente) {
+                await fetchEvaluacionesDocente();
+            }
+
+            return true;
+        } catch (error) {
+            showErrorAlert('Error', 'Error inesperado al actualizar evaluación');
             return false;
+        } finally {
+            setUpdating(false);
         }
-
-        showSuccessAlert('Éxito', 'Evaluación actualizada');
-
-        if (fetchEvaluacionByDocumento) {
-            await fetchEvaluacionByDocumento(evaluacion.id_documento);
-        }
-
-        setUpdating(false);
-        return true;
     };
 
     return { updating, handleUpdateEvaluacion };

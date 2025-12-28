@@ -8,6 +8,7 @@ export async function crearEvaluacionService(data) {
   try {
     const repo = AppDataSource.getRepository(Evaluacion);
     const docRepo = AppDataSource.getRepository(Documento);
+
     const documento = await docRepo.findOne({
       where: { id_documento: data.id_documento },
     });
@@ -26,21 +27,27 @@ export async function crearEvaluacionService(data) {
     });
 
     if (evaluacionExistente) {
-      return [
-        null,
-        `Ya existe una evaluación para este ${data.tipo_documento}`,
-      ];
+      return [null, "La evaluación ya existe"];
     }
+    const nuevaEvaluacion = repo.create({
+      id_documento: data.id_documento,
+      tipo_documento: data.tipo_documento,
+      nota: data.nota,
+      comentario: data.comentario || "",
+      id_usuario: data.id_usuario,
+    });
 
-    const nuevaEvaluacion = repo.create(data);
     await repo.save(nuevaEvaluacion);
-    documento.estado_revision = "calificado";
+
+    documento.nota_revision = data.nota;
+    documento.comentario = data.comentario || null; // Agregado
+    documento.estado_revision = "revisado";
+
     await docRepo.save(documento);
 
     return [nuevaEvaluacion, null];
   } catch (error) {
-    console.error("Error al registrar evaluación:", error);
-    return [null, "Error al guardar la evaluación en la base de datos"];
+    return [null, "Error interno al crear evaluación"];
   }
 }
 
@@ -67,26 +74,34 @@ export async function getEvaluacionByDocumentoService(id_documento) {
 export async function updateEvaluacionService(id_evaluacion, data) {
   try {
     const repo = AppDataSource.getRepository(Evaluacion);
+    const docRepo = AppDataSource.getRepository(Documento);
+
     const evaluacion = await repo.findOne({
       where: { id_evaluacion },
-      relations: ["documento"],
     });
 
-    if (!evaluacion) return [null, "Evaluación no encontrada"];
-
-    if (data.nota !== undefined) evaluacion.nota = data.nota;
-    if (data.comentario !== undefined) evaluacion.comentario = data.comentario;
-    if (data.tipo_documento !== undefined) {
-      evaluacion.tipo_documento = data.tipo_documento;
+    if (!evaluacion) {
+      return [null, "Evaluación no encontrada"];
     }
 
-    evaluacion.fecha_registro = new Date();
+    evaluacion.nota = data.nota;
+    evaluacion.comentario = data.comentario || "";
 
     await repo.save(evaluacion);
+
+    const documento = await docRepo.findOne({
+      where: { id_documento: evaluacion.id_documento },
+    });
+
+    if (documento) {
+      documento.nota_revision = data.nota;
+      documento.comentario = data.comentario || null;
+      await docRepo.save(documento);
+    }
+
     return [evaluacion, null];
   } catch (error) {
-    console.error("Error al actualizar evaluación:", error);
-    return [null, "Error al modificar la evaluación"];
+    return [null, "Error interno al actualizar evaluación"];
   }
 }
 
