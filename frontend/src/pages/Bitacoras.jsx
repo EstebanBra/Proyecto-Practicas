@@ -24,6 +24,8 @@ const Bitacoras = () => {
 
     // 1. Estado para el ID
     const [idPractica, setIdPractica] = useState(null);
+    const [tienePracticaActiva, setTienePracticaActiva] = useState(false);
+    const [cargandoPractica, setCargandoPractica] = useState(true);
 
     // Estado para manejar la actualización de estado de bitácoras
     const [actualizandoEstado, setActualizandoEstado] = useState(null);
@@ -61,12 +63,20 @@ const Bitacoras = () => {
     useEffect(() => {
         if (isEstudiante) {
             const cargarPractica = async () => {
-                const { data } = await bitacoraService.obtenerMiPractica();
-                if (data && data.data) {
+                setCargandoPractica(true);
+                const { data, error } = await bitacoraService.obtenerMiPractica();
+                if (data && data.data && data.data.id_practica) {
                     setIdPractica(data.data.id_practica);
+                    setTienePracticaActiva(true);
+                } else {
+                    setIdPractica(null);
+                    setTienePracticaActiva(false);
                 }
+                setCargandoPractica(false);
             };
             cargarPractica();
+        } else {
+            setCargandoPractica(false);
         }
     }, [isEstudiante]);
 
@@ -369,6 +379,62 @@ const Bitacoras = () => {
     );
 
     if (isEstudiante) {
+        // Mostrar cargando mientras se verifica la práctica
+        if (cargandoPractica) {
+            return (
+                <div className="bitacoras-container">
+                    <div className="bitacoras-header">
+                        <h1>📝 Gestión de Bitácoras</h1>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '50px' }}>
+                        <p>Cargando información de tu práctica...</p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Mostrar mensaje si no tiene práctica activa (postulación pendiente o no postulado)
+        if (!tienePracticaActiva) {
+            return (
+                <div className="bitacoras-container">
+                    <div className="bitacoras-header">
+                        <h1>📝 Gestión de Bitácoras</h1>
+                    </div>
+                    <div style={{ 
+                        textAlign: 'center', 
+                        padding: '50px',
+                        backgroundColor: '#fff3cd',
+                        borderRadius: '10px',
+                        margin: '20px',
+                        border: '1px solid #ffc107'
+                    }}>
+                        <h2 style={{ color: '#856404' }}>⏳ Aún no tienes una práctica activa</h2>
+                        <p style={{ color: '#856404', marginTop: '15px' }}>
+                            Para poder registrar bitácoras, primero debes postular a una oferta de práctica 
+                            y esperar a que el docente <strong>acepte</strong> tu postulación.
+                        </p>
+                        <p style={{ color: '#856404', marginTop: '10px' }}>
+                            Una vez que tu postulación sea aceptada, podrás comenzar a 
+                            registrar tus bitácoras semanales aquí.
+                        </p>
+                        <div style={{ marginTop: '20px' }}>
+                            <a href="/ofertas-publicas" style={{
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                padding: '10px 20px',
+                                borderRadius: '5px',
+                                textDecoration: 'none',
+                                display: 'inline-block'
+                            }}>
+                                Ver Ofertas de Práctica
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Si tiene práctica activa, mostrar el formulario
         return (
             <div className="bitacoras-container">
                 <div className="bitacoras-header">

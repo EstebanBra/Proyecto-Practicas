@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { aceptarPostulante, rechazarPostulante, getOfertas, deleteOferta, updateOferta, postularOferta, getPostulantes } from '@services/ofertaPractica.service.js';
 import OfertaCard from '@components/OfertaCard';
 import Form from '@components/Form';
@@ -7,6 +8,7 @@ import Swal from 'sweetalert2';
 import '@styles/offers.css';
 
 const OfertasPublicas = () => {
+    const navigate = useNavigate();
     const [ofertas, setOfertas] = useState([]);
     const [ofertaAEditar, setOfertaAEditar] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
@@ -263,9 +265,14 @@ const confirmarRechazo = async (ofertaId, alumno) => {
                 const response = await postularOferta(id);
                 
                 if (response.status === 'Success' || response.data) {
-                    showSuccessAlert('¡Postulado!', 'Tu postulación ha sido enviada exitosamente.');
-                    // Actualización visual instantánea de cupos
-                    setOfertas(prev => prev.map(o => o.id === id ? { ...o, cupos: o.cupos - 1 } : o));
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Postulado!',
+                        text: 'Tu postulación ha sido enviada exitosamente. Serás redirigido a tus postulaciones.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    navigate('/mis-postulaciones');
                 } else {
                     showErrorAlert('Error', response.message || 'No se pudo postular.');
                 }

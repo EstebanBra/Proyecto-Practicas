@@ -199,8 +199,14 @@ export async function obtenerMiPractica(req, res) {
         // Obtenemos el ID del token (que corresponde al estudiante logueado)
         const idEstudiante = req.user.id; 
         
+        console.log("=== DEBUG obtenerMiPractica ===");
+        console.log("Token user:", req.user);
+        console.log("ID Estudiante del token:", idEstudiante);
+        
         // Llamamos al servicio con el nuevo nombre
         const practica = await bitacoraService.obtenerPracticaPorEstudiante(idEstudiante);
+
+        console.log("Práctica encontrada:", practica);
 
         if (!practica) {
             return handleErrorClient(res, 404, "No tienes una práctica activa en este momento.");
