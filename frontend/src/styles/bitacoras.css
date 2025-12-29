@@ -674,6 +674,104 @@
     font-size: 70px;
 }
 
+/* Estilos para botones de cambio de estado (docente/admin) */
+.estado-actions {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.estado-actions-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+}
+
+.estado-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.btn-estado {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-estado:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-estado.btn-completado {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    color: #0369a1;
+    border-color: #7dd3fc;
+}
+
+.btn-estado.btn-completado:hover:not(:disabled) {
+    background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(3, 105, 161, 0.25);
+}
+
+.btn-estado.btn-completado.active {
+    background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+    color: #ffffff;
+    border-color: #0369a1;
+}
+
+.btn-estado.btn-aprobado {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #047857;
+    border-color: #6ee7b7;
+}
+
+.btn-estado.btn-aprobado:hover:not(:disabled) {
+    background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
+}
+
+.btn-estado.btn-aprobado.active {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    color: #ffffff;
+    border-color: #047857;
+}
+
+.btn-estado.btn-rechazado {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #b91c1c;
+    border-color: #fca5a5;
+}
+
+.btn-estado.btn-rechazado:hover:not(:disabled) {
+    background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.25);
+}
+
+.btn-estado.btn-rechazado.active {
+    background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+    color: #ffffff;
+    border-color: #b91c1c;
+}
+
+/* Badge para estado completado */
+.estado-badge.completado {
+    background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+    color: #ffffff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .bitacoras-container {

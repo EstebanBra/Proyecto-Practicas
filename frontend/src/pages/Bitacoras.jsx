@@ -25,6 +25,9 @@ const Bitacoras = () => {
     // 1. Estado para el ID
     const [idPractica, setIdPractica] = useState(null);
 
+    // Estado para manejar la actualización de estado de bitácoras
+    const [actualizandoEstado, setActualizandoEstado] = useState(null);
+
     // 2. DEFINICIÓN DE TODOS LOS HOOKS (Deben ir PRIMERO)
     
     // Hooks de bitácoras
@@ -210,6 +213,30 @@ const Bitacoras = () => {
         limpiarBusqueda();
     };
 
+    // Función para cambiar el estado de una bitácora (para docentes)
+    const handleCambiarEstado = async (idBitacora, nuevoEstado) => {
+        setActualizandoEstado(idBitacora);
+        try {
+            const { data, error } = await bitacoraService.actualizarEstado(idBitacora, nuevoEstado);
+            
+            if (error) {
+                showAlert('Error', error, 'error');
+                return;
+            }
+
+            showAlert('Éxito', `Bitácora marcada como "${nuevoEstado}"`, 'success');
+            
+            // Recargar las bitácoras después de actualizar
+            if (rutBusqueda) {
+                await buscarPorRut(rutBusqueda.trim());
+            }
+        } catch (error) {
+            showAlert('Error', 'Error al actualizar el estado', 'error');
+        } finally {
+            setActualizandoEstado(null);
+        }
+    };
+
     const renderBitacoraCard = (bitacora, index) => (
         <div key={bitacora.id_bitacora || index} className="bitacora-card">
             <div className="bitacora-header-card">
@@ -219,6 +246,7 @@ const Bitacoras = () => {
                     {bitacora.estado_revision === 'rechazado' && '✗ Rechazado'}
                     {bitacora.estado_revision === 'en_progreso' && '⧗ En Revisión'}
                     {bitacora.estado_revision === 'pendiente' && '⏳ Pendiente'}
+                    {bitacora.estado_revision === 'completado' && '✓ Completado'}
                 </span>
             </div>
 
@@ -248,6 +276,43 @@ const Bitacoras = () => {
                 {bitacora.nombre_archivo && (
                     <div className="document-attached">
                         <span>📎 {bitacora.nombre_archivo}</span>
+                    </div>
+                )}
+
+                {bitacora.nota && (
+                    <div className="info-row">
+                        <span className="label">📊 Nota:</span>
+                        <span className="value">{bitacora.nota}</span>
+                    </div>
+                )}
+
+                {/* Botones de cambio de estado para docentes/admin */}
+                {(isDocente || isAdmin) && (
+                    <div className="estado-actions">
+                        <p className="estado-actions-label">Cambiar estado:</p>
+                        <div className="estado-buttons">
+                            <button
+                                className={`btn-estado btn-completado ${bitacora.estado_revision === 'completado' ? 'active' : ''}`}
+                                onClick={() => handleCambiarEstado(bitacora.id_bitacora, 'completado')}
+                                disabled={actualizandoEstado === bitacora.id_bitacora || bitacora.estado_revision === 'completado'}
+                            >
+                                {actualizandoEstado === bitacora.id_bitacora ? '⏳' : '✓'} Completado
+                            </button>
+                            <button
+                                className={`btn-estado btn-aprobado ${bitacora.estado_revision === 'aprobado' ? 'active' : ''}`}
+                                onClick={() => handleCambiarEstado(bitacora.id_bitacora, 'aprobado')}
+                                disabled={actualizandoEstado === bitacora.id_bitacora || bitacora.estado_revision === 'aprobado'}
+                            >
+                                {actualizandoEstado === bitacora.id_bitacora ? '⏳' : '✔'} Aprobado
+                            </button>
+                            <button
+                                className={`btn-estado btn-rechazado ${bitacora.estado_revision === 'rechazado' ? 'active' : ''}`}
+                                onClick={() => handleCambiarEstado(bitacora.id_bitacora, 'rechazado')}
+                                disabled={actualizandoEstado === bitacora.id_bitacora || bitacora.estado_revision === 'rechazado'}
+                            >
+                                {actualizandoEstado === bitacora.id_bitacora ? '⏳' : '✗'} Rechazado
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

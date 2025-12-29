@@ -60,6 +60,20 @@ export const bitacoraService = {
             const errorMessage = error.response?.data?.message || 'Error al buscar bitácoras';
             return { data: null, error: errorMessage };
         }
+    },
+
+    async actualizarEstado(idBitacora, estadoRevision, nota = null) {
+        try {
+            const body = { estado_revision: estadoRevision };
+            if (nota !== null) {
+                body.nota = nota;
+            }
+            const response = await axios.put(`/bitacora/${idBitacora}/estado`, body);
+            return { data: response.data, error: null };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error al actualizar el estado';
+            return { data: null, error: errorMessage };
+        }
     }
 };
 

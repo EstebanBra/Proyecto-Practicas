@@ -212,3 +212,36 @@ export async function obtenerMiPractica(req, res) {
         handleErrorServer(res, 500, error.message);
     }
 }
+
+// Actualizar estado de bitácora (para docentes)
+export async function actualizarEstadoBitacora(req, res) {
+    try {
+        const { id } = req.params;
+        const { estado_revision, nota } = req.body;
+
+        if (!id) {
+            return handleErrorClient(res, 400, "El ID de la bitácora es requerido");
+        }
+
+        if (!estado_revision) {
+            return handleErrorClient(res, 400, "El estado de revisión es requerido");
+        }
+
+        const bitacoraActualizada = await bitacoraService.actualizarEstadoBitacora(
+            parseInt(id), 
+            estado_revision, 
+            nota
+        );
+
+        return handleSuccess(res, 200, "Estado de bitácora actualizado exitosamente", bitacoraActualizada);
+    } catch (error) {
+        console.error("Error al actualizar estado de bitácora:", error);
+        if (error.message === "Bitácora no encontrada") {
+            return handleErrorClient(res, 404, error.message);
+        }
+        if (error.message.includes("Estado de revisión no válido") || error.message.includes("La nota debe estar")) {
+            return handleErrorClient(res, 400, error.message);
+        }
+        return handleErrorServer(res, 500, error.message);
+    }
+}

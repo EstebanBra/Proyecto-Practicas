@@ -103,3 +103,33 @@ export async function obtenerPracticaPorEstudiante(idEstudiante) {
         }
     });
 }
+
+// Actualizar el estado de revisión de una bitácora (para docentes)
+export async function actualizarEstadoBitacora(id_bitacora, estado_revision, nota = null) {
+    const bitacora = await bitacoraRepository.findOne({
+        where: { id_bitacora: id_bitacora }
+    });
+
+    if (!bitacora) {
+        throw new Error("Bitácora no encontrada");
+    }
+
+    // Validar estados permitidos
+    const estadosPermitidos = ["en_progreso", "pendiente", "aprobado", "rechazado", "completado"];
+    if (!estadosPermitidos.includes(estado_revision)) {
+        throw new Error("Estado de revisión no válido");
+    }
+
+    bitacora.estado_revision = estado_revision;
+    
+    // Si se proporciona una nota, actualizarla
+    if (nota !== null && nota !== undefined) {
+        const notaNum = parseFloat(nota);
+        if (isNaN(notaNum) || notaNum < 1.0 || notaNum > 7.0) {
+            throw new Error("La nota debe estar entre 1.0 y 7.0");
+        }
+        bitacora.nota = notaNum;
+    }
+
+    return await bitacoraRepository.save(bitacora);
+}

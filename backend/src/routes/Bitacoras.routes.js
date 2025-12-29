@@ -1,6 +1,7 @@
 "use strict";
 import { Router } from "express";
 import {
+    actualizarEstadoBitacora,
     buscarBitacorasPorRut,
     obtenerBitacora,
     obtenerBitacorasPorPractica,
@@ -35,6 +36,11 @@ router
     .get("/buscar-rut/:rut",
         verificarRol(["docente", "administrador"]),
         buscarBitacorasPorRut)
+
+    // Ruta para actualizar estado de bitácora (solo docentes y administradores)
+    .put("/:id/estado",
+        verificarRol(["docente", "administrador"]),
+        actualizarEstadoBitacora)
 
     // Ruta para obtener una bitácora específica
     .get("/:id", obtenerBitacora)
