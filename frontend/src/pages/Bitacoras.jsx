@@ -64,7 +64,7 @@ const Bitacoras = () => {
         if (isEstudiante) {
             const cargarPractica = async () => {
                 setCargandoPractica(true);
-                const { data, error } = await bitacoraService.obtenerMiPractica();
+                const { data } = await bitacoraService.obtenerMiPractica();
                 if (data && data.data && data.data.id_practica) {
                     setIdPractica(data.data.id_practica);
                     setTienePracticaActiva(true);
@@ -227,7 +227,7 @@ const Bitacoras = () => {
     const handleCambiarEstado = async (idBitacora, nuevoEstado) => {
         setActualizandoEstado(idBitacora);
         try {
-            const { data, error } = await bitacoraService.actualizarEstado(idBitacora, nuevoEstado);
+            const { error } = await bitacoraService.actualizarEstado(idBitacora, nuevoEstado);
             
             if (error) {
                 showAlert('Error', error, 'error');
@@ -240,7 +240,7 @@ const Bitacoras = () => {
             if (rutBusqueda) {
                 await buscarPorRut(rutBusqueda.trim());
             }
-        } catch (error) {
+        } catch {
             showAlert('Error', 'Error al actualizar el estado', 'error');
         } finally {
             setActualizandoEstado(null);
@@ -255,7 +255,7 @@ const Bitacoras = () => {
         if (!confirmacion) return;
 
         try {
-            const { data, error } = await bitacoraService.eliminarBitacora(idBitacora);
+            const { error } = await bitacoraService.eliminarBitacora(idBitacora);
             
             if (error) {
                 showAlert('Error', error, 'error');
@@ -268,7 +268,7 @@ const Bitacoras = () => {
             if (rutBusqueda) {
                 await buscarPorRut(rutBusqueda.trim());
             }
-        } catch (error) {
+        } catch {
             showAlert('Error', 'Error al eliminar la bitácora', 'error');
         }
     };
