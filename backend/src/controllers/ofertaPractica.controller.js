@@ -38,7 +38,8 @@ export async function createOfertaPractica(req, res) {
     // Ahora sí tenemos el ID numérico real (ej: 1, 5, 20)
     const idEncargado = userFound.id;
 
-    const { error } = ofertaPracticaValidation.validate(body);
+    // Allow partial updates: make required fields optional for PUT updates
+    const { error } = ofertaPracticaValidation.validate(body, { presence: "optional", abortEarly: false });
 
     if (error) {
       return handleErrorClient(res, 400, "Error de validación", error.message);

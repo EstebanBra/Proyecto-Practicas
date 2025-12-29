@@ -226,11 +226,24 @@ const confirmarRechazo = async (ofertaId, alumno) => {
     };
 
     const handleUpdateSubmit = async (data) => {
+        // Map frontend form field names to backend schema and coerce numeric types
         const dataFormatted = {
-            ...data,
+            titulo: data.titulo?.trim(),
+            descripcion_cargo: data.descripcion_cargo?.trim(),
+            requisitos: data.requisitos?.trim(),
             duracion: Number(data.duracion),
-            cupos: Number(data.cupos)
+            modalidad: data.modalidad,
+            jornada: data.jornada?.trim(),
+            ubicacion: data.ubicacion?.trim(),
+            cupos: Number(data.cupos),
+            fecha_limite: data.fecha_limite
         };
+
+        // Basic front validation to avoid sending clearly invalid payloads
+        if (!dataFormatted.titulo || !dataFormatted.descripcion_cargo) {
+            showErrorAlert('Error', 'Título y descripción son obligatorios.');
+            return;
+        }
 
         try {
             const response = await updateOferta(ofertaAEditar.id, dataFormatted);
@@ -292,7 +305,7 @@ const confirmarRechazo = async (ofertaId, alumno) => {
         { label: 'Jornada', name: 'jornada', fieldType: 'input', type: 'text', required: true, maxLength: 50 },
         { label: 'Ubicación', name: 'ubicacion', fieldType: 'input', type: 'text', required: true, maxLength: 100 },
         { label: 'Cupos', name: 'cupos', fieldType: 'input', type: 'number', required: true, min: 1, max: 100 },
-        { label: 'Fecha Límite', name: 'fecha_limite', fieldType: 'input', type: 'date', required: true, min: today },
+        { label: 'Fecha de Término', name: 'fecha_limite', fieldType: 'input', type: 'date', required: true, min: today },
     ];
 
     const canManage = currentUser && (currentUser.rol === 'administrador' || currentUser.rol === 'docente');
