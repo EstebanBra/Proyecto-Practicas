@@ -11,6 +11,7 @@ import { connectDB } from "./config/configDb.js";
 import { createUsers } from "./config/initialSetup.js";
 import { passportJwtSetup } from "./auth/passport.auth.js";
 
+
 async function setupServer() {
   try {
     const app = express();
@@ -54,11 +55,10 @@ async function setupServer() {
       }),
     );
 
+    
     app.use(passport.initialize());
-    app.use(passport.session());
-
-    passportJwtSetup();
-
+    // app.use(passport.session()); 
+    passportJwtSetup();             
     app.use("/api", indexRoutes);
 
     app.listen(PORT, () => {

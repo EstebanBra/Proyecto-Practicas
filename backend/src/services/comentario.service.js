@@ -1,13 +1,12 @@
-"use strict";  
-import Comentario from "../entity/comentario.entity.js";    
+"use strict";
+import Comentario from "../entity/comentario.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 
-export async function createComentarioService(body) {
+export async function createComentarioService(body) { // Crea un nuevo comentario
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const nuevoComentario = comentarioRepository.create(body);
-    await comentarioRepository.save(nuevoComentario);
-    return nuevoComentario;
+    const nuevoComentario = comentarioRepository.create(body); // Crear inst de comentario , body tiene los datos 
+    return await comentarioRepository.save(nuevoComentario); // Guardar en la BD
   } catch (error) {
     throw new Error("Error al crear el comentario");
   }
@@ -20,13 +19,16 @@ export async function getComentariosService() {
     return comentarios;
   } catch (error) {
     throw new Error("Error al obtener los comentarios");
-  } 
+  }
 }
 
 export async function getComentarioByIdService(id) {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const comentario = await comentarioRepository.findOneBy({ id });    
+    const comentario = await comentarioRepository.findOne({
+      where: { id },
+      relations: ["usuario"]
+    });
     return comentario;
   } catch (error) {
     throw new Error("Error al obtener el comentario por ID");
@@ -38,13 +40,12 @@ export async function updateComentarioService(id, body) {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
     let comentario = await comentarioRepository.findOneBy({ id });
     if (!comentario) {
-      return [null, "Comentario no encontrado"];
+      throw new Error("Comentario no encontrado");
     }
     comentario = { ...comentario, ...body };
-    await comentarioRepository.save(comentario);
-    return [comentario, null];
+    return await comentarioRepository.save(comentario);
   } catch (error) {
-    return [null, "Error al actualizar el comentario"];
+    throw new Error("Error al actualizar el comentario");
   }
 }
 
@@ -53,29 +54,34 @@ export async function deleteComentarioService(id) {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
     const comentario = await comentarioRepository.findOneBy({ id });
     if (!comentario) {
-      return [null, "Comentario no encontrado"];
+      throw new Error("Comentario no encontrado");
     }
     await comentarioRepository.remove(comentario);
-    return [comentario, null];
+    return comentario;
   } catch (error) {
-    return [null, "Error al eliminar el comentario"];
+    throw new Error("Error al eliminar el comentario");
   }
 }
 
 export async function getComentariosByUsuarioIdService(usuarioId) {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const comentarios = await comentarioRepository.findBy({ usuarioId });
+    const comentarios = await comentarioRepository.find({
+      where: { usuarioId },
+      relations: ["usuario"]
+    });
     return comentarios;
   } catch (error) {
     throw new Error("Error al obtener los comentarios por ID de usuario");
   }
 }
 
-export async function getallComentariosService(usuarioId) {
+export async function getallComentariosService() {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const comentarios = await comentarioRepository.findManyBy({ usuarioId });
+    const comentarios = await comentarioRepository.find({
+      relations: ["usuario"]
+    });
     return comentarios;
   } catch (error) {
     throw new Error("Error al obtener todos los comentarios");
