@@ -49,11 +49,9 @@ const DocsEntregados = () => {
         }
     }, [shouldRefetch, fetchData]);
 
-    // Obtener información de prácticas cuando se cargan los documentos
     useEffect(() => {
         const fetchPracticasParaDocumentos = async () => {
             if (documentos.length > 0 && shouldRefetch === false) {
-                // Extraer IDs únicos de prácticas
                 const idsPracticasUnicos = [...new Set(documentos
                     .map(doc => doc.id_practica)
                     .filter(id => id && id > 0))];
@@ -77,8 +75,6 @@ const DocsEntregados = () => {
                     })));
                     return;
                 }
-
-                // Buscar en caché primero
                 const practicasEnCache = {};
                 const idsParaBuscar = [];
 
@@ -90,7 +86,6 @@ const DocsEntregados = () => {
                     }
                 });
 
-                // Si hay prácticas que no están en caché, las buscamos
                 if (idsParaBuscar.length > 0) {
                     const nuevasPracticas = await fetchPracticas(idsParaBuscar);
                     nuevasPracticas.forEach(practica => {
@@ -102,21 +97,17 @@ const DocsEntregados = () => {
 
                 setPracticasInfo(practicasEnCache);
 
-                // Enriquecer documentos con información de práctica y estudiante
                 const documentosEnriquecidos = documentos.map(doc => {
                     const practica = practicasEnCache[doc.id_practica];
 
                     return {
                         ...doc,
-                        // Información del estudiante
                         estudiante_nombre: practica?.estudiante?.nombreCompleto || "Estudiante no disponible",
                         estudiante_rut: practica?.estudiante?.rut || "",
-                        // Información de la práctica
                         practica_nombre: practica?.empresa ?
                             `Práctica en ${practica.empresa}` : "Práctica sin nombre",
                         practica_empresa: practica?.empresa || "Sin empresa",
                         practica_estado: practica?.estado || "Desconocido",
-                        // Formatear fecha y hora de entrega
                         fecha_hora_entrega: doc.fecha_subida ?
                             new Date(doc.fecha_subida).toLocaleString('es-CL', {
                                 year: 'numeric',
@@ -237,16 +228,6 @@ const DocsEntregados = () => {
         }
     };
 
-    const handleUpdateEstadoWrapper = async (docs, nuevoEstado) => {
-        const documentosArray = Array.isArray(docs) ? docs : [docs];
-        const documentosValidos = documentosArray.filter(doc => doc && doc.id_documento);
-
-        if (documentosValidos.length === 0) return;
-
-        await handleUpdateEstados(documentosValidos, nuevoEstado);
-        setShouldRefetch(true);
-    };
-
     const filteredDocs = useMemo(() => {
         return documents.filter((doc) => {
             const searchTerm = filter.toLowerCase().trim();
@@ -347,16 +328,10 @@ const DocsEntregados = () => {
                                             <strong>Práctica:</strong> {doc.practica_nombre}
                                         </p>
                                         <p className="archivo-item">
-                                            <strong>Estado práctica:</strong> {practica?.estado || "Desconocido"}
-                                        </p>
-                                        <p className="archivo-item">
                                             <strong>Tipo documento:</strong> {doc.tipo === "informe" ? "Informe" : "Autoevaluación"}
                                         </p>
                                         <p className="archivo-item">
                                             <strong>Fecha y hora de entrega:</strong> {doc.fecha_hora_entrega}
-                                        </p>
-                                        <p className="archivo-item">
-                                            <strong>Tamaño:</strong> {doc.peso_mb} MB
                                         </p>
 
                                         {evaluacion?.comentario && (
@@ -387,14 +362,7 @@ const DocsEntregados = () => {
                                         >
                                             {evaluacion ? "Editar Nota" : "Evaluar"}
                                         </button>
-                                        <button
-                                            onClick={() => handleUpdateEstadoWrapper([doc],
-                                                doc.estado_revision === "pendiente" ? "revisado" : "pendiente"
-                                            )}
-                                            disabled={updatingEstado || creatingEval || updatingEval}
-                                        >
-                                            {doc.estado_revision === "pendiente" ? "Marcar Revisado" : "Marcar Pendiente"}
-                                        </button>
+
                                     </div>
                                 </div>
                             );

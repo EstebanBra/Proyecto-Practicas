@@ -17,6 +17,23 @@ const DocsFinales = () => {
         fetchDocumentos();
     }, []);
 
+    const PLANTILLAS = [
+        {
+            nombre: "Anexo D. Plantilla Informe PP.pdf",
+            url: "https://adecca.ubiobio.cl/file/download/eyJub21icmUiOiJBbmV4byBELlBsYW50aWxsYUluZm9ybWVQUC5wZGYiLCJhcmNoaXZvIjoiMTc0MzE3OTE2NDEyMDM0NC5wZGYiLCJwYXRoIjoiMjAyNVwvY3Vyc29zXC81ODY5NVwvNDQxMDc4XC8xNzQzMTc5MTY0MTIwMzQ0LnBkZiJ9"
+        },
+        {
+            nombre: "Anexo E. bitácora PP.docx",
+            url: "https://adecca.ubiobio.cl/file/download/eyJub21icmUiOiJBbmV4byBFLmJpdFx1MDBlMWNvcmFQUC5kb2N4IiwiYXJjaGl2byI6IjE3NDMxNzkxNjUwMjAzNDQuZG9jeCIsInBhdGgiOiIyMDI1XC9jdXJzb3NcLzU4Njk1XC80NDEwNzhcLzE3NDMxNzkxNjUwMjAzNDQuZG9jeCJ9"
+        }
+    ];
+
+    const handleDescargarPlantillas = () => {
+        PLANTILLAS.forEach(plantilla => {
+            window.open(plantilla.url, "_blank", "noopener,noreferrer");
+        });
+    };
+
     const handleFileChange = (e, tipo) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -240,8 +257,12 @@ const DocsFinales = () => {
                     </div>
 
                     <div className="main-actions" style={{ marginTop: "20px" }}>
-                        <button className="btn-upload">Reglamento</button>
-                        <button className="btn-download">Descargar Plantillas</button>
+                        <button
+                            className="btn-download"
+                            onClick={handleDescargarPlantillas}
+                        >
+                            Descargar Plantillas
+                        </button>
                     </div>
                 </div>
 
