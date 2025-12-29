@@ -57,12 +57,22 @@ export async function getPostulantes(idOferta) {
 }
 
 // Aceptar a un postulante (Convertirlo en practicante)
-export async function aceptarPostulante(idOferta, idEstudiante) {
+export async function aceptarPostulante(idOferta, idEstudiante, idPostulacion) {
     try {
-        const response = await api.post(`${BASE}/aceptar-postulante`, { idOferta, idEstudiante });
+        const response = await api.post(`${BASE}/aceptar-postulante`, { idOferta, idEstudiante, idPostulacion });
         return response.data;
     } catch (error) {
         return error.response?.data || { status: 'Error', message: 'Error al aceptar estudiante' };
+    }
+}
+
+// Rechazar a un postulante
+export async function rechazarPostulante(idOferta, idEstudiante, idPostulacion) {
+    try {
+        const response = await api.post(`${BASE}/rechazar-postulante`, { idOferta, idEstudiante, idPostulacion });
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { status: 'Error', message: 'Error al rechazar estudiante' };
     }
 }
 
@@ -76,4 +86,5 @@ export default {
   getMisPostulaciones,
   getPostulantes,
   aceptarPostulante,
+  rechazarPostulante,
 };
