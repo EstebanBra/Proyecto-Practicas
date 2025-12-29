@@ -13,6 +13,7 @@ import ProtectedRoute from '@components/ProtectedRoute';
 import '@styles/styles.css';
 import OfertasPublicas from '@pages/OfertasPublicas';
 import MisPostulaciones from '@pages/MisPostulaciones';
+import PracticaExterna from '@pages/PracticaExterna';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['estudiante']}>
             <MisPostulaciones />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/practica-externa',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <PracticaExterna />
           </ProtectedRoute>
         ),
       },

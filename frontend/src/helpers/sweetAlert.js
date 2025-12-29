@@ -36,3 +36,17 @@ export const showAlert = (title, message, icon) => {
     confirmButtonColor: '#3085d6'
   });
 };
+
+export const showConfirmAlert = async (title, message) => {
+  const result = await Swal.fire({
+    title: title,
+    text: message,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#6366f1',
+    cancelButtonColor: '#94a3b8',
+    confirmButtonText: 'Sí, confirmar',
+    cancelButtonText: 'Cancelar'
+  });
+  return result.isConfirmed;
+};
