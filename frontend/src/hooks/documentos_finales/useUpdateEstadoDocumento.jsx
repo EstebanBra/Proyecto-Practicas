@@ -11,7 +11,7 @@ const useUpdateEstadoDocumento = (fetchDocumentos, setDataDocumento) => {
             return false;
         }
 
-        if (!['pendiente', 'revisado', 'calificado'].includes(nuevoEstado)) {
+        if (!['pendiente', 'revisado'].includes(nuevoEstado)) {
             showErrorAlert('Error', 'Estado no válido');
             return false;
         }

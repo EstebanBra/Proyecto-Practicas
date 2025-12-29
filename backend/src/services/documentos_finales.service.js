@@ -122,9 +122,6 @@ export async function updateEstadoDocumentoService(id_documento, estado) {
 
     if (!documento) return [null, "Documento no encontrado"];
 
-    if (documento.estado_revision === "calificado") {
-      return [null, "No se puede modificar un documento ya calificado"];
-    }
 
     documento.estado_revision = estado;
     await documentoRepository.save(documento);

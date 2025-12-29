@@ -20,6 +20,6 @@ router.post("/", isDocente, crearEvaluacion);
 router.get("/docente", isDocente, getEvaluacionesByDocente);
 
 router.get("/documento/:id_documento", getEvaluacionByDocumento);
-router.patch("/:id", isDocente, updateEvaluacion);
+router.patch("/:id", updateEvaluacion);
 
 export default router;

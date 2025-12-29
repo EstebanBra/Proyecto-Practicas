@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { updateEvaluacion } from '@services/evaluaciones_finales_f.service.js';
 import { deleteDataAlert, showErrorAlert } from '@helpers/sweetAlert.js';
 
-const useUpdateEvaluacion = (fetchEvaluacionByDocumento, fetchEvaluacionesDocente) => {
+const useUpdateEvaluacion = (fetchEvaluacionesDocente) => {
     const [updating, setUpdating] = useState(false);
 
     const handleUpdateEvaluacion = async (evaluacion, updateData) => {
@@ -16,14 +16,12 @@ const useUpdateEvaluacion = (fetchEvaluacionByDocumento, fetchEvaluacionesDocent
         setUpdating(true);
 
         try {
-            const dataConComentario = {
-                ...updateData,
-                comentario: updateData.comentario || ""
-            };
-
             const response = await updateEvaluacion(
                 evaluacion.id_evaluacion,
-                dataConComentario
+                {
+                    ...updateData,
+                    comentario: updateData.comentario || ""
+                }
             );
 
             if (response?.error) {
@@ -31,17 +29,10 @@ const useUpdateEvaluacion = (fetchEvaluacionByDocumento, fetchEvaluacionesDocent
                 return false;
             }
 
-            if (fetchEvaluacionByDocumento) {
-                await fetchEvaluacionByDocumento(evaluacion.id_documento);
-            }
-
-            if (fetchEvaluacionesDocente) {
-                await fetchEvaluacionesDocente();
-            }
+            await fetchEvaluacionesDocente(); // 🔥 CLAVE
 
             return true;
-            // eslint-disable-next-line no-unused-vars
-        } catch (error) {
+        } catch {
             showErrorAlert('Error', 'Error inesperado al actualizar evaluación');
             return false;
         } finally {

@@ -35,7 +35,8 @@ const DocsEntregados = () => {
     });
 
     const { submitting: creatingEval, handleCrearEvaluacion } = useCrearEvaluacion(fetchEvaluacionesByDocumento);
-    const { updating: updatingEval, handleUpdateEvaluacion } = useUpdateEvaluacion(fetchEvaluacionesByDocumento);
+    const { updating: updatingEval, handleUpdateEvaluacion } =
+        useUpdateEvaluacion(fetchEvaluacionesDocente);
 
     const fetchData = useCallback(async () => {
         await fetchDocumentos();
@@ -167,7 +168,7 @@ const DocsEntregados = () => {
 
             try {
                 if (evaluacionExistente) {
-                    await handleUpdateEvaluacion([evaluacionExistente], evaluacionData);
+                    await handleUpdateEvaluacion(evaluacionExistente, evaluacionData);
                 } else {
                     await handleCrearEvaluacion(evaluacionData);
                 }
@@ -181,7 +182,7 @@ const DocsEntregados = () => {
                     docsDePractica.some(d => d.id_documento === e.id_documento)
                 );
                 if (docsDePractica.length === 2 && evaluacionesDePractica.length === 2) {
-                    await handleUpdateEstados(docsDePractica, "calificado");
+                    await handleUpdateEstados(docsDePractica, "revisado");
                 }
 
                 await Swal.fire('Guardada', 'Evaluación guardada correctamente', 'success');

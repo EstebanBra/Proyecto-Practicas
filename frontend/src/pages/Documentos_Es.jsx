@@ -114,7 +114,6 @@ const DocsFinales = () => {
         }
     };
 
-    // Filtrar documentos por la práctica seleccionada
     const documentosFiltradosPorPractica = Array.isArray(documentos)
         ? documentos.filter(doc => doc.id_practica === idPracticaSeleccionada)
         : [];
@@ -125,27 +124,9 @@ const DocsFinales = () => {
         )
         : [];
 
-    const getEstadoConNota = (doc) => {
-        if (doc.estado_revision === "calificado" && doc.nota_revision) {
-            return `Calificado: ${doc.nota_revision}`;
-        } else if (doc.estado_revision === "revisado") {
-            return "Revisado";
-        } else if (doc.estado_revision === "pendiente") {
-            return "Pendiente";
-        }
-        return "Pendiente";
-    };
-
     const mostrarNota = (doc) => {
         if (doc.nota_revision !== null && doc.nota_revision !== undefined) {
             return doc.nota_revision;
-        }
-        return "-";
-    };
-
-    const mostrarComentario = (doc) => {
-        if (doc.comentario && doc.comentario.trim() !== "") {
-            return "-";
         }
         return "-";
     };
@@ -160,7 +141,6 @@ const DocsFinales = () => {
     const tieneInforme = documentosFiltradosPorPractica?.some(d => d.tipo === "informe");
     const tieneAutoevaluacion = documentosFiltradosPorPractica?.some(d => d.tipo === "autoevaluacion");
 
-    // Obtener el informe y autoevaluación específicos de la práctica seleccionada
     const informeSeleccionado = documentosFiltradosPorPractica?.find(d => d.tipo === "informe");
     const autoevaluacionSeleccionada = documentosFiltradosPorPractica?.find(d => d.tipo === "autoevaluacion");
 
