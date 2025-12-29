@@ -150,38 +150,68 @@
     transform: scale(1.1);
 }
 
-.file-delete-btn img {
-    width: 18px;
-    height: 18px;
-    filter: brightness(0.8);
+/* Error message */
+.file-error-message {
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.file-delete-btn:hover img {
-    filter: brightness(0.5);
+.file-error-message::before {
+    content: '⚠️';
+}
+
+/* Label */
+.file-upload-label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
 }
 
 /* Responsive */
 @media (max-width: 600px) {
-    .file-drop-zone {
-        padding: 20px;
+    .drop-zone {
+        padding: 20px 15px;
+        min-height: 100px;
     }
 
-    .drop-icon {
-        font-size: 30px;
+    .upload-icon {
+        font-size: 2rem;
+    }
+
+    .drop-text {
+        font-size: 0.85rem;
+    }
+
+    .drop-subtext,
+    .drop-info {
+        font-size: 0.75rem;
     }
 
     .file-item {
-        flex-wrap: wrap;
-        gap: 8px;
+        padding: 8px 10px;
     }
 
-    .file-info {
-        width: 100%;
+    .file-icon {
+        font-size: 1.2rem;
     }
 
-    .file-delete-btn {
-        width: 100%;
-        justify-content: center;
-        margin-left: 0;
+    .file-name {
+        font-size: 0.8rem;
+    }
+
+    .remove-file-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 1rem;
     }
 }

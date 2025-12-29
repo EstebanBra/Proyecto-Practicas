@@ -14,7 +14,8 @@ function determinarTipoDocumento(nombreArchivo) {
     const nombreLower = nombreArchivo.toLowerCase();
     if (nombreLower.includes("informe")) return "informe";
     if (nombreLower.includes("autoevaluacion")) return "autoevaluacion";
-    return "otro";
+    if (nombreLower.includes("bitacora")) return "bitacora";
+    return "documento"; // Tipo genérico para otros documentos
 }
 
 export async function registrarDocumento(data) {
@@ -47,10 +48,6 @@ export async function registrarDocumento(data) {
 
         // Verificar si ya existe un documento del mismo tipo
         const tipoDocumento = determinarTipoDocumento(data.nombre_archivo);
-
-        if (tipoDocumento === "otro") {
-            return [null, "Solo se aceptan archivos de tipo 'informe' o 'autoevaluacion'"];
-        }
 
         const documentosExistentes = await documentoRepository.find({
             where: { id_practica: Number(data.id_practica) }

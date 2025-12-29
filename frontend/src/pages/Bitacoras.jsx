@@ -524,6 +524,10 @@ const Bitacoras = () => {
                         <p className="section-description">
                             Puedes adjuntar un archivo PDF, DOCX, ZIP o RAR (máx. 10 MB)
                         </p>
+                        <p className="file-suggestion">
+                            💡 <strong>Sugerencia:</strong> Para mejor organización, nombra tu archivo como 
+                            <em> "Informe_Bitacora_Semana_X"</em> o similar.
+                        </p>
 
                         {archivoSubido ? (
                             <div className="uploaded-file-preview">
