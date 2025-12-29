@@ -33,14 +33,11 @@ export const comentarioBodyValidation = joi.object({
     }),
 
     archivos: joi.array().items(joi.object({
-        fieldname: joi.string(),
-        originalname: joi.string(),
-        encoding: joi.string(),
-        mimetype: joi.string(),
-        destination: joi.string(),
-        filename: joi.string(),
-        path: joi.string(),
-        size: joi.number()
+        nombre: joi.string(),
+        ruta: joi.string(),
+        tipo: joi.string(),
+        tamaño: joi.number(),
+        filename: joi.string()
     })).optional().allow(null).max(5).messages({
         "array.max": "No se pueden subir más de 5 archivos por comentario."
     })

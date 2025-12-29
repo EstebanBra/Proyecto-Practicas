@@ -104,3 +104,25 @@ export async function getAllComentarios() {
         return error.response.data;
     }
 }
+
+export async function downloadArchivoComentario(comentarioId, archivoIndex, nombreArchivo) {
+    try {
+        const response = await axios.get(`/comentario/archivo/${comentarioId}/${archivoIndex}`, {
+            responseType: 'blob'
+        });
+        
+        // Crear un enlace temporal para descargar
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', nombreArchivo || `archivo_${archivoIndex}`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        return { success: true };
+    } catch (error) {
+        return error.response?.data || { success: false, message: 'Error al descargar el archivo' };
+    }
+}

@@ -3,6 +3,7 @@ import { useGetComentarios } from '../hooks/comentario/useGetComentarios.jsx';
 import { useCreateComentario } from '../hooks/comentario/useCreateComentario.jsx';
 import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario.jsx';
 import { useDeleteComentario } from '../hooks/comentario/useDeleteComentario.jsx';
+import { downloadArchivoComentario } from '../services/comentario.service.js';
 import FileUploadComentario from '../components/FileUploadComentario.jsx';
 import Swal from 'sweetalert2';
 import '../styles/comentario.css';
@@ -355,14 +356,13 @@ const Comentarios = () => {
                                         {comentario.archivos.map((archivo, idx) => (
                                             <div key={idx} className="archivo-item-estudiante">
                                                 <span className="archivo-icon">📄</span>
-                                                <a 
-                                                    href={`/api/comentario/archivo/${comentario.id}/${idx}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                <button
+                                                    onClick={() => downloadArchivoComentario(comentario.id, idx, archivo.nombre || archivo.originalname)}
                                                     className="archivo-link"
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0066cc', textDecoration: 'underline' }}
                                                 >
                                                     {archivo.nombre || archivo.originalname}
-                                                </a>
+                                                </button>
                                                 {archivo.tamaño && (
                                                     <span className="archivo-size">
                                                         ({(archivo.tamaño / 1024).toFixed(1)} KB)

@@ -7,6 +7,7 @@ import { handleMulterErrors, uploadOptionalFiles } from "../middlewares/uploadFi
 import {
   createComentario,
   deleteComentario,
+  downloadArchivoComentario,
   getAllComentarios,
   getComentarioById,
   getComentarios,
@@ -20,7 +21,7 @@ router
   .post("/", [authenticateJwt, isEstudiante, uploadOptionalFiles, handleMulterErrors], createComentario)
   .get("/", [authenticateJwt, isDocenteOrEstudiante], getComentarios)
   .get("/todos", [authenticateJwt, isDocente], getAllComentarios)
-  .get("/archivo/:id/:archivoIndex", [authenticateJwt, isDocenteOrEstudiante])
+  .get("/archivo/:id/:archivoIndex", [authenticateJwt, isDocenteOrEstudiante], downloadArchivoComentario)
   .get("/usuario/:usuarioId", [authenticateJwt, isDocenteOrEstudiante], getComentariosByUsuarioId)
   .get("/:id", [authenticateJwt, isDocenteOrEstudiante], getComentarioById)
   .put("/:id", [authenticateJwt, isDocenteOrEstudiante, uploadOptionalFiles, handleMulterErrors], updateComentario)

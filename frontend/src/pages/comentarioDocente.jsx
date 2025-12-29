@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useGetAllComentarios } from '../hooks/comentario/useGetAllComentarios.jsx';
 import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario.jsx';
 import { useDeleteComentario } from '../hooks/comentario/useDeleteComentario.jsx';
+import { downloadArchivoComentario } from '../services/comentario.service.js';
 import Swal from 'sweetalert2';
 import '../styles/comentario.css';
 
@@ -267,14 +268,13 @@ const ComentarioDocente = () => {
                                         {comentario.archivos.map((archivo, idx) => (
                                             <div key={idx} className="archivo-item-estudiante">
                                                 <span className="archivo-icon">📄</span>
-                                                <a 
-                                                    href={`/api/comentario/archivo/${comentario.id}/${idx}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                <button
+                                                    onClick={() => downloadArchivoComentario(comentario.id, idx, archivo.nombre || archivo.originalname)}
                                                     className="archivo-link"
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0066cc', textDecoration: 'underline' }}
                                                 >
                                                     {archivo.nombre || archivo.originalname}
-                                                </a>
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
