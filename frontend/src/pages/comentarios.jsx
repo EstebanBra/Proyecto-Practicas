@@ -1,161 +1,506 @@
-import Search from '../components/Search';
-import ComentarioPopup from '../components/ComentarioPopup';
-import { useState } from 'react';
-import '../styles/Documentos.css';
+import { useEffect, useState, useCallback } from 'react';
+import '../styles/comentario.css';
+import { useGetComentarios } from '../hooks/comentario/useGetComentarios';
+import { useCreateComentario } from '../hooks/comentario/useCreateComentario';
+import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario';
+import FileUpload from '../components/FileUpload';
+import Swal from 'sweetalert2';
 
 const Comentarios = () => {
-    const [comentarios, setComentarios] = useState([
-        {
-            _id: 1,
-            usuario: 'María',
-            mensaje: 'Estoy teniendo problemas para acceder a mi cuenta.',
-            estado: 'Pendiente',
-            nivelUrgencia: 'normal',
-            tipoProblema: 'Personal',
-            fechaCreacion: '2024-04-14',
-            archivos: []
-        },
-        {
-            _id: 2,
-            usuario: 'Carlos',
-            mensaje: 'El sistema se cae continuamente.',
-            estado: 'Abierto',
-            nivelUrgencia: 'alta',
-            tipoProblema: 'General',
-            fechaCreacion: '2024-04-12',
-            archivos: []
-        },
-        {
-            _id: 3,
-            usuario: 'Lucía',
-            mensaje: 'Necesito recuperar mi contraseña.',
-            estado: 'Respondido',
-            nivelUrgencia: 'normal',
-            tipoProblema: 'Personal',
-            fechaCreacion: '2024-04-10',
-            archivos: []
-        },
-        {
-            _id: 4,
-            usuario: 'Juan',
-            mensaje: 'El sistema muestra resultados incorrectos.',
-            estado: 'Respondido',
-            nivelUrgencia: 'alta',
-            tipoProblema: 'De Empresa',
-            fechaCreacion: '2024-04-08',
-            archivos: []
-        }
-    ]);
+    const { comentarios, handleGetComentarios, loading } = useGetComentarios();
+    const { handleCreateComentario, loading: loadingCreate } = useCreateComentario();
+    const { handleUpdateComentario, loading: loadingUpdate } = useUpdateComentario();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [popupMode, setPopupMode] = useState('create');
-    const [selectedComentario, setSelectedComentario] = useState(null);
+    const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+    const [editingComentario, setEditingComentario] = useState(null);
+    const [editModalKey, setEditModalKey] = useState(0);
+    const [expandedMensaje, setExpandedMensaje] = useState({});
+    const [expandedRespuesta, setExpandedRespuesta] = useState({});
+    
+    const [formData, setFormData] = useState({
+        mensaje: '',
+        nivelUrgencia: '',
+        tipoProblema: ''
+    });
     const [selectedFiles, setSelectedFiles] = useState([]);
+    const [editFormData, setEditFormData] = useState({
+        mensaje: '',
+        nivelUrgencia: '',
+        tipoProblema: '',
+        estado: 'Pendiente'
+    });
+    const [selectedFilesEdit, setSelectedFilesEdit] = useState([]);
 
-    const handleSearch = (term) => {
-        setSearchTerm(term);
-    };
+    const refreshComentarios = useCallback(() => {
+        handleGetComentarios();
+    }, [handleGetComentarios]);
 
-    const filteredComentarios = comentarios.filter((comentario) =>
-        comentario.mensaje.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    useEffect(() => {
+        refreshComentarios();
+    }, [refreshComentarios]);
 
-    const handleOpenPopup = (mode, comentario = null) => {
-        setPopupMode(mode);
-        setSelectedComentario(comentario);
+    const handleSearch = (e) => setSearchTerm(e.target.value);
+
+    const comentariosFiltrados = (comentarios || [])
+        .filter((comentario) => {
+            const mensaje = comentario?.mensaje || '';
+            return mensaje.toLowerCase().includes(searchTerm.toLowerCase());
+        });
+
+    const handleOpenCreate = () => {
+        setFormData({
+            mensaje: '',
+            nivelUrgencia: '',
+            tipoProblema: ''
+        });
+        setSelectedFiles([]);
         setIsPopupOpen(true);
     };
 
     const handleClosePopup = () => {
         setIsPopupOpen(false);
-        setSelectedComentario(null);
+        setSelectedFiles([]);
     };
 
-    const handleSubmit = (formData) => {
-        if (popupMode === 'create') {
-            const nuevo = {
-                _id: Date.now(),
-                usuario: 'Tú',
-                ...formData,
-                fechaCreacion: new Date().toISOString().split('T')[0],
-                archivos: selectedFiles.length > 0 ? selectedFiles.map(f => ({
-                    nombre: f.name,
-                    tamaño: f.size,
-                    tipo: f.type
-                })) : []
-            };
-            setComentarios([...comentarios, nuevo]);
-        } else {
-            setComentarios(
-                comentarios.map((c) =>
-                    c._id === selectedComentario._id ? { 
-                        ...c, 
-                        ...formData,
-                        archivos: selectedFiles.length > 0 ? selectedFiles.map(f => ({
-                            nombre: f.name,
-                            tamaño: f.size,
-                            tipo: f.type
-                        })) : c.archivos
-                    } : c
-                )
-            );
+    const handleOpenEdit = (comentario) => {
+        setEditingComentario(comentario);
+        setEditFormData({
+            mensaje: comentario.mensaje || '',
+            nivelUrgencia: comentario.nivelUrgencia || '',
+            tipoProblema: comentario.tipoProblema || '',
+            estado: comentario.estado || 'Pendiente'
+        });
+        setSelectedFilesEdit([]);
+        setEditModalKey((prev) => prev + 1);
+        setIsEditPopupOpen(true);
+    };
+
+    const handleCloseEdit = () => {
+        setIsEditPopupOpen(false);
+        setSelectedFilesEdit([]);
+        setEditingComentario(null);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleEditInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+
+    const handleFilesSelected = (files) => {
+        setSelectedFiles(files);
+    };
+
+    const handleFilesSelectedEdit = (files) => {
+        setSelectedFilesEdit(files);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        // Validación cliente antes de enviar
+        const validation = validateComentario(formData, selectedFiles, false);
+        if (!validation.valid) {
+            return Swal.fire({ icon: 'error', title: 'Error', text: validation.message });
         }
-        setSelectedFiles([]);
+
+        const dataToSend = new FormData();
+        dataToSend.append('mensaje', formData.mensaje);
+        dataToSend.append('nivelUrgencia', formData.nivelUrgencia);
+        dataToSend.append('tipoProblema', formData.tipoProblema);
+        selectedFiles.forEach(file => dataToSend.append('archivos', file));
+
+        await handleCreateComentario(dataToSend);
+        refreshComentarios();
         handleClosePopup();
     };
 
-    const handleDelete = (id) => {
-        setComentarios(comentarios.filter((c) => c._id !== id));
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        if (!editingComentario) return;
+        // Validación cliente antes de enviar edición
+        const validation = validateComentario(editFormData, selectedFilesEdit, true);
+        if (!validation.valid) {
+            return Swal.fire({ icon: 'error', title: 'Error', text: validation.message });
+        }
+
+        const dataToSend = new FormData();
+        dataToSend.append('mensaje', editFormData.mensaje);
+        dataToSend.append('nivelUrgencia', editFormData.nivelUrgencia);
+        dataToSend.append('tipoProblema', editFormData.tipoProblema);
+        dataToSend.append('estado', editFormData.estado || 'Pendiente');
+        selectedFilesEdit.forEach(file => dataToSend.append('archivos', file));
+
+        await handleUpdateComentario(editingComentario.id, dataToSend);
+        refreshComentarios();
+        handleCloseEdit();
     };
 
-    const fields = [
-        { name: 'mensaje', label: 'Mensaje', type: 'textarea', required: true },
-        { name: 'estado', label: 'Estado', type: 'select', options: ['Pendiente', 'Abierto', 'Respondido'], required: true },
-        { name: 'nivelUrgencia', label: 'Nivel de Urgencia', type: 'select', options: ['normal', 'alta'], required: true },
-        { name: 'tipoProblema', label: 'Tipo de Problema', type: 'select', options: ['Personal', 'General', 'De Empresa'], required: true }
-    ];
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const getUserInitials = (nombreCompleto) => {
+        if (!nombreCompleto) return '?';
+        const partes = nombreCompleto.trim().split(/\s+/);
+        if (partes.length === 1) return partes[0].charAt(0).toUpperCase();
+        return (partes[0].charAt(0) + partes[partes.length - 1].charAt(0)).toUpperCase();
+    };
+
+    const getUrgenciaClass = (nivel) => {
+        return nivel === 'alta' ? 'urgencia-badge alta' : 'urgencia-badge normal';
+    };
+
+    const truncateText = (text, max = 220) => {
+        if (!text) return '';
+        return text.length > max ? `${text.slice(0, max)}...` : text;
+    };
+
+    // Client-side validation mirroring backend Joi rules
+    const validateComentario = (data, archivos, isEdit) => {
+        const mensaje = (data.mensaje || '').trim();
+        if (!mensaje) return { valid: false, message: 'El mensaje no puede estar vacío.' };
+        if (/^\d+$/.test(mensaje)) return { valid: false, message: 'El mensaje no puede contener solo números.' };
+            if (/^[^A-Za-z0-9]+$/.test(mensaje)) return { valid: false, message: 'El mensaje no puede contener solo caracteres especiales.' };
+        if (mensaje.length < 5) return { valid: false, message: 'El mensaje debe tener al menos 5 caracteres.' };
+        if (mensaje.length > 500) return { valid: false, message: 'El mensaje no puede exceder los 500 caracteres.' };
+
+        const nivel = data.nivelUrgencia;
+        if (nivel && !['normal', 'alta'].includes(nivel)) return { valid: false, message: 'Nivel de urgencia inválido.' };
+
+        const tipo = data.tipoProblema;
+        if (tipo && !['Personal', 'General', 'De Empresa'].includes(tipo)) return { valid: false, message: 'Tipo de problema inválido.' };
+
+        if (isEdit) {
+            const estado = data.estado;
+            if (estado && !['Abierto','Respondido','Pendiente'].includes(estado)) return { valid: false, message: 'Estado inválido.' };
+        }
+
+        if (archivos && archivos.length > 5) return { valid: false, message: 'No se pueden subir más de 5 archivos.' };
+
+        return { valid: true };
+    };
+
+    const isLongText = (text, max = 220) => text && text.length > max;
+
+    const toggleExpandMensaje = (id) => {
+        setExpandedMensaje((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const toggleExpandRespuesta = (id) => {
+        setExpandedRespuesta((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
 
     return (
-        <div className="documentos-container">
-            <div className="documentos-content">
-                <div className="top-section">
-                    <h1 className="title">Comentarios</h1>
-                    <div className="filter-actions">
-                        <Search
-                            value={searchTerm}
-                            onChange={handleSearch}
-                            placeholder={'Buscar comentarios...'}
-                        />
-                        <button onClick={() => handleOpenPopup('create')}>
-                            Crear Comentario
-                        </button>
+        <div className="comentarios-estudiante-container">
+            <div className="comentarios-header">
+                <h1>Mis Comentarios</h1>
+                <div className="header-actions">
+                    <input
+                        type="text"
+                        className="search-input"
+                        placeholder="Buscar..."
+                        value={searchTerm}
+                        onChange={handleSearch}
+                    />
+                    <button className="btn-crear-comentario" onClick={handleOpenCreate} disabled={loadingCreate}>
+                        + Nuevo Comentario
+                    </button>
+                </div>
+            </div>
+
+            {isPopupOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-container">
+                        <div className="modal-header-estudiante">
+                            <h2>Mis Comentarios</h2>
+                            <button className="btn-cancelar-header" onClick={handleClosePopup}>
+                                Cancelar
+                            </button>
+                        </div>
+
+                        <div className="modal-content-estudiante">
+                            <h3>Crear Nuevo Comentario</h3>
+                            
+                            <form onSubmit={handleSubmit}>
+                                <div className="form-group">
+                                    <label>Comentario</label>
+                                    <textarea
+                                        name="mensaje"
+                                        value={formData.mensaje}
+                                        onChange={handleInputChange}
+                                        placeholder="Describe tu situación o consulta..."
+                                        required
+                                        minLength={5}
+                                        maxLength={500}
+                                        rows={6}
+                                    />
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Nivel de Urgencia</label>
+                                        <select
+                                            name="nivelUrgencia"
+                                            value={formData.nivelUrgencia}
+                                            onChange={handleInputChange}
+                                            required
+                                        >
+                                            <option value="" disabled>Seleccione nivel</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="alta">Alta</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Tipo de Problema</label>
+                                        <select
+                                            name="tipoProblema"
+                                            value={formData.tipoProblema}
+                                            onChange={handleInputChange}
+                                            required
+                                        >
+                                            <option value="" disabled>Seleccione tipo</option>
+                                            <option value="General">General</option>
+                                            <option value="Personal">Personal</option>
+                                            <option value="De Empresa">De Empresa</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Archivos Adjuntos</label>
+                                    <FileUpload 
+                                        onFilesSelected={handleFilesSelected}
+                                        maxFiles={5}
+                                    />
+                                    {selectedFiles.length > 0 && (
+                                        <div className="files-preview">
+                                            <p className="files-count">Archivos adjuntos ({selectedFiles.length})</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="form-actions">
+                                    <button type="submit" className="btn-enviar" disabled={loadingCreate}>
+                                        {loadingCreate ? 'Enviando...' : 'Enviar Comentario'}
+                                    </button>
+                                    <button type="button" className="btn-cancelar" onClick={handleClosePopup}>
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
+            )}
 
-                <div className="tabla-docs">
-                    {filteredComentarios.length > 0 ? (
-                        filteredComentarios.map((comentario) => (
-                            <div key={comentario._id} className="doc-card">
-                                <div className="doc-header">
-                                    <strong>{comentario.usuario}</strong>
-                                    <span className="doc-estado">{comentario.estado}</span>
+            {isEditPopupOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-container">
+                        <div className="modal-header-estudiante">
+                            <h2>Editar Comentario</h2>
+                            <button className="btn-cancelar-header" onClick={handleCloseEdit}>
+                                Cancelar
+                            </button>
+                        </div>
+
+                        <div className="modal-content-estudiante">
+                            <h3>Actualiza tu comentario</h3>
+                            <form onSubmit={handleEditSubmit}>
+                                <div className="form-group">
+                                    <label>Comentario</label>
+                                    <textarea
+                                        name="mensaje"
+                                        value={editFormData.mensaje}
+                                        onChange={handleEditInputChange}
+                                        placeholder="Edita tu comentario..."
+                                        required
+                                        minLength={5}
+                                        maxLength={500}
+                                        rows={6}
+                                    />
                                 </div>
-                                <div className="doc-info">
-                                    <p>{comentario.mensaje}</p>
-                                    <p className="comentario">
-                                        Tipo: {comentario.tipoProblema} — Urgencia: {comentario.nivelUrgencia}
-                                    </p>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Nivel de Urgencia</label>
+                                        <select
+                                            name="nivelUrgencia"
+                                            value={editFormData.nivelUrgencia}
+                                            onChange={handleEditInputChange}
+                                            required
+                                        >
+                                            <option value="" disabled>Seleccione nivel</option>
+                                            <option value="normal">Normal</option>
+                                            <option value="alta">Alta</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Tipo de Problema</label>
+                                        <select
+                                            name="tipoProblema"
+                                            value={editFormData.tipoProblema}
+                                            onChange={handleEditInputChange}
+                                            required
+                                        >
+                                            <option value="" disabled>Seleccione tipo</option>
+                                            <option value="General">General</option>
+                                            <option value="Personal">Personal</option>
+                                            <option value="De Empresa">De Empresa</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="doc-acciones">
-                                    <button onClick={() => handleDelete(comentario._id)}>Responder</button>
+
+                                <div className="form-group">
+                                    <label>Archivos Adjuntos</label>
+                                    <FileUpload 
+                                        key={editModalKey}
+                                        onFilesSelected={handleFilesSelectedEdit}
+                                        maxFiles={5}
+                                    />
+                                    {selectedFilesEdit.length > 0 && (
+                                        <div className="files-preview">
+                                            <p className="files-count">Archivos adjuntos ({selectedFilesEdit.length})</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="form-actions">
+                                    <button type="submit" className="btn-enviar" disabled={loadingUpdate}>
+                                        {loadingUpdate ? 'Guardando...' : 'Guardar Cambios'}
+                                    </button>
+                                    <button type="button" className="btn-cancelar" onClick={handleCloseEdit}>
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="comentarios-list">
+                {loading ? (
+                    <div className="empty-state">Cargando...</div>
+                ) : comentariosFiltrados.length === 0 ? (
+                    <div className="empty-state">No hay comentarios.</div>
+                ) : (
+                    comentariosFiltrados.map((comentario) => (
+                        <div key={comentario.id} className="comentario-card">
+                            <div className="comentario-header-card">
+                                <div className="user-info">
+                                    <div className="user-avatar">
+                                        {getUserInitials(comentario.usuario?.nombreCompleto)}
+                                    </div>
+                                    <div>
+                                        <div className="user-name">
+                                            {comentario.usuario?.nombreCompleto || `Usuario #${comentario.usuarioId}`}
+                                        </div>
+                                        <div className="comentario-date">
+                                            {formatDate(comentario.fechaCreacion)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="comentario-badges">
+                                    <span className={getUrgenciaClass(comentario.nivelUrgencia)}>
+                                        {comentario.nivelUrgencia === 'alta' ? '⚠️ Urgencia Alta' : 'Normal'}
+                                    </span>
+                                    <span className="tipo-badge">{comentario.tipoProblema}</span>
+                                    {!comentario.respuesta && (
+                                        <button
+                                            type="button"
+                                            className="btn-editar"
+                                            onClick={() => handleOpenEdit(comentario)}
+                                        >
+                                            Editar
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                        ))
-                    ) : (
-                        <p>No hay comentarios disponibles.</p>
-                    )}
-                </div>
+
+                            <div className="comentario-body">
+                                <p title={comentario.mensaje}>
+                                    {expandedMensaje[comentario.id]
+                                        ? comentario.mensaje
+                                        : truncateText(comentario.mensaje)}
+                                </p>
+                                {isLongText(comentario.mensaje) && (
+                                    <button
+                                        type="button"
+                                        className="btn-crear-comentario"
+                                        onClick={() => toggleExpandMensaje(comentario.id)}
+                                    >
+                                        {expandedMensaje[comentario.id] ? 'Ver menos' : 'Ver completo'}
+                                    </button>
+                                )}
+
+                                {comentario.archivos && comentario.archivos.length > 0 && (
+                                    <div className="archivos-section">
+                                        <p className="archivos-title">Archivos adjuntos:</p>
+                                        {comentario.archivos.map((archivo, index) => (
+                                            <div key={index} className="archivo-item-estudiante">
+                                                <span className="archivo-icon">📎</span>
+                                                <a
+                                                    href={`http://localhost:3000/api/comentario/archivo/${comentario.id}/${index}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="archivo-link"
+                                                >
+                                                    {archivo.nombre}
+                                                </a>
+                                                <span className="archivo-size">
+                                                    {archivo.tamaño ? `${(archivo.tamaño / 1024 / 1024).toFixed(1)} MB` : ''}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {comentario.respuesta && (
+                                    <div className="respuesta-docente">
+                                        <div className="respuesta-header">
+                                            <div className="profesor-avatar">P</div>
+                                            <div>
+                                                <div className="profesor-name">Prof. María González</div>
+                                                <div className="respuesta-date">{formatDate(comentario.fechaCreacion)}</div>
+                                            </div>
+                                        </div>
+                                        <p className="respuesta-text" title={comentario.respuesta}>
+                                            {expandedRespuesta[comentario.id]
+                                                ? comentario.respuesta
+                                                : truncateText(comentario.respuesta, 180)}
+                                        </p>
+                                        {isLongText(comentario.respuesta, 180) && (
+                                            <button
+                                                type="button"
+                                                className="btn-crear-comentario"
+                                                onClick={() => toggleExpandRespuesta(comentario.id)}
+                                            >
+                                                {expandedRespuesta[comentario.id] ? 'Ver menos' : 'Ver respuesta completa'}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );

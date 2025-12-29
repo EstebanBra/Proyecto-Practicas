@@ -1,7 +1,8 @@
 import axios from 'axios';
 import cookies from 'js-cookie';
 
-const API_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/api';
+// Usa proxy de Vite en desarrollo; permite override con VITE_BASE_URL
+const API_URL = import.meta.env.VITE_BASE_URL || '/api';
 
 const instance = axios.create({
   baseURL: API_URL,

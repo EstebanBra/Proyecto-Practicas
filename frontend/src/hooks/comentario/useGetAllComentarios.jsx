@@ -11,7 +11,7 @@ export function useGetAllComentarios() {
         setError(null);
         try {
             const response = await getAllComentarios();
-            setComentarios(response.data);
+            setComentarios(response?.data ?? []);
         }
         catch (error) {
             setError(error);

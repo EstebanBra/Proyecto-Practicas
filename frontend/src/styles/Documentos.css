@@ -203,3 +203,21 @@
     font-weight: bold;
     color: #003366;
 }
+
+.doc-card.urgencia-alta{
+    background-color: #fbc2c2;
+    border: 2px solid #ff4d4d;
+    box-shadow: 0 4px 8px rgba(255, 0, 0, 0.2);
+}
+
+.doc-card.urgencia-alta:nth-child(odd)::after {
+    border-right-color: #ffe6e6 !important;
+}
+
+.doc-card.doc-card.urgencia-alta:nth-child(even)::after {
+    border-left-color: #ffe6e6 !important;
+}
+
+.doc-card.urgencia-alta .doc-nombre strong {
+    color: #d32f2f;
+}

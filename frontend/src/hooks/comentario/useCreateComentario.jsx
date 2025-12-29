@@ -11,7 +11,7 @@ export function useCreateComentario() {
         setError(null);
         try {
             const response = await createComentario(dataComentario);
-            if (response.success) {
+            if (response.status === "Success") {
                 Swal.fire({
                     icon: 'success',
                     title: 'Éxito',

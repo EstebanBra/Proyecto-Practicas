@@ -2,8 +2,17 @@ import axios from './root.service.js';
 
 export async function createComentario(dataComentario) {
     try {
+        // Si ya es FormData, enviarlo directamente
+        if (dataComentario instanceof FormData) {
+            const response = await axios.post('/comentario', dataComentario, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            return response.data;
+        }
         // Si hay archivos, usar FormData
-        if (dataComentario.archivos && dataComentario.archivos.length > 0) {
+        else if (dataComentario.archivos && dataComentario.archivos.length > 0) {
             const formData = new FormData();
             formData.append('mensaje', dataComentario.mensaje);
             formData.append('estado', dataComentario.estado || 'Pendiente');

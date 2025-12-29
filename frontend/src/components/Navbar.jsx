@@ -53,9 +53,21 @@ const Navbar = () => {
                                 setMenuOpen(false); 
                                 addActiveClass();
                             }} 
-                            activeClassName="active"
+                            className={({ isActive }) => isActive ? 'active' : ''}
                         >
                             Inicio
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink 
+                            to="/comentarios"
+                            onClick={() => {
+                                setMenuOpen(false); 
+                                addActiveClass();
+                            }} 
+                            className={({ isActive }) => isActive ? 'active' : ''}
+                        >
+                            Comentarios
                         </NavLink>
                     </li>
                     {userRole === 'administrador' && (
@@ -66,7 +78,7 @@ const Navbar = () => {
                                 setMenuOpen(false); 
                                 addActiveClass();
                             }} 
-                            activeClassName="active"
+                            className={({ isActive }) => isActive ? 'active' : ''}
                         >
                             Usuarios
                         </NavLink>
@@ -79,7 +91,7 @@ const Navbar = () => {
                                 logoutSubmit(); 
                                 setMenuOpen(false); 
                             }} 
-                            activeClassName="active"
+                            className={({ isActive }) => isActive ? 'active' : ''}
                         >
                             Cerrar sesión
                         </NavLink>

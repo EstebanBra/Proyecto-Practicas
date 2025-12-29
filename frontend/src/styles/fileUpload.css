@@ -1,0 +1,151 @@
+.file-upload-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.drop-zone {
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.drop-zone.dragging {
+    border-color: #0066cc;
+    background: #e0f2fe;
+}
+
+.drop-zone:hover {
+    border-color: #0066cc;
+    background: #f0f9ff;
+}
+
+.drop-zone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.upload-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto;
+    color: #9ca3af;
+}
+
+.drop-text {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.drop-subtext {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #6b7280;
+}
+
+.drop-info {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.files-list {
+    margin-top: 24px;
+    width: 100%;
+}
+
+.files-count {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 12px 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.file-item:last-child {
+    margin-bottom: 0;
+}
+
+.file-item:hover {
+    background: #f9fafb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.file-icon {
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.file-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1f2937;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.remove-file-btn {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-file-btn:hover {
+    background: #fca5a5;
+    transform: scale(1.1);
+}
