@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useGetAllComentarios } from '../hooks/comentario/useGetAllComentarios.jsx';
 import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario.jsx';
+import { useDeleteComentario } from '../hooks/comentario/useDeleteComentario.jsx';
+import Swal from 'sweetalert2';
 import '../styles/comentario.css';
 
 const ComentarioDocente = () => {
     const { comentarios, handleGetAllComentarios, loading } = useGetAllComentarios();
     const { handleUpdateComentario, loading: loadingUpdate } = useUpdateComentario();
+    const { handleDeleteComentario } = useDeleteComentario();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -299,6 +302,7 @@ const ComentarioDocente = () => {
                             <div style={{ 
                                 display: 'flex', 
                                 justifyContent: 'flex-end', 
+                                gap: '10px',
                                 padding: '10px 0 0',
                                 borderTop: '1px solid #eee',
                                 marginTop: '10px'
@@ -316,6 +320,28 @@ const ComentarioDocente = () => {
                                     }}
                                 >
                                     {comentario.estado === 'Respondido' ? '✏️ Editar respuesta' : '💬 Responder'}
+                                </button>
+                                <button
+                                    className="btn-eliminar-docente"
+                                    onClick={async () => {
+                                        const result = await Swal.fire({
+                                            title: '¿Eliminar comentario?',
+                                            text: 'Esta acción es irreversible.',
+                                            icon: 'warning',
+                                            showCancelButton: true,
+                                            confirmButtonColor: '#dc2626',
+                                            cancelButtonColor: '#6b7280',
+                                            confirmButtonText: 'Sí, eliminar',
+                                            cancelButtonText: 'Cancelar'
+                                        });
+                                        if (result.isConfirmed) {
+                                            await handleDeleteComentario(comentario.id);
+                                            refreshComentarios();
+                                            Swal.fire('Eliminado', 'El comentario ha sido eliminado.', 'success');
+                                        }
+                                    }}
+                                >
+                                    🗑️ Eliminar
                                 </button>
                             </div>
                         </div>

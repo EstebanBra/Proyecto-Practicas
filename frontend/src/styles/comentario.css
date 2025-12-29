@@ -192,6 +192,26 @@
     background: #ffe0b2;
 }
 
+/* Botón Eliminar: estilo naranja/rojo */
+.btn-eliminar,
+.btn-eliminar-docente {
+    background: #f97316;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.btn-eliminar:hover,
+.btn-eliminar-docente:hover {
+    background: #ea580c;
+}
+
 .comentario-body {
     margin-bottom: 10px;
 }
