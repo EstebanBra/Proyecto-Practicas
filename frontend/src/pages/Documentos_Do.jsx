@@ -40,7 +40,7 @@ const DocsEntregados = () => {
     const fetchData = useCallback(async () => {
         await fetchDocumentos();
         await fetchEvaluacionesDocente();
-        await refetchPracticas(); // ACTUALIZAR PRÁCTICAS
+        await refetchPracticas();
         setShouldRefetch(false);
     }, [fetchDocumentos, fetchEvaluacionesDocente, refetchPracticas]);
 
@@ -50,12 +50,10 @@ const DocsEntregados = () => {
         }
     }, [shouldRefetch, fetchData]);
 
-    // Procesar información de prácticas
     useEffect(() => {
         if (practicas.length > 0 && documentos.length > 0 && shouldRefetch === false) {
             const practicasMap = {};
 
-            // Crear mapa de prácticas para búsqueda rápida
             practicas.forEach(practica => {
                 if (practica && practica.id_practica) {
                     practicasMap[practica.id_practica] = practica;
@@ -64,13 +62,8 @@ const DocsEntregados = () => {
 
             setPracticasInfo(practicasMap);
 
-            // Enriquecer documentos con información de prácticas
             const documentosEnriquecidos = documentos.map(doc => {
                 const practica = practicasMap[doc.id_practica];
-
-                // Verificar si el docente está vinculado a esta práctica
-                // Asumiendo que las prácticas ya vienen filtradas por el servicio
-                // Si necesitas más lógica de filtrado, puedes agregarla aquí
 
                 return {
                     ...doc,

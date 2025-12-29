@@ -168,33 +168,9 @@ const DocsFinales = () => {
         <div className="documentos-container">
             <div className="documentos-content">
                 <div className="documentos-header">
+
                     <h2 className="documentos-title">Subida de Documentos Finales</h2>
 
-                    {/* Selector de práctica - NUEVO */}
-                    {practicas.length > 0 && (
-                        <div className="practica-selector" style={{ marginTop: "15px" }}>
-                            <label htmlFor="practica-select" style={{ marginRight: "10px" }}>
-                                <strong>Seleccionar Práctica:</strong>
-                            </label>
-                            <select
-                                id="practica-select"
-                                value={idPracticaSeleccionada || ""}
-                                onChange={(e) => setIdPracticaSeleccionada(Number(e.target.value))}
-                                style={{ padding: "8px", borderRadius: "4px" }}
-                                disabled={loadingPracticas}
-                            >
-                                {loadingPracticas ? (
-                                    <option>Cargando prácticas...</option>
-                                ) : (
-                                    practicas.map(practica => (
-                                        <option key={practica.id_practica} value={practica.id_practica}>
-                                            {practica.empresa || `Práctica #${practica.id_practica}`}
-                                        </option>
-                                    ))
-                                )}
-                            </select>
-                        </div>
-                    )}
                 </div>
 
                 <div className="upload-section-main">
@@ -315,16 +291,6 @@ const DocsFinales = () => {
                 </div>
 
                 <div className="table-section">
-                    <div className="top-bar-docs">
-                        <div className="search-container">
-                            <input
-                                type="text"
-                                placeholder="Buscar documento..."
-                                value={filter}
-                                onChange={(e) => setFilter(e.target.value)}
-                            />
-                        </div>
-                    </div>
 
                     <div className="document-table">
                         <div className="table-header">
