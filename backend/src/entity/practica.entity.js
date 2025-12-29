@@ -90,7 +90,7 @@ const PracticaSchema = new EntitySchema({
     fecha_actualizacion: {
       type: "timestamp",
       default: () => "CURRENT_TIMESTAMP",
-      onUpdate: "CURRENT_TIMESTAMP",
+      nullable: false,
     },
   },
   relations: {

@@ -5,6 +5,11 @@ const practicaController = {
     // Crear solicitud de práctica
     crearPractica: async (req, res) => {
         try {
+            // Verificar si hubo error en la carga de archivos (multer)
+            if (req.fileValidationError) {
+                return error(res, 400, req.fileValidationError);
+            }
+
             // Normalizar tipo_presencia a minúsculas para la BD
             let tipo_presencia = req.body.tipo_presencia;
             if (tipo_presencia) {
@@ -16,11 +21,29 @@ const practicaController = {
                 tipo_presencia = mapa[tipo_presencia] || tipo_presencia.toLowerCase();
             }
             
+            //procesar archivos subidos
+            const documentos = req.files ? req.files.map(file => ({
+                nombre: file.originalname,
+                url: `/uploads/practicas/${file.filename}`,
+                tipo: file.mimetype
+            })) : [];
+            
+            if (documentos.length === 0) {
+                return error(res, 400, "Debe proporcionar al menos un documento");
+            }
+            
+            // Validar que tipo_practica sea válido si viene en el body
+            let tipo_practica = req.body.tipo_practica || "propia";
+            if (!["publicada", "propia"].includes(tipo_practica)) {
+                return error(res, 400, "El tipo de práctica debe ser 'publicada' o 'propia'");
+            }
+
             const datosPractica = {
                 ...req.body,
                 tipo_presencia: tipo_presencia,
+                documentos: documentos,
                 id_estudiante: req.user.id,
-                tipo_practica: "propia",
+                tipo_practica: tipo_practica,
                 estado: "Revision_Pendiente"
             };
             const result = await practicaService.crearPractica(datosPractica);
@@ -69,8 +92,29 @@ const practicaController = {
             const { id } = req.params;
             const { estado, observaciones } = req.body;
 
-            if (!["Aprobada", "Rechazada", "En_Curso", "Finalizada"].includes(estado)) {
-                return error(res, 400, "Estado no válido");
+            if (!estado) {
+                return error(res, 400, "El estado es obligatorio");
+            }
+
+            // Validar que el estado sea válido
+            const estadosValidos = ["Aprobada", "Rechazada", "En_Curso", "Finalizada"];
+            if (!estadosValidos.includes(estado)) {
+                return error(res, 400, `Estado no válido. Debe ser uno de: ${estadosValidos.join(", ")}`);
+            }
+
+            // Verificar que la práctica existe antes de actualizar
+            const practicaExistente = await practicaService.obtenerPracticaPorId(id);
+            if (!practicaExistente) {
+                return error(res, 404, "Práctica no encontrada");
+            }
+
+            // Validar transiciones de estado lógicas
+            const estadoActual = practicaExistente.estado;
+            if (estadoActual === "Finalizada") {
+                return error(res, 400, "No se puede modificar el estado de una práctica finalizada");
+            }
+            if (estadoActual === "Rechazada" && estado !== "Rechazada") {
+                return error(res, 400, "Una práctica rechazada no puede cambiar a otro estado");
             }
 
             const practica = await practicaService.actualizarEstadoPractica(id, estado, observaciones);

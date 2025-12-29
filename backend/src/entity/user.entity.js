@@ -44,7 +44,6 @@ const UserSchema = new EntitySchema({
     updatedAt: {
       type: "timestamp with time zone",
       default: () => "CURRENT_TIMESTAMP",
-      onUpdate: "CURRENT_TIMESTAMP",
       nullable: false,
     },
   },

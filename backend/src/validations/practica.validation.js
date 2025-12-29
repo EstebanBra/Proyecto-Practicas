@@ -28,7 +28,7 @@ export const practicaBodyValidation = Joi.object({
     "number.min": "Las semanas deben ser mayores a 0",
   }),
   tipo_presencia: Joi.string()
-    .valid("presencial", "virtual", "hibrido")
+    .valid("presencial", "virtual", "hibrido", "Presencial", "Virtual", "Hibrido")
     .default("presencial")
     .messages({
       "any.only": "El tipo de presencia debe ser: presencial, virtual o híbrido",
@@ -58,13 +58,8 @@ export const practicaBodyValidation = Joi.object({
     "any.required": "El teléfono del supervisor es obligatorio",
     "string.pattern.base": "El teléfono del supervisor debe ser válido",
   }),
-  documentos: Joi.array().items(Joi.object({
-    nombre: Joi.string().required(),
-    url: Joi.string().required(),
-    tipo: Joi.string().required()
-  })).min(1).required().messages({
-    "any.required": "Los documentos son obligatorios",
-    "array.min": "Debe proporcionar al menos un documento",
+  documentos: Joi.forbidden().messages({
+    "any.unknown": "Los documentos se envían como archivos multipart"
   }),
   estado: Joi.string()
     .valid("Revision_Pendiente", "Aprobada", "Rechazada", "En_Curso", "Finalizada")
@@ -75,7 +70,7 @@ export const practicaBodyValidation = Joi.object({
   observaciones: Joi.string().optional().allow("").max(1000).messages({
     "string.max": "Las observaciones no pueden exceder 1000 caracteres",
   }),
-});
+}).unknown(true);
 
 export const practicaQueryValidation = Joi.object({
   id_practica: Joi.number().integer().optional(),
