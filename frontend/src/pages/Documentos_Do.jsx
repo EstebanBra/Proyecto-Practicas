@@ -8,7 +8,7 @@ import useUpdateEstadoDocumento from "@hooks/documentos_finales/useUpdateEstadoD
 import useGetEvaluaciones from "@hooks/evaluaciones_finales/useGetEvaluaciones.jsx";
 import useUpdateEvaluacion from "@hooks/evaluaciones_finales/useUpdateEvaluacion.jsx";
 import useCrearEvaluacion from "@hooks/evaluaciones_finales/useCrearEvaluacion.jsx";
-import { useTodasPracticas } from "@hooks/practicas/useTodasPracticas"; // REEMPLAZO
+import { useTodasPracticas } from "@hooks/practicas/useTodasPracticas";
 
 const DocsEntregados = () => {
     const [filter, setFilter] = useState("");
@@ -113,8 +113,6 @@ const DocsEntregados = () => {
     };
 
     const handleAddNote = async (doc) => {
-        const practicaInfo = practicasInfo[doc.id_practica];
-
         const { value: formValues } = await Swal.fire({
             title: `Evaluar ${doc.tipo === 'informe' ? 'Informe' : 'Autoevaluación'}`,
             html: `
@@ -267,6 +265,7 @@ const DocsEntregados = () => {
                     ) : currentDocs.length > 0 ? (
                         currentDocs.map((doc) => {
                             const evaluacion = getEvaluacionPorDocumento(doc.id_documento, doc.tipo);
+                            // eslint-disable-next-line no-unused-vars
                             const practica = practicasInfo[doc.id_practica];
 
                             return (

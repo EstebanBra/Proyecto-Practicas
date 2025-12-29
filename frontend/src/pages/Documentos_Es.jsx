@@ -8,13 +8,13 @@ import { usePracticasEstudiante } from "@hooks/practicas/usePracticasEstudiante"
 const DocsFinales = () => {
     const [informeFile, setInformeFile] = useState(null);
     const [autoevaluacionFile, setAutoevaluacionFile] = useState(null);
-    const [filter, setFilter] = useState("");
+    const [filter] = useState("");
     const [selectedDoc, setSelectedDoc] = useState(null);
     const [idPracticaSeleccionada, setIdPracticaSeleccionada] = useState(null);
 
     const { documentos, loading: loadingDocs, fetchDocumentos } = useGetDocumentos();
     const { uploading, handleSubirDocumento } = useSubirDocumento(fetchDocumentos);
-    const { practicas, loading: loadingPracticas } = usePracticasEstudiante();
+    const { practicas} = usePracticasEstudiante();
 
     useEffect(() => {
         fetchDocumentos();
@@ -186,10 +186,6 @@ const DocsFinales = () => {
                                     >
                                         Ver Informe
                                     </button>
-                                    <div className="nota-display">
-                                        <strong>Estado: </strong>
-                                        {getEstadoConNota(informeSeleccionado)}
-                                    </div>
                                     <div className="comentario-display">
                                         <strong>Comentario: </strong>
                                         {mostrarComentarioCompleto(informeSeleccionado)}
@@ -233,10 +229,6 @@ const DocsFinales = () => {
                                     >
                                         Ver Autoevaluación
                                     </button>
-                                    <div className="nota-display">
-                                        <strong>Estado: </strong>
-                                        {getEstadoConNota(autoevaluacionSeleccionada)}
-                                    </div>
                                     <div className="comentario-display">
                                         <strong>Comentario: </strong>
                                         {mostrarComentarioCompleto(autoevaluacionSeleccionada)}
@@ -299,7 +291,6 @@ const DocsFinales = () => {
                             <div>Estado</div>
                             <div>Tipo</div>
                             <div>Nota</div>
-                            <div>Comentario</div>
                         </div>
 
                         {loadingDocs && (
@@ -334,9 +325,6 @@ const DocsFinales = () => {
                                     <div>{doc.tipo === "informe" ? "Informe" : "Autoevaluación"}</div>
                                     <div className="nota-columna">
                                         {mostrarNota(doc)}
-                                    </div>
-                                    <div className="comentario-columna" title={doc.comentario || "Sin comentarios"}>
-                                        {mostrarComentario(doc)}
                                     </div>
                                 </div>
                             </div>
