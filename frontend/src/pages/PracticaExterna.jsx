@@ -47,11 +47,12 @@ const PracticaExterna = () => {
                 return;
             }
 
-            // Verificar si ya tiene una práctica en progreso
+            // Verificar si ya tiene una práctica activa o en progreso
             try {
                 const response = await obtenerMiPractica();
                 if (response.status === 'Success' && response.data) {
-                    if (response.data.estado === 'en_progreso') {
+                    const estadosActivos = ['activa', 'en_progreso', 'pendiente_revision'];
+                    if (estadosActivos.includes(response.data.estado)) {
                         setPracticaActiva(response.data);
                     }
                 }
@@ -190,18 +191,56 @@ const PracticaExterna = () => {
 
     if (!isAuthorized) return null;
 
+    // Función para formatear fechas correctamente
+    const formatearFecha = (fecha) => {
+        if (!fecha) return 'No especificada';
+        try {
+            // Si la fecha viene como string ISO, ajustar zona horaria
+            const fechaObj = new Date(fecha);
+            // Ajustar para evitar problemas de timezone
+            const fechaLocal = new Date(fechaObj.getTime() + fechaObj.getTimezoneOffset() * 60000);
+            return fechaLocal.toLocaleDateString('es-CL', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        } catch {
+            return 'Fecha inválida';
+        }
+    };
+
+    // Obtener clase y texto del estado
+    const getEstadoInfo = (estado) => {
+        const estados = {
+            'activa': { clase: 'badge-activa', texto: 'Activa' },
+            'en_progreso': { clase: 'badge-progreso', texto: 'En Progreso' },
+            'pendiente_revision': { clase: 'badge-pendiente', texto: 'Pendiente de Revisión' },
+            'finalizada': { clase: 'badge-finalizada', texto: 'Finalizada' },
+            'cancelada': { clase: 'badge-cancelada', texto: 'Cancelada' }
+        };
+        return estados[estado] || { clase: 'badge-default', texto: estado };
+    };
+
     // Si ya tiene una práctica activa
     if (practicaActiva) {
+        const estadoInfo = getEstadoInfo(practicaActiva.estado);
+        
         return (
             <div className="practica-externa-container">
                 <div className="practica-activa-card">
                     <div className="icon-warning">⚠️</div>
-                    <h2>Ya tienes una práctica en progreso</h2>
+                    <h2>Ya tienes una práctica registrada</h2>
                     <div className="practica-info">
                         <p><strong>Empresa:</strong> {practicaActiva.empresa || 'No especificada'}</p>
-                        <p><strong>Estado:</strong> <span className="badge badge-progreso">En Progreso</span></p>
-                        <p><strong>Fecha inicio:</strong> {new Date(practicaActiva.fecha_inicio).toLocaleDateString('es-CL')}</p>
-                        <p><strong>Fecha fin:</strong> {new Date(practicaActiva.fecha_fin).toLocaleDateString('es-CL')}</p>
+                        <p><strong>Estado:</strong> <span className={`badge ${estadoInfo.clase}`}>{estadoInfo.texto}</span></p>
+                        <p><strong>Fecha inicio:</strong> {formatearFecha(practicaActiva.fecha_inicio)}</p>
+                        <p><strong>Fecha fin:</strong> {formatearFecha(practicaActiva.fecha_fin)}</p>
+                        {practicaActiva.semanas && (
+                            <p><strong>Semanas:</strong> {practicaActiva.semanas}</p>
+                        )}
+                        {practicaActiva.tipo_presencia && (
+                            <p><strong>Modalidad:</strong> {practicaActiva.tipo_presencia}</p>
+                        )}
                     </div>
                     <p className="info-text">
                         Debes finalizar tu práctica actual antes de poder registrar una nueva.
@@ -209,6 +248,9 @@ const PracticaExterna = () => {
                     <div className="action-buttons">
                         <button onClick={() => navigate('/bitacoras')} className="btn-primary">
                             Ir a mis Bitácoras
+                        </button>
+                        <button onClick={() => navigate('/documentos-finales')} className="btn-secondary">
+                            Documentos Finales
                         </button>
                     </div>
                 </div>

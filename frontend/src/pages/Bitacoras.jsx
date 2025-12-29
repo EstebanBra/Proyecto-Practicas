@@ -113,13 +113,21 @@ const Bitacoras = () => {
             return;
         }
 
-        try {
-            const fileToUpload = getFileToUpload();
-            if (!fileToUpload) {
-                showAlert('Error', 'No se pudo obtener el archivo', 'error');
-                return;
-            }
+        // Validar que se haya seleccionado una semana si el archivo es de bitácora
+        const fileToUpload = getFileToUpload();
+        if (!fileToUpload) {
+            showAlert('Error', 'No se pudo obtener el archivo', 'error');
+            return;
+        }
 
+        // Verificar si el archivo contiene "bitacora" en el nombre
+        const esBitacora = fileToUpload.name.toLowerCase().includes('bitacora');
+        if (esBitacora && !formData.semana) {
+            showAlert('Advertencia', 'Debes seleccionar la semana antes de subir un archivo de bitácora', 'warning');
+            return;
+        }
+
+        try {
             const { data, error } = await subirArchivo(fileToUpload);
 
             if (error) {
@@ -129,7 +137,9 @@ const Bitacoras = () => {
 
             const documentData = {
                 id_practica: idPractica,
-                ...data.data
+                ...data.data,
+                // Incluir la semana si es un documento de bitácora
+                ...(esBitacora && { semana: parseInt(formData.semana) })
             };
 
             const { data: docData, error: docError } = await registrarDocumento(documentData);
@@ -142,7 +152,8 @@ const Bitacoras = () => {
             setDocumentoId(docData.data.id_documento);
             setArchivoSubido({
                 nombre: data.data.nombre_archivo,
-                id: docData.data.id_documento
+                id: docData.data.id_documento,
+                semana: esBitacora ? parseInt(formData.semana) : null
             });
             clearFiles();
             fetchDocumentos();

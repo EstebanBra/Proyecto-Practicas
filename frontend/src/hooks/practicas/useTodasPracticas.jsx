@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { obtenerTodasPracticas } from '@services/practica.service.js';
 
 export function useTodasPracticas() {
@@ -27,7 +27,7 @@ export function useTodasPracticas() {
         fetchPracticas();
     }, []);
 
-    const refetch = async () => {
+    const refetch = useCallback(async () => {
         setLoading(true);
         const result = await obtenerTodasPracticas();
         if (result.status === "Error") {
@@ -37,7 +37,7 @@ export function useTodasPracticas() {
             setError(null);
         }
         setLoading(false);
-    };
+    }, []);
 
     return { practicas, loading, error, refetch };
 }

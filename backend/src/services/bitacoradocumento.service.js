@@ -29,7 +29,7 @@ export async function registrarDocumento(data) {
 
         // Validar el formato del documento
         if (!FORMATOS_PERMITIDOS.includes(data.formato.toLowerCase())) {
-            return [null, `Formato no permitido. Los formatos permitidos son: ${FORMATOS_PERMITIDOS.join(", ")}`];
+            return [null, `Formato no permitido. Formatos permitidos: ${FORMATOS_PERMITIDOS.join(", ")}`];
         }
 
         // Verificar si existe la práctica
@@ -46,19 +46,49 @@ export async function registrarDocumento(data) {
             return [null, "Solo se pueden registrar documentos cuando la práctica está en progreso"];
         }
 
-        // Verificar si ya existe un documento del mismo tipo
+        // Determinar tipo de documento
         const tipoDocumento = determinarTipoDocumento(data.nombre_archivo);
 
+        // Obtener documentos existentes de esta práctica
         const documentosExistentes = await documentoRepository.find({
             where: { id_practica: Number(data.id_practica) }
         });
 
-        const documentoDelMismoTipo = documentosExistentes.find(doc =>
-            determinarTipoDocumento(doc.nombre_archivo) === tipoDocumento
-        );
+        // Para bitácoras: validar por semana
+        if (tipoDocumento === "bitacora") {
+            // La semana es requerida para documentos de bitácora
+            if (!data.semana) {
+                return [null, "Debe especificar la semana para documentos de bitácora"];
+            }
 
-        if (documentoDelMismoTipo) {
-            return [null, `Ya existe un documento de tipo ${tipoDocumento} para esta práctica`];
+            const semanaNum = parseInt(data.semana);
+            if (isNaN(semanaNum) || semanaNum < 1 || semanaNum > 20) {
+                return [null, "La semana debe ser un número entre 1 y 20"];
+            }
+
+            // Verificar si ya existe un documento de bitácora para esta semana
+            const bitacoraExistente = documentosExistentes.find(doc => 
+                determinarTipoDocumento(doc.nombre_archivo) === "bitacora" && 
+                doc.semana === semanaNum
+            );
+
+            if (bitacoraExistente) {
+                return [null, `Ya existe un documento de bitácora para la semana ${semanaNum}`];
+            }
+
+            data.semana = semanaNum;
+        } else {
+            // Para otros tipos (informe, autoevaluacion, documento): solo uno por práctica
+            const documentoDelMismoTipo = documentosExistentes.find(doc =>
+                determinarTipoDocumento(doc.nombre_archivo) === tipoDocumento
+            );
+
+            if (documentoDelMismoTipo) {
+                return [null, `Ya existe un documento de tipo ${tipoDocumento} para esta práctica`];
+            }
+            
+            // No asignar semana a documentos que no son bitácoras
+            data.semana = null;
         }
 
         // Crear y guardar el documento

@@ -18,7 +18,6 @@ const DocsEntregados = () => {
     const { documentos, loading: loadingDocs, fetchDocumentos } = useGetDocumentos();
     const {
         evaluacionesDocente,
-        loading: loadingEval,
         fetchEvaluacionesDocente,
         fetchEvaluacionByDocumento
     } = useGetEvaluaciones();
@@ -36,7 +35,7 @@ const DocsEntregados = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     // Mapear prácticas por id
     useEffect(() => {
@@ -57,7 +56,7 @@ const DocsEntregados = () => {
         setCurrentPage(1);
     };
 
-    const handleDownload = (ruta_archivo, nombre_archivo) => {
+    const handleDownload = (ruta_archivo) => {
         const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
         const relativePath = ruta_archivo.replace(/\\/g, '/').split('uploads/')[1];
         const downloadUrl = `${baseUrl}/uploads/${relativePath}`;
@@ -233,14 +232,14 @@ const DocsEntregados = () => {
 
                                         {doc.comentario && (
                                             <div className="comentario">
-                                                "{doc.comentario}"
+                                                &ldquo;{doc.comentario}&rdquo;
                                             </div>
                                         )}
 
                                         <div className="doc-acciones">
                                             <button 
                                                 className="btn-descargar"
-                                                onClick={() => handleDownload(doc.ruta_archivo, doc.nombre_archivo)}
+                                                onClick={() => handleDownload(doc.ruta_archivo)}
                                             >
                                                 📥 Descargar
                                             </button>

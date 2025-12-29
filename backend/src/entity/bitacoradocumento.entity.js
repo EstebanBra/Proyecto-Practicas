@@ -14,6 +14,11 @@ const DocumentoSchema = new EntitySchema({
             type: "int",
             nullable: false
         },
+        semana: {
+            type: "int",
+            nullable: true,
+            comment: "Número de semana para bitácoras (null para otros tipos de documentos)"
+        },
         nombre_archivo: {
             type: "varchar",
             length: 255,

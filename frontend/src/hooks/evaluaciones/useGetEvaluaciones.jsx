@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     getEvaluacionesByDocente,
     getEvaluacionByDocumento,
@@ -10,7 +10,7 @@ const useGetEvaluaciones = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchEvaluacionesDocente = async () => {
+    const fetchEvaluacionesDocente = useCallback(async () => {
         setLoading(true);
         const response = await getEvaluacionesByDocente();
         if (response?.error) {
@@ -20,22 +20,22 @@ const useGetEvaluaciones = () => {
             setEvaluacionesDocente(response);
         }
         setLoading(false);
-    };
+    }, []);
 
-    const fetchEvaluacionByDocumento = async (id_documento) => {
+    const fetchEvaluacionByDocumento = useCallback(async (id_documento) => {
         setLoading(true);
         const response = await getEvaluacionByDocumento(id_documento);
         setEvaluacionDocumento(response?.error ? null : response);
         setLoading(false);
         return response;
-    };
+    }, []);
 
     useEffect(() => {
         const usuario = JSON.parse(sessionStorage.getItem('usuario'));
         if (usuario?.rol === 'docente') {
             fetchEvaluacionesDocente();
         }
-    }, []);
+    }, [fetchEvaluacionesDocente]);
 
     return {
         evaluacionesDocente,
