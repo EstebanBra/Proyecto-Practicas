@@ -3,6 +3,7 @@ import { useGetComentarios } from '../hooks/comentario/useGetComentarios.jsx';
 import { useCreateComentario } from '../hooks/comentario/useCreateComentario.jsx';
 import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario.jsx';
 import FileUploadComentario from '../components/FileUploadComentario.jsx';
+import Swal from 'sweetalert2';
 import '../styles/comentario.css';
 
 const Comentarios = () => {
@@ -94,11 +95,67 @@ const Comentarios = () => {
         setSelectedFilesEdit(files);
     };
 
+    // Función de validación para comentarios
+    const validateComentario = (data, archivos, isEdit = false) => {
+        const mensaje = (data.mensaje || '').trim();
+        
+        if (!mensaje) {
+            return { valid: false, message: 'El mensaje no puede estar vacío.' };
+        }
+        if (/^\d+$/.test(mensaje)) {
+            return { valid: false, message: 'El mensaje no puede contener solo números.' };
+        }
+        if (/^[^A-Za-z0-9]+$/.test(mensaje)) {
+            return { valid: false, message: 'El mensaje no puede contener solo caracteres especiales.' };
+        }
+        if (mensaje.length < 5) {
+            return { valid: false, message: 'El mensaje debe tener al menos 5 caracteres.' };
+        }
+        if (mensaje.length > 500) {
+            return { valid: false, message: 'El mensaje no puede exceder los 500 caracteres.' };
+        }
+
+        const nivel = data.nivelUrgencia;
+        if (nivel && !['normal', 'alta'].includes(nivel)) {
+            return { valid: false, message: 'Nivel de urgencia inválido.' };
+        }
+
+        const tipo = data.tipoProblema;
+        if (tipo && !['Personal', 'General', 'De Empresa'].includes(tipo)) {
+            return { valid: false, message: 'Tipo de problema inválido.' };
+        }
+
+        if (isEdit) {
+            const estado = data.estado;
+            if (estado && !['Abierto', 'Respondido', 'Pendiente'].includes(estado)) {
+                return { valid: false, message: 'Estado inválido.' };
+            }
+        }
+
+        if (archivos && archivos.length > 5) {
+            return { valid: false, message: 'No se pueden subir más de 5 archivos.' };
+        }
+
+        return { valid: true };
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // Validar antes de enviar
+        const validation = validateComentario(formData, selectedFiles, false);
+        if (!validation.valid) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Validación',
+                text: validation.message,
+                timer: 3000
+            });
+            return;
+        }
+
         const dataToSend = {
-            mensaje: formData.mensaje,
+            mensaje: formData.mensaje.trim(),
             nivelUrgencia: formData.nivelUrgencia,
             tipoProblema: formData.tipoProblema,
             archivos: selectedFiles
@@ -115,8 +172,20 @@ const Comentarios = () => {
         e.preventDefault();
         if (!editingComentario) return;
 
+        // Validar antes de enviar
+        const validation = validateComentario(editFormData, selectedFilesEdit, true);
+        if (!validation.valid) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Validación',
+                text: validation.message,
+                timer: 3000
+            });
+            return;
+        }
+
         const dataToSend = {
-            mensaje: editFormData.mensaje,
+            mensaje: editFormData.mensaje.trim(),
             nivelUrgencia: editFormData.nivelUrgencia,
             tipoProblema: editFormData.tipoProblema,
             estado: editFormData.estado,
