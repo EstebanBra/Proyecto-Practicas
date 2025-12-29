@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { updateComentario } from '@services/comentario.service.js';
+import Swal from 'sweetalert2';
 
 export function useUpdateComentario() {
     const [loading, setLoading] = useState(false);
@@ -11,9 +12,35 @@ export function useUpdateComentario() {
         setError(null);
         try {
             const response = await updateComentario(id, data);
-            setComentario(response.data);
+            // El backend devuelve { status: "Success", message, data }
+            if (response.status === 'Success') {
+                setComentario(response.data);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.message || 'Comentario actualizado exitosamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                return response;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Error al actualizar el comentario',
+                    timer: 3000
+                });
+                return null;
+            }
         } catch (error) {
             setError(error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Error al actualizar el comentario',
+                timer: 3000
+            });
+            return null;
         } finally {
             setLoading(false);
         }

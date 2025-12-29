@@ -1,123 +1,479 @@
+/* ============ ESTILOS ESTUDIANTE Y DOCENTE ============ */
 
-.tabla-docs {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    padding: 20px;
-    background: #e5ddd5; 
+.comentarios-estudiante-container {
+    padding: 100px 20px 40px;
     min-height: 100vh;
-    overflow-y: auto;
-    border-radius: 12px;
+    background: #f5f7fa;
 }
 
-
-.doc-card {
-    max-width: 70%;
-    padding: 12px 15px;
-    border-radius: 10px;
-    position: relative;
-    background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-    font-size: 0.95rem;
-    line-height: 1.4;
-    word-wrap: break-word;
-    transition: all 0.25s ease;
-}
-
-.doc-card:nth-child(odd) {
-    align-self: flex-start;
-    background: #ffffff; 
-    border-top-left-radius: 0;
-}
-
-.doc-card:nth-child(even) {
-    align-self: flex-end;
-    background: #dcf8c6; 
-    border-top-right-radius: 0;
-}
-
-.doc-card:nth-child(odd)::after,
-.doc-card:nth-child(even)::after {
-    content: "";
-    position: absolute;
-    width: 0;
-    height: 0;
-    border: 10px solid transparent;
-    top: 0;
-}
-
-.doc-card:nth-child(odd)::after {
-    left: -10px;
-    border-right-color: #ffffff;
-}
-
-.doc-card:nth-child(even)::after {
-    right: -10px;
-    border-left-color: #dcf8c6;
-}
-
-
-.doc-header {
+.comentarios-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 0 10px;
 }
 
-.doc-nombre strong {
-    color: #075e54;
+.comentarios-header h1 {
+    margin: 0;
+    color: #003366;
+    font-size: 1.8rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    min-width: 250px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #003366;
+}
+
+/* Docente search input */
+.docente-search-row {
+    padding: 0 20px;
+    margin-bottom: 15px;
+}
+
+.search-input-docente {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     font-size: 0.95rem;
 }
 
-.doc-estado {
-    font-size: 0.8rem;
-    color: #888;
-    font-weight: 400;
+.search-input-docente:focus {
+    outline: none;
+    border-color: #003366;
+    box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
 }
 
-
-.doc-info {
-    margin-bottom: 5px;
-    color: #222;
-}
-
-.archivo-item {
-    margin: 2px 0;
-}
-
-.comentario {
-    margin-top: 5px;
-    font-style: italic;
-    font-size: 0.9rem;
-    color: #555;
-}
-
-
-.doc-acciones {
-    display: flex;
-    justify-content: flex-end;
-    gap: 6px;
-    margin-top: 5px;
-}
-
-.doc-acciones button {
-    background: transparent;
+.btn-crear-comentario {
+    padding: 10px 20px;
+    background: #003366;
+    color: white;
     border: none;
-    color: #128c7e;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 0.8rem;
-    padding: 4px 6px;
-    border-radius: 5px;
+    font-weight: bold;
+    font-size: 0.95rem;
     transition: background 0.2s;
 }
 
-.doc-acciones button:hover {
-    background: rgba(0,0,0,0.05);
+.btn-crear-comentario:hover:not(:disabled) {
+    background: #004488;
 }
 
-.tabla-docs p {
-    text-align: center;
-    color: #777;
+.btn-crear-comentario:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.comentarios-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 0 10px;
+}
+
+.comentario-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.comentario-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.comentario-header-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: #e3f2fd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #1976d2;
     font-size: 0.9rem;
+}
+
+.user-name {
+    font-weight: bold;
+    color: #333;
+    display: block;
+}
+
+.comentario-date {
+    font-size: 0.8rem;
+    color: #888;
+    display: block;
+}
+
+.comentario-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.urgencia-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.urgencia-badge.normal {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.urgencia-badge.alta {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.tipo-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.btn-editar {
+    padding: 6px 12px;
+    background: #fff3e0;
+    color: #e65100;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.btn-editar:hover {
+    background: #ffe0b2;
+}
+
+.comentario-body {
+    margin-bottom: 10px;
+}
+
+.comentario-body > p {
+    margin: 0;
+    color: #444;
+    line-height: 1.6;
+}
+
+.archivos-section {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.archivos-title {
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.archivo-item-estudiante {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.archivo-item-estudiante:last-child {
+    border-bottom: none;
+}
+
+.archivo-icon {
+    font-size: 1.1rem;
+}
+
+.archivo-link {
+    color: #1976d2;
+    text-decoration: none;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.archivo-link:hover {
+    text-decoration: underline;
+}
+
+.archivo-size {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.respuesta-docente {
+    margin-top: 15px;
+    padding: 15px;
+    background: #e8f5e9;
+    border-radius: 8px;
+}
+
+.respuesta-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.profesor-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #c8e6c9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.profesor-name {
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+.respuesta-date {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.respuesta-text {
+    margin: 0;
+    color: #333;
+    line-height: 1.5;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #888;
+    background: white;
+    border-radius: 12px;
+}
+
+/* ============ MODAL ============ */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 550px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header-estudiante {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    background: #003366;
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header-estudiante h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.btn-cancelar-header {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.btn-cancelar-header:hover {
+    opacity: 0.8;
+}
+
+.modal-content-estudiante {
+    padding: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #003366;
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn-cancelar {
+    padding: 10px 20px;
+    background: #e0e0e0;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-cancelar:hover {
+    background: #d0d0d0;
+}
+
+.btn-enviar {
+    padding: 10px 25px;
+    background: #003366;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-enviar:hover:not(:disabled) {
+    background: #004488;
+}
+
+.btn-enviar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============ RESPONSIVE ============ */
+
+@media (max-width: 768px) {
+    .comentarios-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        width: 100%;
+    }
+
+    .search-input {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .btn-crear-comentario {
+        width: 100%;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .comentario-header-card {
+        flex-direction: column;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-cancelar,
+    .btn-enviar {
+        width: 100%;
+    }
 }

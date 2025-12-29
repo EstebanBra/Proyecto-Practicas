@@ -94,6 +94,17 @@ const Navbar = () => {
                         </NavLink>
                     </li>
 
+                    {/* Comentarios - Visible para estudiantes y docentes */}
+                    <li>
+                        <NavLink
+                            to="/comentarios"
+                            onClick={() => { setMenuOpen(false); }}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Comentarios
+                        </NavLink>
+                    </li>
+
                     <li>
                         <NavLink
                             to="/auth"

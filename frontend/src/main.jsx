@@ -8,6 +8,7 @@ import Register from '@pages/Register';
 import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
 import Bitacoras from '@pages/Bitacoras';
+import ComentariosWrapper from '@pages/ComentariosWrapper';
 import ProtectedRoute from '@components/ProtectedRoute';
 import '@styles/styles.css';
 import OfertasPublicas from '@pages/OfertasPublicas';
@@ -54,7 +55,15 @@ const router = createBrowserRouter([
           <Bitacoras />
         </ProtectedRoute>
         ),
-        }
+      },
+      {
+        path: '/comentarios',
+        element: (
+        <ProtectedRoute allowedRoles={['estudiante', 'docente', 'administrador']}>
+          <ComentariosWrapper />
+        </ProtectedRoute>
+        ),
+      }
     ]
   },
   {

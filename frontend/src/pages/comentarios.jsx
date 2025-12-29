@@ -1,162 +1,446 @@
-import Search from '../components/Search';
-import ComentarioPopup from '../components/ComentarioPopup';
-import { useState } from 'react';
-import '../styles/Documentos.css';
+import { useState, useEffect, useCallback } from 'react';
+import { useGetComentarios } from '../hooks/comentario/useGetComentarios.jsx';
+import { useCreateComentario } from '../hooks/comentario/useCreateComentario.jsx';
+import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario.jsx';
+import FileUploadComentario from '../components/FileUploadComentario.jsx';
+import '../styles/comentario.css';
 
 const Comentarios = () => {
-    const [comentarios, setComentarios] = useState([
-        {
-            _id: 1,
-            usuario: 'María',
-            mensaje: 'Estoy teniendo problemas para acceder a mi cuenta.',
-            estado: 'Pendiente',
-            nivelUrgencia: 'normal',
-            tipoProblema: 'Personal',
-            fechaCreacion: '2024-04-14',
-            archivos: []
-        },
-        {
-            _id: 2,
-            usuario: 'Carlos',
-            mensaje: 'El sistema se cae continuamente.',
-            estado: 'Abierto',
-            nivelUrgencia: 'alta',
-            tipoProblema: 'General',
-            fechaCreacion: '2024-04-12',
-            archivos: []
-        },
-        {
-            _id: 3,
-            usuario: 'Lucía',
-            mensaje: 'Necesito recuperar mi contraseña.',
-            estado: 'Respondido',
-            nivelUrgencia: 'normal',
-            tipoProblema: 'Personal',
-            fechaCreacion: '2024-04-10',
-            archivos: []
-        },
-        {
-            _id: 4,
-            usuario: 'Juan',
-            mensaje: 'El sistema muestra resultados incorrectos.',
-            estado: 'Respondido',
-            nivelUrgencia: 'alta',
-            tipoProblema: 'De Empresa',
-            fechaCreacion: '2024-04-08',
-            archivos: []
-        }
-    ]);
+    const { comentarios, handleGetComentarios, loading } = useGetComentarios();
+    const { handleCreateComentario, loading: loadingCreate } = useCreateComentario();
+    const { handleUpdateComentario, loading: loadingUpdate } = useUpdateComentario();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [popupMode, setPopupMode] = useState('create');
-    const [selectedComentario, setSelectedComentario] = useState(null);
+    const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+    const [editingComentario, setEditingComentario] = useState(null);
+    const [expandedMensaje, setExpandedMensaje] = useState({});
+    const [expandedRespuesta, setExpandedRespuesta] = useState({});
+    
+    const [formData, setFormData] = useState({
+        mensaje: '',
+        nivelUrgencia: 'normal',
+        tipoProblema: 'General'
+    });
     const [selectedFiles, setSelectedFiles] = useState([]);
+    const [editFormData, setEditFormData] = useState({
+        mensaje: '',
+        nivelUrgencia: 'normal',
+        tipoProblema: 'General',
+        estado: 'Pendiente'
+    });
+    const [selectedFilesEdit, setSelectedFilesEdit] = useState([]);
 
-    const handleSearch = (term) => {
-        setSearchTerm(term);
-    };
+    const refreshComentarios = useCallback(() => {
+        handleGetComentarios();
+    }, [handleGetComentarios]);
 
-    const filteredComentarios = comentarios.filter((comentario) =>
-        comentario.mensaje.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    useEffect(() => {
+        refreshComentarios();
+    }, [refreshComentarios]);
 
-    const handleOpenPopup = (mode, comentario = null) => {
-        setPopupMode(mode);
-        setSelectedComentario(comentario);
+    const handleSearch = (e) => setSearchTerm(e.target.value);
+
+    const comentariosFiltrados = (comentarios || [])
+        .filter((comentario) => {
+            const mensaje = comentario.mensaje?.toLowerCase() || '';
+            return mensaje.includes(searchTerm.toLowerCase());
+        });
+
+    const handleOpenCreate = () => {
+        setFormData({
+            mensaje: '',
+            nivelUrgencia: 'normal',
+            tipoProblema: 'General'
+        });
+        setSelectedFiles([]);
         setIsPopupOpen(true);
     };
 
     const handleClosePopup = () => {
         setIsPopupOpen(false);
-        setSelectedComentario(null);
     };
 
-    const handleSubmit = (formData) => {
-        if (popupMode === 'create') {
-            const nuevo = {
-                _id: Date.now(),
-                usuario: 'Tú',
-                ...formData,
-                fechaCreacion: new Date().toISOString().split('T')[0],
-                archivos: selectedFiles.length > 0 ? selectedFiles.map(f => ({
-                    nombre: f.name,
-                    tamaño: f.size,
-                    tipo: f.type
-                })) : []
-            };
-            setComentarios([...comentarios, nuevo]);
-        } else {
-            setComentarios(
-                comentarios.map((c) =>
-                    c._id === selectedComentario._id ? { 
-                        ...c, 
-                        ...formData,
-                        archivos: selectedFiles.length > 0 ? selectedFiles.map(f => ({
-                            nombre: f.name,
-                            tamaño: f.size,
-                            tipo: f.type
-                        })) : c.archivos
-                    } : c
-                )
-            );
+    const handleOpenEdit = (comentario) => {
+        setEditingComentario(comentario);
+        setEditFormData({
+            mensaje: comentario.mensaje || '',
+            nivelUrgencia: comentario.nivelUrgencia || 'normal',
+            tipoProblema: comentario.tipoProblema || 'General',
+            estado: comentario.estado || 'Pendiente'
+        });
+        setSelectedFilesEdit([]);
+        setIsEditPopupOpen(true);
+    };
+
+    const handleCloseEdit = () => {
+        setIsEditPopupOpen(false);
+        setEditingComentario(null);
+    };
+
+    const handleInputChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleEditInputChange = (e) => {
+        setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+    };
+
+    const handleFilesSelected = (files) => {
+        setSelectedFiles(files);
+    };
+
+    const handleFilesSelectedEdit = (files) => {
+        setSelectedFilesEdit(files);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        const dataToSend = {
+            mensaje: formData.mensaje,
+            nivelUrgencia: formData.nivelUrgencia,
+            tipoProblema: formData.tipoProblema,
+            archivos: selectedFiles
+        };
+
+        const response = await handleCreateComentario(dataToSend);
+        if (response) {
+            handleClosePopup();
+            refreshComentarios();
         }
-        setSelectedFiles([]);
-        handleClosePopup();
     };
 
-    const handleDelete = (id) => {
-        setComentarios(comentarios.filter((c) => c._id !== id));
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        if (!editingComentario) return;
+
+        const dataToSend = {
+            mensaje: editFormData.mensaje,
+            nivelUrgencia: editFormData.nivelUrgencia,
+            tipoProblema: editFormData.tipoProblema,
+            estado: editFormData.estado,
+            archivos: selectedFilesEdit.length > 0 ? selectedFilesEdit : undefined
+        };
+
+        const response = await handleUpdateComentario(editingComentario.id, dataToSend);
+        if (response) {
+            handleCloseEdit();
+            refreshComentarios();
+        }
     };
 
-    const fields = [
-        { name: 'mensaje', label: 'Mensaje', type: 'textarea', required: true },
-        { name: 'estado', label: 'Estado', type: 'select', options: ['Pendiente', 'Abierto', 'Respondido'], required: true },
-        { name: 'nivelUrgencia', label: 'Nivel de Urgencia', type: 'select', options: ['normal', 'alta'], required: true },
-        { name: 'tipoProblema', label: 'Tipo de Problema', type: 'select', options: ['Personal', 'General', 'De Empresa'], required: true }
-    ];
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-CL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
 
-    return (
-        <div className="documentos-container">
-            <div className="documentos-content">
-                <div className="top-section">
-                    <h1 className="title">Comentarios</h1>
-                    <div className="filter-actions">
-                        <Search
-                            value={searchTerm}
-                            onChange={handleSearch}
-                            placeholder={'Buscar comentarios...'}
-                        />
-                        <button onClick={() => handleOpenPopup('create')}>
-                            Crear Comentario
-                        </button>
-                    </div>
-                </div>
+    const getUserInitials = (nombreCompleto) => {
+        if (!nombreCompleto) return '??';
+        const words = nombreCompleto.split(' ');
+        return words.slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    };
 
-                <div className="tabla-docs">
-                    {filteredComentarios.length > 0 ? (
-                        filteredComentarios.map((comentario) => (
-                            <div key={comentario._id} className="doc-card">
-                                <div className="doc-header">
-                                    <strong>{comentario.usuario}</strong>
-                                    <span className="doc-estado">{comentario.estado}</span>
-                                </div>
-                                <div className="doc-info">
-                                    <p>{comentario.mensaje}</p>
-                                    <p className="comentario">
-                                        Tipo: {comentario.tipoProblema} — Urgencia: {comentario.nivelUrgencia}
-                                    </p>
-                                </div>
-                                <div className="doc-acciones">
-                                    <button onClick={() => handleDelete(comentario._id)}>Responder</button>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p>No hay comentarios disponibles.</p>
-                    )}
+    const getUrgenciaClass = (nivel) => {
+        return nivel === 'alta' ? 'alta' : 'normal';
+    };
+
+    const truncateText = (text, max = 220) => {
+        if (!text) return '';
+        return text.length > max ? text.substring(0, max) + '...' : text;
+    };
+
+    const isLongText = (text, max = 220) => text && text.length > max;
+
+    const toggleExpandMensaje = (id) => {
+        setExpandedMensaje(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const toggleExpandRespuesta = (id) => {
+        setExpandedRespuesta(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    if (loading) {
+        return (
+            <div className="comentarios-estudiante-container">
+                <div style={{ textAlign: 'center', padding: '50px' }}>
+                    <p>Cargando comentarios...</p>
                 </div>
             </div>
+        );
+    }
+
+    return (
+        <div className="comentarios-estudiante-container">
+            <div className="comentarios-header">
+                <h1>💬 Mis Comentarios</h1>
+                <div className="header-actions">
+                    <input
+                        type="text"
+                        placeholder="Buscar comentarios..."
+                        value={searchTerm}
+                        onChange={handleSearch}
+                        className="search-input"
+                    />
+                    <button 
+                        className="btn-crear-comentario" 
+                        onClick={handleOpenCreate}
+                        disabled={loadingCreate}
+                    >
+                        + Nuevo Comentario
+                    </button>
+                </div>
+            </div>
+
+            <div className="comentarios-list">
+                {comentariosFiltrados.length === 0 ? (
+                    <div className="empty-state">
+                        <p>No tienes comentarios aún. ¡Crea uno nuevo!</p>
+                    </div>
+                ) : (
+                    comentariosFiltrados.map((comentario) => (
+                        <div key={comentario.id} className="comentario-card">
+                            <div className="comentario-header-card">
+                                <div className="user-info">
+                                    <div className="user-avatar">
+                                        {getUserInitials(comentario.usuario?.nombreCompleto)}
+                                    </div>
+                                    <div>
+                                        <span className="user-name">
+                                            {comentario.usuario?.nombreCompleto || 'Usuario'}
+                                        </span>
+                                        <span className="comentario-date">
+                                            {formatDate(comentario.fechaCreacion)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="comentario-badges">
+                                    <span className={`urgencia-badge ${getUrgenciaClass(comentario.nivelUrgencia)}`}>
+                                        {comentario.nivelUrgencia === 'alta' ? '🔴 Alta' : '🟢 Normal'}
+                                    </span>
+                                    <span className="tipo-badge">{comentario.tipoProblema}</span>
+                                    {comentario.estado !== 'Respondido' && (
+                                        <button 
+                                            className="btn-editar" 
+                                            onClick={() => handleOpenEdit(comentario)}
+                                        >
+                                            ✏️ Editar
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="comentario-body">
+                                <p>
+                                    {expandedMensaje[comentario.id] 
+                                        ? comentario.mensaje 
+                                        : truncateText(comentario.mensaje)}
+                                    {isLongText(comentario.mensaje) && (
+                                        <button 
+                                            onClick={() => toggleExpandMensaje(comentario.id)}
+                                            style={{ 
+                                                background: 'none', 
+                                                border: 'none', 
+                                                color: '#0066cc', 
+                                                cursor: 'pointer',
+                                                marginLeft: '5px'
+                                            }}
+                                        >
+                                            {expandedMensaje[comentario.id] ? 'Ver menos' : 'Ver más'}
+                                        </button>
+                                    )}
+                                </p>
+
+                                {comentario.archivos && comentario.archivos.length > 0 && (
+                                    <div className="archivos-section">
+                                        <p className="archivos-title">📎 Archivos adjuntos:</p>
+                                        {comentario.archivos.map((archivo, idx) => (
+                                            <div key={idx} className="archivo-item-estudiante">
+                                                <span className="archivo-icon">📄</span>
+                                                <a 
+                                                    href={`/api/comentario/archivo/${comentario.id}/${idx}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="archivo-link"
+                                                >
+                                                    {archivo.nombre || archivo.originalname}
+                                                </a>
+                                                {archivo.tamaño && (
+                                                    <span className="archivo-size">
+                                                        ({(archivo.tamaño / 1024).toFixed(1)} KB)
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {comentario.respuesta && (
+                                <div className="respuesta-docente">
+                                    <div className="respuesta-header">
+                                        <div className="profesor-avatar">👨‍🏫</div>
+                                        <div>
+                                            <span className="profesor-name">Respuesta del Docente</span>
+                                            <span className="respuesta-date">{formatDate(comentario.fechaRespuesta)}</span>
+                                        </div>
+                                    </div>
+                                    <p className="respuesta-text">
+                                        {expandedRespuesta[comentario.id] 
+                                            ? comentario.respuesta 
+                                            : truncateText(comentario.respuesta)}
+                                        {isLongText(comentario.respuesta) && (
+                                            <button 
+                                                onClick={() => toggleExpandRespuesta(comentario.id)}
+                                                style={{ 
+                                                    background: 'none', 
+                                                    border: 'none', 
+                                                    color: '#0066cc', 
+                                                    cursor: 'pointer',
+                                                    marginLeft: '5px'
+                                                }}
+                                            >
+                                                {expandedRespuesta[comentario.id] ? 'Ver menos' : 'Ver más'}
+                                            </button>
+                                        )}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Modal Crear Comentario */}
+            {isPopupOpen && (
+                <div className="modal-overlay" onClick={handleClosePopup}>
+                    <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header-estudiante">
+                            <h2>Nuevo Comentario</h2>
+                            <button className="btn-cancelar-header" onClick={handleClosePopup}>✕</button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="modal-content-estudiante">
+                            <div className="form-group">
+                                <label>Mensaje *</label>
+                                <textarea
+                                    name="mensaje"
+                                    value={formData.mensaje}
+                                    onChange={handleInputChange}
+                                    placeholder="Describe tu consulta o problema..."
+                                    required
+                                    minLength={5}
+                                    maxLength={500}
+                                />
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Nivel de Urgencia</label>
+                                    <select 
+                                        name="nivelUrgencia" 
+                                        value={formData.nivelUrgencia} 
+                                        onChange={handleInputChange}
+                                    >
+                                        <option value="normal">Normal</option>
+                                        <option value="alta">Alta</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Tipo de Problema</label>
+                                    <select 
+                                        name="tipoProblema" 
+                                        value={formData.tipoProblema} 
+                                        onChange={handleInputChange}
+                                    >
+                                        <option value="General">General</option>
+                                        <option value="Personal">Personal</option>
+                                        <option value="De Empresa">De Empresa</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Archivos (opcional)</label>
+                                <FileUploadComentario onFilesSelected={handleFilesSelected} />
+                            </div>
+                            <div className="form-actions">
+                                <button type="button" className="btn-cancelar" onClick={handleClosePopup}>
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="btn-enviar" disabled={loadingCreate}>
+                                    {loadingCreate ? 'Enviando...' : 'Enviar Comentario'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Editar Comentario */}
+            {isEditPopupOpen && editingComentario && (
+                <div className="modal-overlay" onClick={handleCloseEdit}>
+                    <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header-estudiante">
+                            <h2>Editar Comentario</h2>
+                            <button className="btn-cancelar-header" onClick={handleCloseEdit}>✕</button>
+                        </div>
+                        <form onSubmit={handleEditSubmit} className="modal-content-estudiante">
+                            <div className="form-group">
+                                <label>Mensaje *</label>
+                                <textarea
+                                    name="mensaje"
+                                    value={editFormData.mensaje}
+                                    onChange={handleEditInputChange}
+                                    placeholder="Describe tu consulta o problema..."
+                                    required
+                                    minLength={5}
+                                    maxLength={500}
+                                />
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Nivel de Urgencia</label>
+                                    <select 
+                                        name="nivelUrgencia" 
+                                        value={editFormData.nivelUrgencia} 
+                                        onChange={handleEditInputChange}
+                                    >
+                                        <option value="normal">Normal</option>
+                                        <option value="alta">Alta</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Tipo de Problema</label>
+                                    <select 
+                                        name="tipoProblema" 
+                                        value={editFormData.tipoProblema} 
+                                        onChange={handleEditInputChange}
+                                    >
+                                        <option value="General">General</option>
+                                        <option value="Personal">Personal</option>
+                                        <option value="De Empresa">De Empresa</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Archivos adicionales (opcional)</label>
+                                <FileUploadComentario onFilesSelected={handleFilesSelectedEdit} />
+                            </div>
+                            <div className="form-actions">
+                                <button type="button" className="btn-cancelar" onClick={handleCloseEdit}>
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="btn-enviar" disabled={loadingUpdate}>
+                                    {loadingUpdate ? 'Guardando...' : 'Guardar Cambios'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

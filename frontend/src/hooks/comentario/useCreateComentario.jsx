@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState } from "react";
 import { createComentario } from '@services/comentario.service.js';
 import Swal from 'sweetalert2';
 
@@ -11,30 +11,34 @@ export function useCreateComentario() {
         setError(null);
         try {
             const response = await createComentario(dataComentario);
-            if (response.success) {
+            // El backend devuelve { status: "Success", message, data }
+            if (response.status === 'Success') {
                 Swal.fire({
                     icon: 'success',
                     title: 'Éxito',
-                    text: 'Comentario creado exitosamente',
-                    timer: 2000
+                    text: response.message || 'Comentario creado exitosamente',
+                    timer: 2000,
+                    showConfirmButton: false
                 });
+                return response;
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: response.message || 'Error al crear el comentario',
-                    timer: 2000
+                    timer: 3000
                 });
+                return null;
             }
-            return response;
         } catch (error) {
             setError(error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: error.message || 'Error al crear el comentario',
-                timer: 2000
+                timer: 3000
             });
+            return null;
         } finally {
             setLoading(false);
         }
