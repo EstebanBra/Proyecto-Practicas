@@ -1,0 +1,43 @@
+import { useState, useEffect } from 'react';
+import { obtenerMisPracticas } from '@services/practica.service.js';
+
+export function usePracticasEstudiante() {
+    const [practicas, setPracticas] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchPracticas = async () => {
+            try {
+                setLoading(true);
+                const result = await obtenerMisPracticas();
+
+                if (result.status === "Error") {
+                    setError(result.message);
+                } else {
+                    setPracticas(result.data || []);
+                }
+            } catch (err) {
+                setError("Error al cargar las prácticas");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPracticas();
+    }, []);
+
+    const refetch = async () => {
+        setLoading(true);
+        const result = await obtenerMisPracticas();
+        if (result.status === "Error") {
+            setError(result.message);
+        } else {
+            setPracticas(result.data || []);
+            setError(null);
+        }
+        setLoading(false);
+    };
+
+    return { practicas, loading, error, refetch };
+}

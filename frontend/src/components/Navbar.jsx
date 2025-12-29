@@ -91,7 +91,29 @@ const Navbar = () => {
                             Práctica Externa
                         </NavLink>
                     </li>
+                    <li>
+                        <NavLink 
+                            to="/documentos-finales" 
+                            onClick={() => setMenuOpen(false)}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Documentos Finales
+                        </NavLink>
+                    </li>
                     </>
+                    )}
+
+                    {/* Visible para DOCENTES y ADMINISTRADORES */}
+                    {(userRole === 'docente' || userRole === 'administrador') && (
+                    <li>
+                        <NavLink 
+                            to="/docs-entregados" 
+                            onClick={() => setMenuOpen(false)}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Docs. Entregados
+                        </NavLink>
+                    </li>
                     )}
 
                     {/* Visible para TODOS */}

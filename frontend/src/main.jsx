@@ -14,6 +14,8 @@ import '@styles/styles.css';
 import OfertasPublicas from '@pages/OfertasPublicas';
 import MisPostulaciones from '@pages/MisPostulaciones';
 import PracticaExterna from '@pages/PracticaExterna';
+import DocumentosFinales from '@pages/DocumentosFinales';
+import DocsEntregados from '@pages/DocsEntregados';
 
 const router = createBrowserRouter([
   {
@@ -46,6 +48,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['estudiante']}>
             <PracticaExterna />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/documentos-finales',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <DocumentosFinales />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/docs-entregados',
+        element: (
+          <ProtectedRoute allowedRoles={['docente', 'administrador']}>
+            <DocsEntregados />
           </ProtectedRoute>
         ),
       },
