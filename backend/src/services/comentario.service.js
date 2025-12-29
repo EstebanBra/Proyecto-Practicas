@@ -15,7 +15,16 @@ export async function createComentarioService(body) { // Crea un nuevo comentari
 export async function getComentariosService() {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const comentarios = await comentarioRepository.find();
+    let comentarios = await comentarioRepository.find();
+    // Priorizar 'alta' y ordenar por fecha (más reciente primero)
+    comentarios = comentarios.sort((a, b) => {
+      const aHigh = a.nivelUrgencia === 'alta' ? 1 : 0;
+      const bHigh = b.nivelUrgencia === 'alta' ? 1 : 0;
+      if (aHigh !== bHigh) return bHigh - aHigh;
+      const dateA = a.fechaCreacion ? new Date(a.fechaCreacion) : new Date(0);
+      const dateB = b.fechaCreacion ? new Date(b.fechaCreacion) : new Date(0);
+      return dateB - dateA;
+    });
     return comentarios;
   } catch (error) {
     throw new Error("Error al obtener los comentarios");
@@ -70,7 +79,15 @@ export async function getComentariosByUsuarioIdService(usuarioId) {
       where: { usuarioId },
       relations: ["usuario"]
     });
-    return comentarios;
+    // Ordenar por prioridad y fecha para la vista del usuario
+    return comentarios.sort((a, b) => {
+      const aHigh = a.nivelUrgencia === 'alta' ? 1 : 0;
+      const bHigh = b.nivelUrgencia === 'alta' ? 1 : 0;
+      if (aHigh !== bHigh) return bHigh - aHigh;
+      const dateA = a.fechaCreacion ? new Date(a.fechaCreacion) : new Date(0);
+      const dateB = b.fechaCreacion ? new Date(b.fechaCreacion) : new Date(0);
+      return dateB - dateA;
+    });
   } catch (error) {
     throw new Error("Error al obtener los comentarios por ID de usuario");
   }
@@ -79,8 +96,17 @@ export async function getComentariosByUsuarioIdService(usuarioId) {
 export async function getallComentariosService() {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    const comentarios = await comentarioRepository.find({
+    let comentarios = await comentarioRepository.find({
       relations: ["usuario"]
+    });
+    // Ordenar por prioridad (alta primero) y luego por fecha desc
+    comentarios = comentarios.sort((a, b) => {
+      const aHigh = a.nivelUrgencia === 'alta' ? 1 : 0;
+      const bHigh = b.nivelUrgencia === 'alta' ? 1 : 0;
+      if (aHigh !== bHigh) return bHigh - aHigh;
+      const dateA = a.fechaCreacion ? new Date(a.fechaCreacion) : new Date(0);
+      const dateB = b.fechaCreacion ? new Date(b.fechaCreacion) : new Date(0);
+      return dateB - dateA;
     });
     return comentarios;
   } catch (error) {
