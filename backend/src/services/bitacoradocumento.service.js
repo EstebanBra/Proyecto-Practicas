@@ -115,3 +115,14 @@ export async function actualizarEstadoDocumento(id_documento, estado_revision) {
         throw new Error(`Error al actualizar el estado del documento: ${error.message}`);
     }
 }
+
+export async function obtenerDocumentoPorId(id_documento) {
+    try {
+        return await documentoRepository.findOne({
+            where: { id_documento: parseInt(id_documento) }
+        });
+    } catch (error) {
+        console.error("Error al obtener documento por ID:", error);
+        throw new Error("Error al obtener el documento");
+    }
+}

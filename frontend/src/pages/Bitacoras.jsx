@@ -312,6 +312,21 @@ const Bitacoras = () => {
                 {bitacora.nombre_archivo && (
                     <div className="document-attached">
                         <span>📎 {bitacora.nombre_archivo}</span>
+                        <button
+                            type="button"
+                            className="btn-descargar"
+                            onClick={async () => {
+                                const result = await bitacoraService.descargarArchivo(
+                                    bitacora.id_bitacora,
+                                    bitacora.nombre_archivo
+                                );
+                                if (!result.success) {
+                                    showAlert('Error', result.error || 'No se pudo descargar el archivo', 'error');
+                                }
+                            }}
+                        >
+                            ⬇️ Descargar
+                        </button>
                     </div>
                 )}
 

@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
     actualizarEstadoBitacora,
     buscarBitacorasPorRut,
+    descargarArchivoBitacora,
     eliminarBitacora,
     obtenerBitacora,
     obtenerBitacorasPorPractica,
@@ -37,6 +38,11 @@ router
     .get("/buscar-rut/:rut",
         verificarRol(["docente", "administrador"]),
         buscarBitacorasPorRut)
+
+    // Ruta para descargar archivo de bitácora (docentes, administradores y estudiantes)
+    .get("/:id/descargar",
+        verificarRol(["docente", "administrador", "estudiante"]),
+        descargarArchivoBitacora)
 
     // Ruta para actualizar estado de bitácora (solo docentes y administradores)
     .put("/:id/estado",

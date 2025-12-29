@@ -1,6 +1,7 @@
 "use strict";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import * as bitacoraService from "../services/Bitacoras.service.js";
+import fs from "fs";
 
 export async function registrarBitacora(req, res) {
     try {
@@ -270,5 +271,48 @@ export async function eliminarBitacora(req, res) {
             return handleErrorClient(res, 404, error.message);
         }
         return handleErrorServer(res, 500, error.message);
+    }
+}
+
+// Descargar archivo de una bitácora
+export async function descargarArchivoBitacora(req, res) {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return handleErrorClient(res, 400, "El ID de la bitácora es requerido");
+        }
+
+        // Obtener la bitácora
+        const bitacora = await bitacoraService.obtenerBitacora(parseInt(id));
+
+        if (!bitacora) {
+            return handleErrorClient(res, 404, "Bitácora no encontrada");
+        }
+
+        if (!bitacora.ruta_archivo) {
+            return handleErrorClient(res, 404, "Esta bitácora no tiene archivo adjunto");
+        }
+
+        const filePath = bitacora.ruta_archivo;
+
+        // Verificar que el archivo existe
+        if (!fs.existsSync(filePath)) {
+            return handleErrorClient(res, 404, "El archivo no existe en el servidor");
+        }
+
+        // Enviar el archivo para descarga
+        const fileName = bitacora.nombre_archivo || `bitacora_semana_${bitacora.semana}`;
+        res.download(filePath, fileName, (err) => {
+            if (err) {
+                console.error("Error al descargar archivo:", err);
+                if (!res.headersSent) {
+                    return handleErrorServer(res, 500, "Error al descargar el archivo");
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error al descargar archivo de bitácora:", error);
+        return handleErrorServer(res, 500, "Error al descargar el archivo");
     }
 }

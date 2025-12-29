@@ -2,6 +2,7 @@
 import { Router } from "express";
 import {
     actualizarEstadoDocumento,
+    descargarDocumento,
     obtenerDocumentosPractica,
     registrarDocumento,
     subirArchivo
@@ -26,6 +27,11 @@ router
     .post("/registrar",
         verificarRol(["estudiante"]),
         registrarDocumento)
+
+    // Descargar documento (profesores, coordinadores y estudiantes)
+    .get("/descargar/:id_documento",
+        verificarRol(["estudiante", "profesor", "coordinador", "docente", "administrador"]),
+        descargarDocumento)
 
     // Obtener documentos de una práctica
     .get("/practica/:id_practica",
