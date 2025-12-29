@@ -150,9 +150,7 @@ const DocsEntregados = () => {
             html: `
                 <div style="text-align: left; margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
                     <p><strong>Estudiante:</strong> ${doc.estudiante_nombre || "N/A"}</p>
-                    <p><strong>RUT:</strong> ${doc.estudiante_rut || "N/A"}</p>
                     <p><strong>Práctica:</strong> ${doc.practica_nombre || "N/A"}</p>
-                    <p><strong>Estado práctica:</strong> ${practicaInfo?.estado || "N/A"}</p>
                     <p><strong>Fecha entrega documento:</strong> ${doc.fecha_hora_entrega || "N/A"}</p>
                 </div>
                 <input id="swal-nota" class="swal2-input" placeholder="Nota (1.0 - 7.0)" type="number" step="0.1" min="1" max="7">
@@ -218,7 +216,7 @@ const DocsEntregados = () => {
                     await handleUpdateEstados(docsDePractica, "calificado");
                 }
 
-                await Swal.fire('¡Éxito!', 'Evaluación guardada correctamente', 'success');
+                await Swal.fire('Guardada', 'Evaluación guardada correctamente', 'success');
                 setShouldRefetch(true);
 
             } catch (error) {
@@ -233,11 +231,9 @@ const DocsEntregados = () => {
             const searchTerm = filter.toLowerCase().trim();
 
             if (!searchTerm) {
-                // Si no hay término de búsqueda, solo aplicar filtro de estado
                 return estadoFiltro === "todos" || doc.estado_revision === estadoFiltro;
             }
 
-            // Buscar en múltiples campos
             const matchesName = doc.nombre_archivo?.toLowerCase().includes(searchTerm);
             const matchesStudent = doc.estudiante_nombre?.toLowerCase().includes(searchTerm);
             const matchesRut = doc.estudiante_rut?.toLowerCase().includes(searchTerm);
@@ -247,7 +243,6 @@ const DocsEntregados = () => {
 
             const matchesEstado = estadoFiltro === "todos" || doc.estado_revision === estadoFiltro;
 
-            // Retornar verdadero si coincide con cualquiera de los campos de búsqueda
             return (matchesName || matchesStudent || matchesRut || matchesPractica || matchesTipo || matchesEstadoPractica) && matchesEstado;
         });
     }, [documents, filter, estadoFiltro]);
@@ -386,12 +381,12 @@ const DocsEntregados = () => {
                         <Search
                             value={filter}
                             onChange={handleFilterChange}
-                            placeholder="     Buscar (estudiante, RUT, documento, práctica...)"
+                            placeholder="     Buscar"
                         />
                     </div>
 
                     <div className="estado-buttons">
-                        {["pendiente", "revisado", "calificado", "todos"].map((estado) => (
+                        {["pendiente", "revisado","todos"].map((estado) => (
                             <button
                                 key={estado}
                                 className={`btn-action ${estadoFiltro === estado ? "active" : ""}`}
