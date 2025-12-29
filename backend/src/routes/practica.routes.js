@@ -3,15 +3,15 @@ import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import { isDocenteOrAdmin, isEstudiante } from "../middlewares/authorization.middleware.js";
 import {
+    actualizarPractica,
+    asignarDocente,
+    calificarPractica,
     crearPracticaExterna,
+    finalizarPractica,
     obtenerMiPractica,
     obtenerMisPracticas,
     obtenerPracticaPorId,
-    actualizarPractica,
-    finalizarPractica,
-    obtenerTodasPracticas,
-    asignarDocente,
-    calificarPractica
+    obtenerTodasPracticas
 } from "../controllers/practica.controller.js";
 
 const router = Router();
