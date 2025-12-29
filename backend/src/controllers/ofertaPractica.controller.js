@@ -17,6 +17,7 @@ import User from "../entity/user.entity.js";
 import { sendEmail } from "../helpers/email.helper.js";
 import OfertaPractica from "../entity/ofertaPractica.entity.js";
 import Practica from "../entity/practica.entity.js";
+import { enviarCorreoAceptacion } from "../services/email.service.js";
 
 export async function createOfertaPractica(req, res) {
   try {
@@ -251,7 +252,7 @@ export async function aceptarPostulante(req, res) {
     const userRepo = AppDataSource.getRepository(User);
     const practicaRepo = AppDataSource.getRepository("Practica"); 
 
-    // Validaciones básicas
+    // 1. Validaciones básicas
     const oferta = await ofertaRepo.findOne({ 
         where: { id: parseInt(idOferta) },
         relations: ["encargado"] 
@@ -263,7 +264,7 @@ export async function aceptarPostulante(req, res) {
     const estudianteEncontrado = await userRepo.findOne({ where: { id: parseInt(idEstudiante) } });
     if (!estudianteEncontrado) return handleErrorClient(res, 404, "Estudiante no encontrado");
 
-    // Verificar duplicados
+    // 2. Verificar duplicados
     const practicaExistente = await practicaRepo.findOne({
         where: { 
             estudiante: { id: estudianteEncontrado.id }, 
@@ -275,19 +276,29 @@ export async function aceptarPostulante(req, res) {
         return handleErrorClient(res, 400, "El estudiante ya tiene una práctica en curso.");
     }
 
-    // CREAR LA PRÁCTICA
+    // 3. CREAR LA PRÁCTICA
     const nuevaPractica = practicaRepo.create({
         estudiante: estudianteEncontrado,
         docente: oferta.encargado,
         fecha_inicio: new Date(),
-        estado: "en_progreso",     // Para que coincida con el enum de la entity
-        horas_practicas: 0,        // nombre según la entity (era horas_totales)
-        tipo_presencia: oferta.modalidad === "online" ? "virtual" : "presencial" // Mapeamos la modalidad
+        estado: "en_progreso",
+        horas_practicas: 0,
+        tipo_presencia: oferta.modalidad === "online" ? "virtual" : "presencial"
     });
 
     await practicaRepo.save(nuevaPractica);
+
+    //  ENVIAR EL CORREO DE CONFIRMACIÓN
+    console.log("Intentando enviar correo a:", estudianteEncontrado.email);
     
-    handleSuccess(res, 201, "Estudiante aceptado. Práctica iniciada correctamente.", nuevaPractica);
+    // Obtenemos el nombre para el correo (o usamos uno genérico si falla)
+    const nombreEstudiante = estudianteEncontrado.nombreCompleto || "Estudiante";
+    const tituloOferta = oferta.titulo || "Práctica Profesional"; // Asegúrate que tu oferta tenga título
+    
+    // Llamamos al servicio (sin await para no hacer esperar al usuario en el frontend)
+    enviarCorreoAceptacion(estudianteEncontrado.email, nombreEstudiante, tituloOferta);
+
+    handleSuccess(res, 201, "Estudiante aceptado. Se ha enviado un correo de notificación.", nuevaPractica);
 
   } catch (error) {
     console.error("Error al aceptar postulante:", error);
