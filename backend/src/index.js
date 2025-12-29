@@ -6,11 +6,15 @@ import indexRoutes from "./routes/index.routes.js";
 import session from "express-session";
 import passport from "passport";
 import express, { json, urlencoded } from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import { ACCESS_TOKEN_SECRET, cookieKey, HOST, PORT } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
 import { createUsers } from "./config/initialSetup.js";
 import { passportJwtSetup } from "./auth/passport.auth.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function setupServer() {
   try {
@@ -54,6 +58,9 @@ async function setupServer() {
         },
       }),
     );
+
+    // Servir archivos estáticos desde la carpeta uploads
+    app.use("/api/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
     
     app.use(passport.initialize());
