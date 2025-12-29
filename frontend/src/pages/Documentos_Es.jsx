@@ -3,19 +3,28 @@ import "@styles/docs_finales.css";
 
 import useGetDocumentos from "@hooks/documentos_finales/useGetDocumentos";
 import useSubirDocumento from "@hooks/documentos_finales/useSubirDocumento";
+import { usePracticasEstudiante } from "@hooks/practicas/usePracticasEstudiante";
 
 const DocsFinales = () => {
     const [informeFile, setInformeFile] = useState(null);
     const [autoevaluacionFile, setAutoevaluacionFile] = useState(null);
     const [filter, setFilter] = useState("");
-    const [selectedDoc, setSelectedDoc] = useState(null); // Para mostrar comentario
+    const [selectedDoc, setSelectedDoc] = useState(null);
+    const [idPracticaSeleccionada, setIdPracticaSeleccionada] = useState(null);
 
     const { documentos, loading: loadingDocs, fetchDocumentos } = useGetDocumentos();
     const { uploading, handleSubirDocumento } = useSubirDocumento(fetchDocumentos);
+    const { practicas, loading: loadingPracticas } = usePracticasEstudiante();
 
     useEffect(() => {
         fetchDocumentos();
     }, []);
+
+    useEffect(() => {
+        if (practicas.length > 0 && !idPracticaSeleccionada) {
+            setIdPracticaSeleccionada(practicas[0].id_practica);
+        }
+    }, [practicas, idPracticaSeleccionada]);
 
     const PLANTILLAS = [
         {
@@ -76,6 +85,10 @@ const DocsFinales = () => {
         if (!informeFile && !autoevaluacionFile)
             return alert("Debes seleccionar al menos un archivo.");
 
+        if (!idPracticaSeleccionada) {
+            return alert("Debes seleccionar una práctica.");
+        }
+
         try {
             const formData = new FormData();
 
@@ -87,7 +100,7 @@ const DocsFinales = () => {
                 formData.append("autoevaluacion", autoevaluacionFile);
             }
 
-            formData.append("id_practica", 1);
+            formData.append("id_practica", idPracticaSeleccionada); // USAR LA PRÁCTICA SELECCIONADA
             const result = await handleSubirDocumento(formData);
 
             if (result.success) {
@@ -101,8 +114,13 @@ const DocsFinales = () => {
         }
     };
 
-    const filteredDocs = Array.isArray(documentos)
-        ? documentos.filter((d) =>
+    // Filtrar documentos por la práctica seleccionada
+    const documentosFiltradosPorPractica = Array.isArray(documentos)
+        ? documentos.filter(doc => doc.id_practica === idPracticaSeleccionada)
+        : [];
+
+    const filteredDocs = Array.isArray(documentosFiltradosPorPractica)
+        ? documentosFiltradosPorPractica.filter((d) =>
             d.nombre_archivo?.toLowerCase().includes(filter.toLowerCase())
         )
         : [];
@@ -139,14 +157,44 @@ const DocsFinales = () => {
         return "Sin comentarios";
     };
 
-    const tieneInforme = documentos?.some(d => d.tipo === "informe");
-    const tieneAutoevaluacion = documentos?.some(d => d.tipo === "autoevaluacion");
+    const tieneInforme = documentosFiltradosPorPractica?.some(d => d.tipo === "informe");
+    const tieneAutoevaluacion = documentosFiltradosPorPractica?.some(d => d.tipo === "autoevaluacion");
+
+    // Obtener el informe y autoevaluación específicos de la práctica seleccionada
+    const informeSeleccionado = documentosFiltradosPorPractica?.find(d => d.tipo === "informe");
+    const autoevaluacionSeleccionada = documentosFiltradosPorPractica?.find(d => d.tipo === "autoevaluacion");
 
     return (
         <div className="documentos-container">
             <div className="documentos-content">
                 <div className="documentos-header">
                     <h2 className="documentos-title">Subida de Documentos Finales</h2>
+
+                    {/* Selector de práctica - NUEVO */}
+                    {practicas.length > 0 && (
+                        <div className="practica-selector" style={{ marginTop: "15px" }}>
+                            <label htmlFor="practica-select" style={{ marginRight: "10px" }}>
+                                <strong>Seleccionar Práctica:</strong>
+                            </label>
+                            <select
+                                id="practica-select"
+                                value={idPracticaSeleccionada || ""}
+                                onChange={(e) => setIdPracticaSeleccionada(Number(e.target.value))}
+                                style={{ padding: "8px", borderRadius: "4px" }}
+                                disabled={loadingPracticas}
+                            >
+                                {loadingPracticas ? (
+                                    <option>Cargando prácticas...</option>
+                                ) : (
+                                    practicas.map(practica => (
+                                        <option key={practica.id_practica} value={practica.id_practica}>
+                                            {practica.empresa || `Práctica #${practica.id_practica}`}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                        </div>
+                    )}
                 </div>
 
                 <div className="upload-section-main">
@@ -157,19 +205,18 @@ const DocsFinales = () => {
                                     <button
                                         className="upload-btn"
                                         onClick={() => {
-                                            const informe = documentos.find(d => d.tipo === "informe");
-                                            if (informe) window.open(informe.ruta_archivo, "_blank");
+                                            if (informeSeleccionado) window.open(informeSeleccionado.ruta_archivo, "_blank");
                                         }}
                                     >
                                         Ver Informe
                                     </button>
                                     <div className="nota-display">
                                         <strong>Estado: </strong>
-                                        {getEstadoConNota(documentos.find(d => d.tipo === "informe"))}
+                                        {getEstadoConNota(informeSeleccionado)}
                                     </div>
                                     <div className="comentario-display">
                                         <strong>Comentario: </strong>
-                                        {mostrarComentarioCompleto(documentos.find(d => d.tipo === "informe"))}
+                                        {mostrarComentarioCompleto(informeSeleccionado)}
                                     </div>
                                 </div>
                             ) : (
@@ -181,6 +228,7 @@ const DocsFinales = () => {
                                             accept=".pdf,.docx"
                                             onChange={(e) => handleFileChange(e, "informe")}
                                             hidden
+                                            disabled={!idPracticaSeleccionada}
                                         />
                                     </label>
                                     {informeFile && (
@@ -204,19 +252,18 @@ const DocsFinales = () => {
                                     <button
                                         className="upload-btn"
                                         onClick={() => {
-                                            const autoEval = documentos.find(d => d.tipo === "autoevaluacion");
-                                            if (autoEval) window.open(autoEval.ruta_archivo, "_blank");
+                                            if (autoevaluacionSeleccionada) window.open(autoevaluacionSeleccionada.ruta_archivo, "_blank");
                                         }}
                                     >
                                         Ver Autoevaluación
                                     </button>
                                     <div className="nota-display">
                                         <strong>Estado: </strong>
-                                        {getEstadoConNota(documentos.find(d => d.tipo === "autoevaluacion"))}
+                                        {getEstadoConNota(autoevaluacionSeleccionada)}
                                     </div>
                                     <div className="comentario-display">
                                         <strong>Comentario: </strong>
-                                        {mostrarComentarioCompleto(documentos.find(d => d.tipo === "autoevaluacion"))}
+                                        {mostrarComentarioCompleto(autoevaluacionSeleccionada)}
                                     </div>
                                 </div>
                             ) : (
@@ -228,6 +275,7 @@ const DocsFinales = () => {
                                             accept=".pdf,.docx"
                                             onChange={(e) => handleFileChange(e, "autoevaluacion")}
                                             hidden
+                                            disabled={!idPracticaSeleccionada}
                                         />
                                     </label>
                                     {autoevaluacionFile && (
@@ -249,7 +297,7 @@ const DocsFinales = () => {
                             <button
                                 onClick={handleSubirArchivos}
                                 className="btn-upload"
-                                disabled={uploading || (!informeFile && !autoevaluacionFile)}
+                                disabled={uploading || (!informeFile && !autoevaluacionFile) || !idPracticaSeleccionada}
                             >
                                 {uploading ? "Subiendo..." : "Subir Archivos"}
                             </button>
@@ -293,7 +341,7 @@ const DocsFinales = () => {
                         )}
 
                         {!loadingDocs && filteredDocs.length === 0 && (
-                            <div className="row-main"><div>No se encontraron documentos</div></div>
+                            <div className="row-main"><div>No se encontraron documentos para esta práctica</div></div>
                         )}
 
                         {!loadingDocs && filteredDocs.map((doc) => (

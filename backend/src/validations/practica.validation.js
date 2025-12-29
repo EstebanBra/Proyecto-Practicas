@@ -1,33 +1,87 @@
 "use strict";
 import Joi from "joi";
 
-export const practicaBodyValidation = Joi.object({
-  id_estudiante: Joi.number().integer().required().messages({
-    "any.required": "El id del estudiante es obligatorio",
-    "number.base": "El id del estudiante debe ser un número entero",
-  }),
-  id_docente: Joi.number().integer().required().messages({
-    "any.required": "El id del docente es obligatorio",
-    "number.base": "El id del docente debe ser un número entero",
-  }),
-  fecha_inicio: Joi.date().optional().messages({
-    "date.base": "La fecha de inicio debe tener un formato válido (YYYY-MM-DD)",
-  }),
-  fecha_fin: Joi.date().optional().min(Joi.ref("fecha_inicio")).messages({
-    "date.base": "La fecha de fin debe tener un formato válido (YYYY-MM-DD)",
-    "date.min": "La fecha de fin no puede ser anterior a la fecha de inicio",
-  }),
-  estado: Joi.string()
-    .valid("activa", "en_progreso", "finalizada", "cancelada")
-    .default("activa")
-    .messages({
-      "any.only":
-        "El estado debe ser uno de: activa, en_progreso, finalizada o cancelada",
-    }),
+export const practicaCreateValidation = Joi.object({
+  fecha_inicio: Joi.date().required(),
+  fecha_fin: Joi.date().min(Joi.ref("fecha_inicio")).required(),
+
+  horas_practicas: Joi.number().integer().min(1).required(),
+  semanas: Joi.number().integer().min(1).required(),
+
+  tipo_presencia: Joi.string()
+    .valid("presencial", "virtual", "hibrido")
+    .insensitive()
+    .default("presencial"),
+
+  empresa: Joi.string().min(3).max(255).required(),
+
+  supervisor_nombre: Joi.string().min(3).max(255).required(),
+  supervisor_email: Joi.string().email().required(),
+  supervisor_telefono: Joi.string()
+    .pattern(/^\+?[\d\s-]{8,20}$/)
+    .required(),
+
+  documentos: Joi.array()
+    .items(
+      Joi.object({
+        nombre: Joi.string().required(),
+        url: Joi.string().required(),
+        tipo: Joi.string().required(),
+      }),
+    )
+    .min(1)
+    .required(),
+
+  observaciones: Joi.string().allow("").max(1000).optional(),
+
+  id_estudiante: Joi.forbidden(),
+  id_docente: Joi.forbidden(),
+  tipo_practica: Joi.forbidden(),
+  estado: Joi.forbidden(),
 });
 
-export const practicaQueryValidation = Joi.object({
-  id_practica: Joi.number().integer().optional(),
-  id_estudiante: Joi.number().integer().optional(),
-  id_docente: Joi.number().integer().optional(),
+export const practicaUpdateValidation = Joi.object({
+  fecha_inicio: Joi.date().optional(),
+  fecha_fin: Joi.date().min(Joi.ref("fecha_inicio")).optional(),
+
+  horas_practicas: Joi.number().integer().min(1).optional(),
+  semanas: Joi.number().integer().min(1).optional(),
+
+  tipo_presencia: Joi.string()
+    .valid("presencial", "virtual", "hibrido")
+    .insensitive()
+    .optional(),
+
+  empresa: Joi.string().min(3).max(255).optional(),
+
+  supervisor_nombre: Joi.string().min(3).max(255).optional(),
+  supervisor_email: Joi.string().email().optional(),
+  supervisor_telefono: Joi.string()
+    .pattern(/^\+?[\d\s-]{8,20}$/)
+    .optional(),
+
+  documentos: Joi.array()
+    .items(
+      Joi.object({
+        nombre: Joi.string().required(),
+        url: Joi.string().required(),
+        tipo: Joi.string().required(),
+      }),
+    )
+    .optional(),
+
+  observaciones: Joi.string().allow("").max(1000).optional(),
+
+  id_estudiante: Joi.forbidden(),
+  id_docente: Joi.forbidden(),
+  tipo_practica: Joi.forbidden(),
+  estado: Joi.forbidden(),
+});
+
+export const practicaEstadoValidation = Joi.object({
+  estado: Joi.string()
+    .valid("Aprobada", "Rechazada", "En_Curso", "Finalizada")
+    .required(),
+
+  observaciones: Joi.string().allow("").max(1000).optional(),
 });

@@ -8,7 +8,7 @@ import useUpdateEstadoDocumento from "@hooks/documentos_finales/useUpdateEstadoD
 import useGetEvaluaciones from "@hooks/evaluaciones_finales/useGetEvaluaciones.jsx";
 import useUpdateEvaluacion from "@hooks/evaluaciones_finales/useUpdateEvaluacion.jsx";
 import useCrearEvaluacion from "@hooks/evaluaciones_finales/useCrearEvaluacion.jsx";
-import useGetPracticaById from "@hooks/practicas/useGetPracticaById.jsx";
+import { useTodasPracticas } from "@hooks/practicas/useTodasPracticas"; // REEMPLAZO
 
 const DocsEntregados = () => {
     const [filter, setFilter] = useState("");
@@ -28,7 +28,7 @@ const DocsEntregados = () => {
         fetchEvaluacionesByDocumento
     } = useGetEvaluaciones();
 
-    const { practicasCache, loading: loadingPracticas, fetchPractica, fetchPracticas } = useGetPracticaById();
+    const { practicas, loading: loadingPracticas, refetch: refetchPracticas } = useTodasPracticas(); // REEMPLAZO
 
     const { updating: updatingEstado, handleUpdateEstados } = useUpdateEstadoDocumento(() => {
         setShouldRefetch(true);
@@ -40,8 +40,9 @@ const DocsEntregados = () => {
     const fetchData = useCallback(async () => {
         await fetchDocumentos();
         await fetchEvaluacionesDocente();
+        await refetchPracticas(); // ACTUALIZAR PRÁCTICAS
         setShouldRefetch(false);
-    }, []);
+    }, [fetchDocumentos, fetchEvaluacionesDocente, refetchPracticas]);
 
     useEffect(() => {
         if (shouldRefetch) {
@@ -49,84 +50,60 @@ const DocsEntregados = () => {
         }
     }, [shouldRefetch, fetchData]);
 
+    // Procesar información de prácticas
     useEffect(() => {
-        const fetchPracticasParaDocumentos = async () => {
-            if (documentos.length > 0 && shouldRefetch === false) {
-                const idsPracticasUnicos = [...new Set(documentos
-                    .map(doc => doc.id_practica)
-                    .filter(id => id && id > 0))];
+        if (practicas.length > 0 && documentos.length > 0 && shouldRefetch === false) {
+            const practicasMap = {};
 
-                if (idsPracticasUnicos.length === 0) {
-                    setDocuments(documentos.map(doc => ({
-                        ...doc,
-                        estudiante_nombre: "Estudiante no disponible",
-                        estudiante_rut: "",
-                        practica_nombre: "Práctica sin nombre",
-                        practica_empresa: "Sin empresa",
-                        practica_estado: "Desconocido",
-                        fecha_hora_entrega: doc.fecha_subida ?
-                            new Date(doc.fecha_subida).toLocaleString('es-CL', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            }) : "Fecha no disponible"
-                    })));
-                    return;
+            // Crear mapa de prácticas para búsqueda rápida
+            practicas.forEach(practica => {
+                if (practica && practica.id_practica) {
+                    practicasMap[practica.id_practica] = practica;
                 }
-                const practicasEnCache = {};
-                const idsParaBuscar = [];
+            });
 
-                idsPracticasUnicos.forEach(id => {
-                    if (practicasCache[id]) {
-                        practicasEnCache[id] = practicasCache[id];
-                    } else if (id) {
-                        idsParaBuscar.push(id);
-                    }
-                });
+            setPracticasInfo(practicasMap);
 
-                if (idsParaBuscar.length > 0) {
-                    const nuevasPracticas = await fetchPracticas(idsParaBuscar);
-                    nuevasPracticas.forEach(practica => {
-                        if (practica && practica.id_practica) {
-                            practicasEnCache[practica.id_practica] = practica;
-                        }
-                    });
-                }
+            // Enriquecer documentos con información de prácticas
+            const documentosEnriquecidos = documentos.map(doc => {
+                const practica = practicasMap[doc.id_practica];
 
-                setPracticasInfo(practicasEnCache);
+                // Verificar si el docente está vinculado a esta práctica
+                // Asumiendo que las prácticas ya vienen filtradas por el servicio
+                // Si necesitas más lógica de filtrado, puedes agregarla aquí
 
-                const documentosEnriquecidos = documentos.map(doc => {
-                    const practica = practicasEnCache[doc.id_practica];
+                return {
+                    ...doc,
+                    estudiante_nombre: practica?.estudiante?.nombreCompleto ||
+                        practica?.estudiante_nombre ||
+                        "Estudiante no disponible",
+                    estudiante_rut: practica?.estudiante?.rut ||
+                        practica?.estudiante_rut ||
+                        "",
+                    practica_nombre: practica?.empresa ?
+                        `Práctica en ${practica.empresa}` :
+                        practica?.nombre ||
+                        "Práctica sin nombre",
+                    practica_empresa: practica?.empresa ||
+                        practica?.empresa_nombre ||
+                        "Sin empresa",
+                    practica_estado: practica?.estado ||
+                        practica?.estado_practica ||
+                        "Desconocido",
+                    fecha_hora_entrega: doc.fecha_subida ?
+                        new Date(doc.fecha_subida).toLocaleString('es-CL', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : "Fecha no disponible"
+                };
+            });
 
-                    return {
-                        ...doc,
-                        estudiante_nombre: practica?.estudiante?.nombreCompleto || "Estudiante no disponible",
-                        estudiante_rut: practica?.estudiante?.rut || "",
-                        practica_nombre: practica?.empresa ?
-                            `Práctica en ${practica.empresa}` : "Práctica sin nombre",
-                        practica_empresa: practica?.empresa || "Sin empresa",
-                        practica_estado: practica?.estado || "Desconocido",
-                        fecha_hora_entrega: doc.fecha_subida ?
-                            new Date(doc.fecha_subida).toLocaleString('es-CL', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            }) : "Fecha no disponible"
-                    };
-                });
-
-                setDocuments(documentosEnriquecidos);
-            }
-        };
-
-        if (documentos.length > 0 && shouldRefetch === false) {
-            fetchPracticasParaDocumentos();
+            setDocuments(documentosEnriquecidos);
         }
-    }, [documentos, shouldRefetch, practicasCache]);
+    }, [practicas, documentos, shouldRefetch]);
 
     const handleFilterChange = (e) => {
         setFilter(e.target.value);
@@ -357,7 +334,6 @@ const DocsEntregados = () => {
                                         >
                                             {evaluacion ? "Editar Nota" : "Evaluar"}
                                         </button>
-
                                     </div>
                                 </div>
                             );
@@ -386,7 +362,7 @@ const DocsEntregados = () => {
                     </div>
 
                     <div className="estado-buttons">
-                        {["pendiente", "revisado","todos"].map((estado) => (
+                        {["pendiente", "revisado", "todos"].map((estado) => (
                             <button
                                 key={estado}
                                 className={`btn-action ${estadoFiltro === estado ? "active" : ""}`}
