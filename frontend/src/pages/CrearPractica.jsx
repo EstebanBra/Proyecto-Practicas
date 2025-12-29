@@ -48,105 +48,120 @@ const CrearPractica = () => {
     };
 
    return (
-        <main className="container">
-            <Form
-                title="Registrar Practica Externa"
-                fields={[
-                    {
-                        label: "Empresa",
-                        name: "empresa",
-                        placeholder: "Nombre de la Empresa",
-                        fieldType: 'input',
-                        type: "text",
-                        required: true,
-                        minLength: 3,
-                        maxLength: 255
-                    },
-                    {
-                        label: "Tipo de Presencia",
-                        name: "tipo_presencia",
-                        fieldType: 'select',
-                        options: [
-                            { value: "Presencial", label: "Presencial" },
-                            { value: "Virtual", label: "Virtual" },
-                            { value: "Hibrido", label: "Hibrido" }
-                        ],
-                        required: true
-                    },
-                    {
-                        label: "Fecha de inicio",
-                        name: "fecha_inicio",
-                        fieldType: 'input',
-                        type: "date",
-                        required: true
-                    },
-                    {
-                        label: "Nombre de Supervisor/a",
-                        name: "supervisor_nombre",
-                        placeholder: "Nombre Completo",
-                        fieldType: 'input',
-                        type: "text",
-                        required: true,
-                        minLength: 3,
-                        maxLength: 255
-                    },
-                    {
-                        label: "Email de Supervisor/a",
-                        name: "supervisor_email",
-                        placeholder: "correo@empresa.com",
-                        fieldType: 'input',
-                        type: "email",
-                        required: true
-                    },
-                    {
-                        label: "Telefono de Supervisor/a",
-                        name: "supervisor_telefono",
-                        placeholder: "+56 9 1234 5678",
-                        fieldType: 'input',
-                        type: "text",
-                        required: true,
-                        pattern: /^\+?[\d\s-]{8,20}$/,
-                        patternMessage: "numero valido requerido"
-                    },
-                    {
-                        label: "Fecha de termino",
-                        name: "fecha_fin",
-                        fieldType: 'input',
-                        type: "date",
-                        required: true
-                    },
-                    {
-                        label: "Horas de Practica",
-                        name: "horas_practicas",
-                        placeholder: "Horas minimas 199",
-                        fieldType: 'input',
-                        type: "number",
-                        required: true,
-                        min: 1
-                    },
-                    {
-                        label: "Semanas",
-                        name: "semanas",
-                        placeholder: "Duracion estimada",
-                        fieldType: 'input',
-                        type: "number",
-                        required: true,
-                        min: 1
-                    },
-                    {
-                        label: "Documentos Requeridos",
-                        name: "documentos",
-                        fieldType: 'filedrop',
-                        required: true,
-                        onChange: handleFileChange,
-                        accept: ".pdf,.doc,.docx",
-                        fullWidth: true,
-                        files: files
-                    }
-                ]}
-                buttonText="Registrar Practica"
-                onSubmit={handleSubmit}
-            />
+        <main className="container-practica">
+            <div className="form-wrapper-practica">
+                <h1 className="form-title-practica">Postulación de Práctica Profesional Externa</h1>
+                <p className="form-subtitle-practica">Complete todos los campos requeridos para registrar su práctica profesional</p>
+                
+                <Form
+                    title=""
+                    fields={[
+                        {
+                            section: "Información de la Práctica",
+                            sectionDescription: "Complete el formulario con los datos de su práctica profesional externa",
+                            subsection: "Información de la Empresa",
+                            label: "Nombre de la Empresa",
+                            name: "empresa",
+                            placeholder: "Ingrese el nombre de la empresa",
+                            fieldType: 'input',
+                            type: "text",
+                            required: true,
+                            minLength: 3,
+                            maxLength: 255
+                        },
+                        {
+                            label: "Tipo de Presencia",
+                            name: "tipo_presencia",
+                            fieldType: 'select',
+                            options: [
+                                { value: "", label: "Seleccione el tipo de presencia" },
+                                { value: "Presencial", label: "Presencial" },
+                                { value: "Virtual", label: "Virtual" },
+                                { value: "Hibrido", label: "Hibrido" }
+                            ],
+                            required: true
+                        },
+                        {
+                            subsection: "Periodo de Práctica",
+                            label: "Fecha de Inicio",
+                            name: "fecha_inicio",
+                            placeholder: "dd - mm - aaaa",
+                            fieldType: 'input',
+                            type: "date",
+                            required: true
+                        },
+                        {
+                            label: "Fecha de Término",
+                            name: "fecha_fin",
+                            placeholder: "dd - mm - aaaa",
+                            fieldType: 'input',
+                            type: "date",
+                            required: true
+                        },
+                        {
+                            label: "Horas de Práctica",
+                            name: "horas_practicas",
+                            placeholder: "Ej: 480",
+                            fieldType: 'input',
+                            type: "number",
+                            required: true,
+                            min: 1
+                        },
+                        {
+                            label: "Semanas",
+                            name: "semanas",
+                            placeholder: "Ej: 12",
+                            fieldType: 'input',
+                            type: "number",
+                            required: true,
+                            min: 1
+                        },
+                        {
+                            subsection: "Información del Supervisor",
+                            label: "Nombre del Supervisor/a",
+                            name: "supervisor_nombre",
+                            placeholder: "Nombre completo del supervisor",
+                            fieldType: 'input',
+                            type: "text",
+                            required: true,
+                            minLength: 3,
+                            maxLength: 255,
+                            fullWidth: true
+                        },
+                        {
+                            label: "Email del Supervisor/a",
+                            name: "supervisor_email",
+                            placeholder: "supervisor@empresa.com",
+                            fieldType: 'input',
+                            type: "email",
+                            required: true
+                        },
+                        {
+                            label: "Teléfono del Supervisor/a",
+                            name: "supervisor_telefono",
+                            placeholder: "+56 9 1234 5678",
+                            fieldType: 'input',
+                            type: "text",
+                            required: true,
+                            pattern: /^\+?[\d\s-]{8,20}$/,
+                            patternMessage: "numero valido requerido"
+                        },
+                        {
+                            subsection: "Documentos Requeridos",
+                            label: "Documentos Requeridos",
+                            name: "documentos",
+                            fieldType: 'filedrop',
+                            required: true,
+                            onChange: handleFileChange,
+                            accept: ".pdf,.doc,.docx",
+                            fullWidth: true,
+                            files: files
+                        }
+                    ]}
+                    buttonText="Registrar Práctica"
+                    onSubmit={handleSubmit}
+                />
+            </div>
         </main>
     );
 };

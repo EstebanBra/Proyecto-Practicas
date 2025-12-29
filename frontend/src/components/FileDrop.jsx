@@ -91,10 +91,14 @@ const FileDrop = ({ onChange, accept = ".pdf,.doc,.docx", files = [] }) => {
                     className="file-input"
                 />
                 <label htmlFor="file-input" className="filedrop-label">
-                    <div className="filedrop-icon">📁</div>
+                    <div className="filedrop-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4V16M12 4L8 8M12 4L16 8M4 20H20" stroke="#003366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                    </div>
                     <div className="filedrop-text">
-                        <p className="filedrop-main">Arrastra tus archivos aqui (Documento de Postulacion, Curriculum)</p>
-                        <p className="filedrop-sub">O haz clic para seleccionar tus archivos</p>
+                        <p className="filedrop-main">Haga clic para cargar archivos o arrastre y suelte</p>
+                        <p className="filedrop-sub">PDF, DOC, DOCX hasta 10MB</p>
                     </div>
                 </label>
             </div>

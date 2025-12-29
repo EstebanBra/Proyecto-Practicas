@@ -22,17 +22,43 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
         onSubmit(data);
     };
 
-    return (
-        <form
-            className={`form ${backgroundColor ? '' : ''} ${Array.isArray(fields) && fields.length > 6 ? 'form-grid' : ''}`}
-            style={{ backgroundColor: backgroundColor }}
-            onSubmit={handleSubmit(onFormSubmit)}
-            autoComplete="off"
-        >
-            <h1>{title}</h1>
-            {fields.map((field, index) => (
+    // Agrupar campos por secciones
+    const renderFields = () => {
+        let currentSection = null;
+        let currentSubsection = null;
+        const elements = [];
+
+        fields.forEach((field, index) => {
+            // Renderizar sección principal
+            if (field.section && field.section !== currentSection) {
+                currentSection = field.section;
+                elements.push(
+                    <div key={`section-${index}`} className="form-section-header">
+                        <h2>{field.section}</h2>
+                        {field.sectionDescription && <p className="section-description">{field.sectionDescription}</p>}
+                    </div>
+                );
+            }
+
+            // Renderizar subsección
+            if (field.subsection && field.subsection !== currentSubsection) {
+                currentSubsection = field.subsection;
+                elements.push(
+                    <div key={`subsection-${index}`} className="form-subsection-header">
+                        <h3>{field.subsection}</h3>
+                    </div>
+                );
+            }
+
+            // Renderizar campo
+            elements.push(
                 <div className={`container_inputs ${field.fullWidth ? 'full-width' : ''}`} key={index}>
-                    {field.label && <label htmlFor={field.name}>{field.label}</label>}
+                    {field.label && (
+                        <label htmlFor={field.name}>
+                            {field.label}
+                            {field.required && <span className="required-asterisk">*</span>}
+                        </label>
+                    )}
                     {field.fieldType === 'input' && (
                         <input
                             {...register(field.name, {
@@ -79,7 +105,6 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
                             disabled={field.disabled}
                             onChange={field.onChange}
                         >
-                            <option value="">Seleccionar opción</option>
                             {field.options && field.options.map((option, optIndex) => (
                                 <option className="options-class" key={optIndex} value={option.value}>
                                     {option.label}
@@ -108,8 +133,22 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
                         {errors[field.name]?.message || field.errorMessageData || ''}
                     </div>
                 </div>
-            ))}
-            {buttonText && <button type="submit">{buttonText}</button>}
+            );
+        });
+
+        return elements;
+    };
+
+    return (
+        <form
+            className={`form form-practica ${backgroundColor ? '' : ''} ${Array.isArray(fields) && fields.length > 6 ? 'form-grid' : ''}`}
+            style={{ backgroundColor: backgroundColor }}
+            onSubmit={handleSubmit(onFormSubmit)}
+            autoComplete="off"
+        >
+            {title && <h1>{title}</h1>}
+            {renderFields()}
+            {buttonText && <button type="submit" className="submit-button-practica">{buttonText}</button>}
             {footerContent && <div className="footerContent">{footerContent}</div>}
         </form>
     );

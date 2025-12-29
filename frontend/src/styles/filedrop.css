@@ -4,29 +4,29 @@
 }
 
 .filedrop-area {
-    border: 2px dashed #003366;
+    border: 2px dashed #d0d0d0;
     border-radius: 8px;
-    padding: 2rem 1.5rem;
+    padding: 2.5rem 1.5rem;
     text-align: center;
     cursor: pointer;
-    background-color: rgba(238, 247, 255, 0.5);
-    transition: all 0.3s ease;
+    background-color: #fafafa;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 150px;
+    min-height: 160px;
     box-sizing: border-box;
 }
 
 .filedrop-area:hover {
-    border-color: #0066cc;
-    background-color: rgba(0, 110, 223, 0.08);
+    border-color: #0055aa;
+    background-color: #f5f5f5;
 }
 
 .filedrop-area.dragging {
-    border-color: #0066cc;
-    background-color: rgba(0, 110, 223, 0.15);
-    transform: scale(1.01);
+    border-color: #0055aa;
+    background-color: #f0f0f0;
+    border-style: dashed;
 }
 
 .file-input {
@@ -44,6 +44,19 @@
 
 .filedrop-icon {
     font-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.filedrop-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+.filedrop-icon svg path {
+    stroke: #0055aa;
 }
 
 .filedrop-text {
@@ -53,16 +66,17 @@
 }
 
 .filedrop-main {
-    margin: 0;
-    color: #003366;
-    font-weight: 600;
-    font-size: 13px;
+    margin: 0 0 0.5rem 0;
+    color: #333333;
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .filedrop-sub {
     margin: 0;
-    color: rgba(0, 51, 102, 0.6);
-    font-size: 12px;
+    color: #666666;
+    font-size: 13px;
+    font-weight: 400;
 }
 
 .files-list {
