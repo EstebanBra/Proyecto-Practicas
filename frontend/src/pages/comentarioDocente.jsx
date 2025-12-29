@@ -3,10 +3,12 @@ import '../styles/comentario.css';
 import { useGetAllComentarios } from '../hooks/comentario/useGetAllComentarios';
 import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario';
 import Swal from 'sweetalert2';
+import { useDeleteComentario } from '../hooks/comentario/useDeleteComentario';
 
 const ComentarioDocente = () => {
     const { comentarios, handleGetAllComentarios, loading } = useGetAllComentarios();
     const { handleUpdateComentario, loading: loadingUpdate } = useUpdateComentario();
+    const { handleDeleteComentario } = useDeleteComentario();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -199,15 +201,7 @@ const ComentarioDocente = () => {
                                 </div>
                             </div>
 
-                            <div className="docente-search-row">
-                                <input
-                                    type="text"
-                                    className="search-input-docente"
-                                    placeholder="Buscar por mensaje o estudiante..."
-                                    value={searchTerm}
-                                    onChange={handleSearch}
-                                />
-                            </div>
+                            
                             
                             <div className="mensaje-original">
                                 <p>{comentarioSeleccionado.mensaje}</p>
@@ -340,6 +334,34 @@ const ComentarioDocente = () => {
                                     onClick={() => handleOpenRespuesta(comentario)}
                                 >
                                     ← Responder
+                                </button>
+                                {comentario.respuesta && (
+                                    <button
+                                        className="btn-editar"
+                                        onClick={() => handleOpenRespuesta(comentario)}
+                                        style={{ marginLeft: 8 }}
+                                    >
+                                        Editar Respuesta
+                                    </button>
+                                )}
+                                <button
+                                    className="btn-eliminar-docente"
+                                    onClick={async () => {
+                                        const result = await Swal.fire({
+                                            title: '¿Eliminar comentario?',
+                                            text: 'Esta acción es irreversible.',
+                                            icon: 'warning',
+                                            showCancelButton: true,
+                                            confirmButtonText: 'Sí, eliminar',
+                                            cancelButtonText: 'Cancelar'
+                                        });
+                                        if (result.isConfirmed) {
+                                            const ok = await handleDeleteComentario(comentario.id);
+                                            if (ok) refreshComentarios();
+                                        }
+                                    }}
+                                >
+                                    Eliminar
                                 </button>
                             </div>
                         </div>

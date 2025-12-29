@@ -5,11 +5,13 @@ import { useCreateComentario } from '../hooks/comentario/useCreateComentario';
 import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario';
 import FileUpload from '../components/FileUpload';
 import Swal from 'sweetalert2';
+import { useDeleteComentario } from '../hooks/comentario/useDeleteComentario';
 
 const Comentarios = () => {
     const { comentarios, handleGetComentarios, loading } = useGetComentarios();
     const { handleCreateComentario, loading: loadingCreate } = useCreateComentario();
     const { handleUpdateComentario, loading: loadingUpdate } = useUpdateComentario();
+    const { handleDeleteComentario } = useDeleteComentario();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -32,6 +34,7 @@ const Comentarios = () => {
         estado: 'Pendiente'
     });
     const [selectedFilesEdit, setSelectedFilesEdit] = useState([]);
+
 
     const refreshComentarios = useCallback(() => {
         handleGetComentarios();
@@ -431,6 +434,26 @@ const Comentarios = () => {
                                             Editar
                                         </button>
                                     )}
+                                    <button
+                                        type="button"
+                                        className="btn-eliminar"
+                                        onClick={async () => {
+                                            const result = await Swal.fire({
+                                                title: '¿Eliminar comentario?',
+                                                text: 'Esta acción es irreversible.',
+                                                icon: 'warning',
+                                                showCancelButton: true,
+                                                confirmButtonText: 'Sí, eliminar',
+                                                cancelButtonText: 'Cancelar'
+                                            });
+                                            if (result.isConfirmed) {
+                                                const ok = await handleDeleteComentario(comentario.id);
+                                                if (ok) refreshComentarios();
+                                            }
+                                        }}
+                                    >
+                                        Eliminar
+                                    </button>
                                 </div>
                             </div>
 
