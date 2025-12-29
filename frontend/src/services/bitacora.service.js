@@ -74,6 +74,16 @@ export const bitacoraService = {
             const errorMessage = error.response?.data?.message || 'Error al actualizar el estado';
             return { data: null, error: errorMessage };
         }
+    },
+
+    async eliminarBitacora(idBitacora) {
+        try {
+            const response = await axios.delete(`/bitacora/${idBitacora}`);
+            return { data: response.data, error: null };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error al eliminar la bitácora';
+            return { data: null, error: errorMessage };
+        }
     }
 };
 

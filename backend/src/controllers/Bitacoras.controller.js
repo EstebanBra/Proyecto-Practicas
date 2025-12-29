@@ -245,3 +245,24 @@ export async function actualizarEstadoBitacora(req, res) {
         return handleErrorServer(res, 500, error.message);
     }
 }
+
+// Eliminar una bitácora (para docentes y administradores)
+export async function eliminarBitacora(req, res) {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return handleErrorClient(res, 400, "El ID de la bitácora es requerido");
+        }
+
+        const resultado = await bitacoraService.eliminarBitacora(parseInt(id));
+
+        return handleSuccess(res, 200, "Bitácora eliminada exitosamente", resultado);
+    } catch (error) {
+        console.error("Error al eliminar bitácora:", error);
+        if (error.message === "Bitácora no encontrada") {
+            return handleErrorClient(res, 404, error.message);
+        }
+        return handleErrorServer(res, 500, error.message);
+    }
+}

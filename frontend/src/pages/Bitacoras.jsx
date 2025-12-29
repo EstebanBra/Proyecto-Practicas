@@ -237,6 +237,32 @@ const Bitacoras = () => {
         }
     };
 
+    // Función para eliminar una bitácora (para docentes)
+    const handleEliminarBitacora = async (idBitacora, semana) => {
+        // Confirmar antes de eliminar
+        const confirmacion = window.confirm(`¿Estás seguro de eliminar la bitácora de la Semana ${semana}? Esta acción no se puede deshacer.`);
+        
+        if (!confirmacion) return;
+
+        try {
+            const { data, error } = await bitacoraService.eliminarBitacora(idBitacora);
+            
+            if (error) {
+                showAlert('Error', error, 'error');
+                return;
+            }
+
+            showAlert('Éxito', 'Bitácora eliminada correctamente', 'success');
+            
+            // Recargar las bitácoras después de eliminar
+            if (rutBusqueda) {
+                await buscarPorRut(rutBusqueda.trim());
+            }
+        } catch (error) {
+            showAlert('Error', 'Error al eliminar la bitácora', 'error');
+        }
+    };
+
     const renderBitacoraCard = (bitacora, index) => (
         <div key={bitacora.id_bitacora || index} className="bitacora-card">
             <div className="bitacora-header-card">
@@ -311,6 +337,29 @@ const Bitacoras = () => {
                                 disabled={actualizandoEstado === bitacora.id_bitacora || bitacora.estado_revision === 'rechazado'}
                             >
                                 {actualizandoEstado === bitacora.id_bitacora ? '⏳' : '✗'} Rechazado
+                            </button>
+                        </div>
+                        
+                        {/* Botón de eliminar bitácora */}
+                        <div className="eliminar-action" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                            <button
+                                className="btn-estado btn-eliminar"
+                                onClick={() => handleEliminarBitacora(bitacora.id_bitacora, bitacora.semana)}
+                                style={{
+                                    backgroundColor: '#dc3545',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    width: '100%',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                🗑️ Eliminar Bitácora
                             </button>
                         </div>
                     </div>

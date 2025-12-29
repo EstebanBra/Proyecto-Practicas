@@ -133,3 +133,17 @@ export async function actualizarEstadoBitacora(id_bitacora, estado_revision, not
 
     return await bitacoraRepository.save(bitacora);
 }
+
+// Eliminar una bitácora (para docentes y administradores)
+export async function eliminarBitacora(id_bitacora) {
+    const bitacora = await bitacoraRepository.findOne({
+        where: { id_bitacora: id_bitacora }
+    });
+
+    if (!bitacora) {
+        throw new Error("Bitácora no encontrada");
+    }
+
+    await bitacoraRepository.remove(bitacora);
+    return { mensaje: "Bitácora eliminada correctamente", id: id_bitacora };
+}

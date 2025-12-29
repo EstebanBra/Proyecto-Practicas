@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
     actualizarEstadoBitacora,
     buscarBitacorasPorRut,
+    eliminarBitacora,
     obtenerBitacora,
     obtenerBitacorasPorPractica,
     obtenerMiPractica,
@@ -41,6 +42,11 @@ router
     .put("/:id/estado",
         verificarRol(["docente", "administrador"]),
         actualizarEstadoBitacora)
+
+    // Ruta para eliminar una bitácora (solo docentes y administradores)
+    .delete("/:id",
+        verificarRol(["docente", "administrador"]),
+        eliminarBitacora)
 
     // Ruta para obtener una bitácora específica
     .get("/:id", obtenerBitacora)
