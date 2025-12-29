@@ -1,0 +1,42 @@
+"use strict";
+import Joi from "joi";
+
+export const evaluacionBodyValidation = Joi.object({
+  id_documento: Joi.number().integer().required().messages({
+    "any.required": "El id del documento es obligatorio",
+    "number.base": "El id del documento debe ser numérico",
+  }),
+  tipo_documento: Joi.string()
+    .valid("informe", "autoevaluacion")
+    .required()
+    .messages({
+      "any.required": "Debe indicar el tipo de documento (informe o autoevaluacion)",
+      "any.only": "El tipo de documento debe ser 'informe' o 'autoevaluacion'",
+    }),
+  nota: Joi.number().min(1).max(7).required().messages({
+    "number.base": "La nota debe ser un número",
+    "number.min": "La nota mínima es 1.0",
+    "number.max": "La nota máxima es 7.0",
+    "any.required": "Debe indicar la nota de la evaluación",
+  }),
+  comentario: Joi.string().allow("", null).max(1000).messages({
+    "string.max": "El comentario no puede superar los 1000 caracteres",
+  }),
+});
+
+export const evaluacionUpdateValidation = Joi.object({
+  nota: Joi.number().min(1).max(7).optional().messages({
+    "number.base": "La nota debe ser un número",
+    "number.min": "La nota mínima es 1.0",
+    "number.max": "La nota máxima es 7.0",
+  }),
+  comentario: Joi.string().allow("", null).max(1000).optional().messages({
+    "string.max": "El comentario no puede superar los 1000 caracteres",
+  }),
+  tipo_documento: Joi.string()
+    .valid("informe", "autoevaluacion")
+    .optional()
+    .messages({
+      "any.only": "El tipo de documento debe ser 'informe' o 'autoevaluacion'",
+    }),
+});

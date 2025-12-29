@@ -1,6 +1,8 @@
 "use strict";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import * as documentoService from "../services/bitacoradocumento.service.js";
+import path from "path";
+import fs from "fs";
 
 export async function subirArchivo(req, res) {
     try {
@@ -115,5 +117,43 @@ export async function actualizarEstadoDocumento(req, res) {
     } catch (error) {
         console.error("Error al actualizar estado del documento:", error);
         return handleErrorServer(res, 500, "Error al actualizar el estado del documento");
+    }
+}
+
+export async function descargarDocumento(req, res) {
+    try {
+        const { id_documento } = req.params;
+
+        if (!id_documento) {
+            return handleErrorClient(res, 400, "ID de documento requerido");
+        }
+
+        // Obtener el documento de la base de datos
+        const documento = await documentoService.obtenerDocumentoPorId(id_documento);
+
+        if (!documento) {
+            return handleErrorClient(res, 404, "Documento no encontrado");
+        }
+
+        const filePath = documento.ruta_archivo;
+
+        // Verificar que el archivo existe
+        if (!fs.existsSync(filePath)) {
+            return handleErrorClient(res, 404, "El archivo no existe en el servidor");
+        }
+
+        // Enviar el archivo para descarga
+        const fileName = documento.nombre_archivo;
+        res.download(filePath, fileName, (err) => {
+            if (err) {
+                console.error("Error al descargar archivo:", err);
+                if (!res.headersSent) {
+                    return handleErrorServer(res, 500, "Error al descargar el archivo");
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error al descargar documento:", error);
+        return handleErrorServer(res, 500, "Error al descargar el documento");
     }
 }

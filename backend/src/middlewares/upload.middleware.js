@@ -102,7 +102,8 @@ function createUploadMiddleware(options = {}) {
 
 // Middlewares específicos
 export const uploadDocument = createUploadMiddleware({
-    requireNamePattern: ["informe", "autoevaluacion"]
+    destination: "uploads/documentos"
+    // Nota: Ya no se requiere patrón de nombre específico
 });
 
 export const uploadBitacora = createUploadMiddleware({

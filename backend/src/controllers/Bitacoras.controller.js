@@ -1,6 +1,7 @@
 "use strict";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import * as bitacoraService from "../services/Bitacoras.service.js";
+import fs from "fs";
 
 export async function registrarBitacora(req, res) {
     try {
@@ -199,8 +200,14 @@ export async function obtenerMiPractica(req, res) {
         // Obtenemos el ID del token (que corresponde al estudiante logueado)
         const idEstudiante = req.user.id; 
         
+        console.log("=== DEBUG obtenerMiPractica ===");
+        console.log("Token user:", req.user);
+        console.log("ID Estudiante del token:", idEstudiante);
+        
         // Llamamos al servicio con el nuevo nombre
         const practica = await bitacoraService.obtenerPracticaPorEstudiante(idEstudiante);
+
+        console.log("Práctica encontrada:", practica);
 
         if (!practica) {
             return handleErrorClient(res, 404, "No tienes una práctica activa en este momento.");
@@ -210,5 +217,102 @@ export async function obtenerMiPractica(req, res) {
     } catch (error) {
         console.error("Error al obtener mi práctica:", error);
         handleErrorServer(res, 500, error.message);
+    }
+}
+
+// Actualizar estado de bitácora (para docentes)
+export async function actualizarEstadoBitacora(req, res) {
+    try {
+        const { id } = req.params;
+        const { estado_revision, nota } = req.body;
+
+        if (!id) {
+            return handleErrorClient(res, 400, "El ID de la bitácora es requerido");
+        }
+
+        if (!estado_revision) {
+            return handleErrorClient(res, 400, "El estado de revisión es requerido");
+        }
+
+        const bitacoraActualizada = await bitacoraService.actualizarEstadoBitacora(
+            parseInt(id), 
+            estado_revision, 
+            nota
+        );
+
+        return handleSuccess(res, 200, "Estado de bitácora actualizado exitosamente", bitacoraActualizada);
+    } catch (error) {
+        console.error("Error al actualizar estado de bitácora:", error);
+        if (error.message === "Bitácora no encontrada") {
+            return handleErrorClient(res, 404, error.message);
+        }
+        if (error.message.includes("Estado de revisión no válido") || error.message.includes("La nota debe estar")) {
+            return handleErrorClient(res, 400, error.message);
+        }
+        return handleErrorServer(res, 500, error.message);
+    }
+}
+
+// Eliminar una bitácora (para docentes y administradores)
+export async function eliminarBitacora(req, res) {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return handleErrorClient(res, 400, "El ID de la bitácora es requerido");
+        }
+
+        const resultado = await bitacoraService.eliminarBitacora(parseInt(id));
+
+        return handleSuccess(res, 200, "Bitácora eliminada exitosamente", resultado);
+    } catch (error) {
+        console.error("Error al eliminar bitácora:", error);
+        if (error.message === "Bitácora no encontrada") {
+            return handleErrorClient(res, 404, error.message);
+        }
+        return handleErrorServer(res, 500, error.message);
+    }
+}
+
+// Descargar archivo de una bitácora
+export async function descargarArchivoBitacora(req, res) {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return handleErrorClient(res, 400, "El ID de la bitácora es requerido");
+        }
+
+        // Obtener la bitácora
+        const bitacora = await bitacoraService.obtenerBitacora(parseInt(id));
+
+        if (!bitacora) {
+            return handleErrorClient(res, 404, "Bitácora no encontrada");
+        }
+
+        if (!bitacora.ruta_archivo) {
+            return handleErrorClient(res, 404, "Esta bitácora no tiene archivo adjunto");
+        }
+
+        const filePath = bitacora.ruta_archivo;
+
+        // Verificar que el archivo existe
+        if (!fs.existsSync(filePath)) {
+            return handleErrorClient(res, 404, "El archivo no existe en el servidor");
+        }
+
+        // Enviar el archivo para descarga
+        const fileName = bitacora.nombre_archivo || `bitacora_semana_${bitacora.semana}`;
+        res.download(filePath, fileName, (err) => {
+            if (err) {
+                console.error("Error al descargar archivo:", err);
+                if (!res.headersSent) {
+                    return handleErrorServer(res, 500, "Error al descargar el archivo");
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error al descargar archivo de bitácora:", error);
+        return handleErrorServer(res, 500, "Error al descargar el archivo");
     }
 }

@@ -16,7 +16,29 @@ const PracticaSchema = new EntitySchema({
     },
     id_docente: {
       type: "int",
-      nullable: false,
+      nullable: true, // Nullable para prácticas externas sin docente asignado
+    },
+    // Datos de la empresa
+    empresa: {
+      type: "varchar",
+      length: 255,
+      nullable: true, // Para prácticas de ofertas publicadas
+    },
+    // Datos del supervisor
+    supervisor_nombre: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    supervisor_email: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    supervisor_telefono: {
+      type: "varchar",
+      length: 20,
+      nullable: true,
     },
     fecha_inicio: {
       type: "date",
@@ -34,10 +56,19 @@ const PracticaSchema = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    tipo_presencia:{
+    tipo_presencia: {
       type: "enum",
-      enum: ["presencial", "virtual"],
+      enum: ["presencial", "virtual", "hibrido"],
       default: "presencial",
+    },
+    tipo_practica: {
+      type: "enum",
+      enum: ["publicada", "externa"], // publicada = desde ofertas, externa = ingresada por estudiante
+      default: "publicada",
+    },
+    documentos: {
+      type: "simple-json",
+      nullable: true, // Array de objetos con info de documentos
     },
     nota_practica: {
       type: "decimal",
@@ -47,8 +78,12 @@ const PracticaSchema = new EntitySchema({
     },
     estado: {
       type: "enum",
-      enum: ["activa", "en_progreso", "finalizada", "cancelada"],
+      enum: ["activa", "en_progreso", "finalizada", "cancelada", "pendiente_revision"],
       default: "activa",
+    },
+    fecha_creacion: {
+      type: "timestamp",
+      default: () => "CURRENT_TIMESTAMP",
     },
   },
   relations: {
@@ -62,7 +97,8 @@ const PracticaSchema = new EntitySchema({
       target: "User",
       type: "many-to-one",
       joinColumn: { name: "id_docente" },
-      onDelete: "CASCADE",
+      onDelete: "SET NULL",
+      nullable: true,
     },
   },
 });

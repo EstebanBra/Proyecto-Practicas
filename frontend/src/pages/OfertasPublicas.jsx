@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { aceptarPostulante, getOfertas, deleteOferta, updateOferta, postularOferta, getPostulantes } from '@services/ofertaPractica.service.js';
+import { useNavigate } from 'react-router-dom';
+import { aceptarPostulante, rechazarPostulante, getOfertas, deleteOferta, updateOferta, postularOferta, getPostulantes } from '@services/ofertaPractica.service.js';
 import OfertaCard from '@components/OfertaCard';
 import Form from '@components/Form';
 import { deleteDataAlert, showSuccessAlert, showErrorAlert } from '@helpers/sweetAlert.js';
@@ -7,6 +8,7 @@ import Swal from 'sweetalert2';
 import '@styles/offers.css';
 
 const OfertasPublicas = () => {
+    const navigate = useNavigate();
     const [ofertas, setOfertas] = useState([]);
     const [ofertaAEditar, setOfertaAEditar] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
@@ -60,6 +62,20 @@ const handleVerPostulantes = async (ofertaId) => {
             return;
         }
 
+        // Función para obtener el estilo del estado
+        const getEstadoBadge = (estado) => {
+            switch (estado) {
+                case 'pendiente':
+                    return '<span style="background:#ffc107;color:#212529;padding:3px 8px;border-radius:12px;font-size:0.8rem;">⏳ Pendiente</span>';
+                case 'aceptado':
+                    return '<span style="background:#28a745;color:white;padding:3px 8px;border-radius:12px;font-size:0.8rem;">✅ Aceptado</span>';
+                case 'rechazado':
+                    return '<span style="background:#dc3545;color:white;padding:3px 8px;border-radius:12px;font-size:0.8rem;">❌ Rechazado</span>';
+                default:
+                    return `<span style="background:#6c757d;color:white;padding:3px 8px;border-radius:12px;font-size:0.8rem;">${estado}</span>`;
+            }
+        };
+
         // Generamos la tabla HTML
         let htmlTable = `
             <div style="overflow-x: auto;">
@@ -68,25 +84,40 @@ const handleVerPostulantes = async (ofertaId) => {
                         <tr style="background:#f8f9fa; border-bottom:2px solid #dee2e6; color: #495057;">
                             <th style="padding:12px 15px;">Nombre</th>
                             <th style="padding:12px 15px;">RUT</th>
-                            <th style="padding:12px 15px;">Acción</th> 
+                            <th style="padding:12px 15px;">Estado</th>
+                            <th style="padding:12px 15px;">Acciones</th> 
                         </tr>
                     </thead>
                     <tbody>
         `;
         
         alumnos.forEach(alumno => {
+            const botonesAccion = alumno.estado === 'pendiente' 
+                ? `
+                    <button 
+                        id="btn-aceptar-${alumno.idPostulacion}"
+                        class="swal-btn-aceptar"
+                        style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px;"
+                    >
+                        ✔ Aceptar
+                    </button>
+                    <button 
+                        id="btn-rechazar-${alumno.idPostulacion}"
+                        class="swal-btn-rechazar"
+                        style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;"
+                    >
+                        ✖ Rechazar
+                    </button>
+                `
+                : '<span style="color: #6c757d; font-style: italic;">Ya procesado</span>';
+
             htmlTable += `
                 <tr style="border-bottom:1px solid #eee;">
                     <td style="padding:12px 15px;">${alumno.nombreCompleto}</td>
                     <td style="padding:12px 15px;">${alumno.rut}</td>
+                    <td style="padding:12px 15px;">${getEstadoBadge(alumno.estado)}</td>
                     <td style="padding:12px 15px;">
-                        <button 
-                            id="btn-aceptar-${alumno.id}"
-                            class="swal-btn-aceptar"
-                            style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;"
-                        >
-                            ✔ Aceptar
-                        </button>
+                        ${botonesAccion}
                     </td>
                 </tr>
             `;
@@ -97,15 +128,21 @@ const handleVerPostulantes = async (ofertaId) => {
         Swal.fire({
             title: `Postulantes (${alumnos.length})`,
             html: htmlTable,
-            width: '800px',
+            width: '900px',
             showConfirmButton: true,
             confirmButtonText: 'Cerrar',
-            // didOpen se ejecuta cuando el popup se abre
             didOpen: () => {
                 alumnos.forEach(alumno => {
-                    const btn = document.getElementById(`btn-aceptar-${alumno.id}`);
-                    if (btn) {
-                        btn.onclick = () => confirmarAceptacion(ofertaId, alumno);
+                    if (alumno.estado === 'pendiente') {
+                        const btnAceptar = document.getElementById(`btn-aceptar-${alumno.idPostulacion}`);
+                        const btnRechazar = document.getElementById(`btn-rechazar-${alumno.idPostulacion}`);
+                        
+                        if (btnAceptar) {
+                            btnAceptar.onclick = () => confirmarAceptacion(ofertaId, alumno);
+                        }
+                        if (btnRechazar) {
+                            btnRechazar.onclick = () => confirmarRechazo(ofertaId, alumno);
+                        }
                     }
                 });
             }
@@ -129,14 +166,39 @@ const confirmarAceptacion = async (ofertaId, alumno) => {
     if (result.isConfirmed) {
         Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
         
-        const resp = await aceptarPostulante(ofertaId, alumno.id);
+        const resp = await aceptarPostulante(ofertaId, alumno.id, alumno.idPostulacion);
         
         if (resp.status === 'Success' || resp.data) {
             await Swal.fire('¡Éxito!', 'El estudiante ha sido aceptado correctamente.', 'success');
-            // Opcional: Volver a abrir la lista de postulantes
             handleVerPostulantes(ofertaId); 
         } else {
             Swal.fire('Error', resp.message || 'No se pudo aceptar al estudiante', 'error');
+        }
+    }
+};
+
+// Función auxiliar para manejar el click en "Rechazar"
+const confirmarRechazo = async (ofertaId, alumno) => {
+    const result = await Swal.fire({
+        title: `¿Rechazar a ${alumno.nombreCompleto}?`,
+        text: "Esta acción rechazará la postulación del estudiante.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, rechazar',
+        confirmButtonColor: '#dc3545',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+        Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
+        
+        const resp = await rechazarPostulante(ofertaId, alumno.id, alumno.idPostulacion);
+        
+        if (resp.status === 'Success' || resp.data) {
+            await Swal.fire('Completado', 'La postulación ha sido rechazada.', 'info');
+            handleVerPostulantes(ofertaId); 
+        } else {
+            Swal.fire('Error', resp.message || 'No se pudo rechazar al estudiante', 'error');
         }
     }
 };
@@ -203,9 +265,14 @@ const confirmarAceptacion = async (ofertaId, alumno) => {
                 const response = await postularOferta(id);
                 
                 if (response.status === 'Success' || response.data) {
-                    showSuccessAlert('¡Postulado!', 'Tu postulación ha sido enviada exitosamente.');
-                    // Actualización visual instantánea de cupos
-                    setOfertas(prev => prev.map(o => o.id === id ? { ...o, cupos: o.cupos - 1 } : o));
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Postulado!',
+                        text: 'Tu postulación ha sido enviada exitosamente. Serás redirigido a tus postulaciones.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    navigate('/mis-postulaciones');
                 } else {
                     showErrorAlert('Error', response.message || 'No se pudo postular.');
                 }

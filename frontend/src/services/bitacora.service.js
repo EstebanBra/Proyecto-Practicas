@@ -60,6 +60,53 @@ export const bitacoraService = {
             const errorMessage = error.response?.data?.message || 'Error al buscar bitácoras';
             return { data: null, error: errorMessage };
         }
+    },
+
+    async actualizarEstado(idBitacora, estadoRevision, nota = null) {
+        try {
+            const body = { estado_revision: estadoRevision };
+            if (nota !== null) {
+                body.nota = nota;
+            }
+            const response = await axios.put(`/bitacora/${idBitacora}/estado`, body);
+            return { data: response.data, error: null };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error al actualizar el estado';
+            return { data: null, error: errorMessage };
+        }
+    },
+
+    async eliminarBitacora(idBitacora) {
+        try {
+            const response = await axios.delete(`/bitacora/${idBitacora}`);
+            return { data: response.data, error: null };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error al eliminar la bitácora';
+            return { data: null, error: errorMessage };
+        }
+    },
+
+    async descargarArchivo(idBitacora, nombreArchivo) {
+        try {
+            const response = await axios.get(`/bitacora/${idBitacora}/descargar`, {
+                responseType: 'blob'
+            });
+            
+            // Crear un enlace temporal para descargar
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', nombreArchivo || `bitacora_${idBitacora}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            
+            return { success: true, error: null };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error al descargar el archivo';
+            return { success: false, error: errorMessage };
+        }
     }
 };
 
@@ -110,6 +157,29 @@ export const documentoService = {
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Error al actualizar el documento';
             return { data: null, error: errorMessage };
+        }
+    },
+
+    async descargarDocumento(idDocumento, nombreArchivo) {
+        try {
+            const response = await axios.get(`/bitacoradocumento/descargar/${idDocumento}`, {
+                responseType: 'blob'
+            });
+            
+            // Crear un enlace temporal para descargar
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', nombreArchivo || `documento_${idDocumento}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            
+            return { success: true, error: null };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error al descargar el documento';
+            return { success: false, error: errorMessage };
         }
     }
 };

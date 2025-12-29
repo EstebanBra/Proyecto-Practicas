@@ -8,10 +8,14 @@ import Register from '@pages/Register';
 import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
 import Bitacoras from '@pages/Bitacoras';
+import ComentariosWrapper from '@pages/ComentariosWrapper';
 import ProtectedRoute from '@components/ProtectedRoute';
 import '@styles/styles.css';
 import OfertasPublicas from '@pages/OfertasPublicas';
 import MisPostulaciones from '@pages/MisPostulaciones';
+import PracticaExterna from '@pages/PracticaExterna';
+import DocumentosFinales from '@pages/DocumentosFinales';
+import DocsEntregados from '@pages/DocsEntregados';
 
 const router = createBrowserRouter([
   {
@@ -40,6 +44,30 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: '/practica-externa',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <PracticaExterna />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/documentos-finales',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <DocumentosFinales />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/docs-entregados',
+        element: (
+          <ProtectedRoute allowedRoles={['docente', 'administrador']}>
+            <DocsEntregados />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: '/users',
         element: (
         <ProtectedRoute allowedRoles={['administrador']}>
@@ -54,7 +82,15 @@ const router = createBrowserRouter([
           <Bitacoras />
         </ProtectedRoute>
         ),
-        }
+      },
+      {
+        path: '/comentarios',
+        element: (
+        <ProtectedRoute allowedRoles={['estudiante', 'docente', 'administrador']}>
+          <ComentariosWrapper />
+        </ProtectedRoute>
+        ),
+      }
     ]
   },
   {

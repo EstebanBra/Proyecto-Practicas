@@ -6,6 +6,11 @@ import {
   getOfertaPracticaByIdService,
   getOfertasPracticaService,
   updateOfertaPracticaService,
+  createPostulacionService,
+  getPostulacionesByEstudianteService,
+  getPostulantesByOfertaService,
+  updateEstadoPostulacionService,
+  getPostulacionByOfertaEstudianteService,
 } from "../services/ofertaPractica.service.js";
 import {
   handleErrorClient,
@@ -17,7 +22,7 @@ import User from "../entity/user.entity.js";
 import { sendEmail } from "../helpers/email.helper.js";
 import OfertaPractica from "../entity/ofertaPractica.entity.js";
 import Practica from "../entity/practica.entity.js";
-import { enviarCorreoAceptacion } from "../services/email.service.js";
+import Postulacion from "../entity/postulacion.entity.js";
 
 export async function createOfertaPractica(req, res) {
   try {
@@ -129,10 +134,9 @@ export async function postularOferta(req, res) {
     const userToken = req.user;
 
     const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
-    const userRepo = AppDataSource.getRepository(User); // Repositorio de usuarios
+    const userRepo = AppDataSource.getRepository(User);
 
     // Buscamos al estudiante REAL en la base de datos usando el email del token
-    // Esto trae el objeto completo (con ID, password encriptada, etc.)
     const estudianteReal = await userRepo.findOne({
         where: { email: userToken.email }
     });
@@ -141,21 +145,14 @@ export async function postularOferta(req, res) {
         return handleErrorClient(res, 404, "Estudiante no encontrado en la base de datos.");
     }
 
-    // Buscamos la oferta y sus postulantes
+    // Buscamos la oferta
     const oferta = await ofertaRepo.findOne({
       where: { id: parseInt(id) },
-      relations: ["encargado", "postulantes"], 
+      relations: ["encargado"], 
     });
 
     if (!oferta) {
       return handleErrorClient(res, 404, "Oferta no encontrada");
-    }
-
-    // Verificamos si YA postuló usando el ID del estudiante real
-    const yaPostulo = oferta.postulantes.some(p => p.id === estudianteReal.id);
-
-    if (yaPostulo) {
-      return handleErrorClient(res, 400, "Ya has postulado a esta oferta anteriormente.");
     }
 
     // Verificar cupos
@@ -163,7 +160,17 @@ export async function postularOferta(req, res) {
       return handleErrorClient(res, 400, "Lo sentimos, ya no quedan cupos disponibles.");
     }
 
-    // Enviar correo (usando datos del usuario real o del token, da igual aquí)
+    // Crear la postulación con estado "pendiente"
+    const [nuevaPostulacion, errorPostulacion] = await createPostulacionService(
+      parseInt(id), 
+      estudianteReal.id
+    );
+
+    if (errorPostulacion) {
+      return handleErrorClient(res, 400, errorPostulacion);
+    }
+
+    // Enviar correo al profesor
     const emailProfesor = oferta.encargado.email;
     const asunto = `Nueva Postulación: ${oferta.titulo}`;
     const mensajeHtml = `
@@ -173,21 +180,20 @@ export async function postularOferta(req, res) {
         <li><strong>Email:</strong> ${estudianteReal.email}</li>
         <li><strong>RUT:</strong> ${estudianteReal.rut}</li>
       </ul>
+      <p>Ingresa al sistema para aceptar o rechazar la postulación.</p>
     `;
     
     // Enviamos el correo (sin bloquear si falla)
     await sendEmail(emailProfesor, asunto, mensajeHtml);
 
-    // Guardamos al estudiante
-    oferta.postulantes.push(estudianteReal); // Usamos el objeto completo de la DB
+    // Reducir cupos
     oferta.cupos = oferta.cupos - 1;
-    
     await ofertaRepo.save(oferta);
 
-    handleSuccess(res, 200, "Postulación enviada exitosamente.");
+    handleSuccess(res, 200, "Postulación enviada exitosamente.", nuevaPostulacion);
 
   } catch (error) {
-    console.error(error); // Para ver detalles en consola si falla algo más
+    console.error(error);
     handleErrorServer(res, 500, error.message);
   }
 }
@@ -195,7 +201,6 @@ export async function postularOferta(req, res) {
 // --- Ver Mis Postulaciones (Estudiante) ---
 export async function getMisPostulaciones(req, res) {
   try {
-    // Usamos el email para buscar al usuario real en la BD.
     const emailEstudiante = req.user.email; 
     const userRepo = AppDataSource.getRepository(User);
     
@@ -205,16 +210,23 @@ export async function getMisPostulaciones(req, res) {
         return handleErrorClient(res, 404, "Usuario no encontrado");
     }
 
-    const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
+    // Usamos el servicio de postulaciones
+    const [postulaciones, error] = await getPostulacionesByEstudianteService(estudiante.id);
 
-    const misOfertas = await ofertaRepo.find({
-      where: {
-        postulantes: { id: estudiante.id }
-      },
-      relations: ["encargado"]
-    });
+    if (error) {
+      return handleErrorClient(res, 400, error);
+    }
 
-    handleSuccess(res, 200, "Historial recuperado", misOfertas);
+    // Transformamos los datos para el frontend
+    const misPostulaciones = postulaciones.map(p => ({
+      id: p.id,
+      estado: p.estado,
+      fecha_postulacion: p.fecha_postulacion,
+      fecha_respuesta: p.fecha_respuesta,
+      oferta: p.oferta
+    }));
+
+    handleSuccess(res, 200, "Historial recuperado", misPostulaciones);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -224,19 +236,26 @@ export async function getMisPostulaciones(req, res) {
 export async function getPostulantesPorOferta(req, res) {
   try {
     const { id } = req.params;
-    const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
 
-    const oferta = await ofertaRepo.findOne({
-      where: { id: parseInt(id) },
-      relations: ["postulantes"] 
-    });
+    const [postulaciones, error] = await getPostulantesByOfertaService(parseInt(id));
 
-    if (!oferta) {
-      return handleErrorClient(res, 404, "Oferta no encontrada");
+    if (error) {
+      return handleErrorClient(res, 400, error);
     }
-    // Agregamos el texto "Lista de postulantes" como tercer argumento.
-    // Así 'oferta.postulantes' pasa a ser el cuarto argumento (data).
-    handleSuccess(res, 200, "Lista de postulantes", oferta.postulantes);
+
+    // Transformamos los datos para incluir el estado de la postulación
+    const postulantesConEstado = postulaciones.map(p => ({
+      idPostulacion: p.id,
+      id: p.estudiante.id,
+      nombreCompleto: p.estudiante.nombreCompleto,
+      rut: p.estudiante.rut,
+      email: p.estudiante.email,
+      estado: p.estado,
+      fecha_postulacion: p.fecha_postulacion,
+      fecha_respuesta: p.fecha_respuesta
+    }));
+
+    handleSuccess(res, 200, "Lista de postulantes", postulantesConEstado);
     
   } catch (error) {
     handleErrorServer(res, 500, error.message);
@@ -246,13 +265,13 @@ export async function getPostulantesPorOferta(req, res) {
 // --- Aceptar Estudiante y Crear Práctica ---
 export async function aceptarPostulante(req, res) {
   try {
-    const { idOferta, idEstudiante } = req.body; 
+    const { idOferta, idEstudiante, idPostulacion } = req.body; 
 
     const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
     const userRepo = AppDataSource.getRepository(User);
     const practicaRepo = AppDataSource.getRepository("Practica"); 
 
-    // 1. Validaciones básicas
+    // Validaciones básicas
     const oferta = await ofertaRepo.findOne({ 
         where: { id: parseInt(idOferta) },
         relations: ["encargado"] 
@@ -264,19 +283,28 @@ export async function aceptarPostulante(req, res) {
     const estudianteEncontrado = await userRepo.findOne({ where: { id: parseInt(idEstudiante) } });
     if (!estudianteEncontrado) return handleErrorClient(res, 404, "Estudiante no encontrado");
 
-    // 2. Verificar duplicados
-    const practicaExistente = await practicaRepo.findOne({
-        where: { 
-            estudiante: { id: estudianteEncontrado.id }, 
-            estado: "en_progreso" 
-        }
-    });
+    // Verificar duplicados de práctica en curso (activa o en_progreso)
+    const practicaExistente = await practicaRepo
+        .createQueryBuilder("practica")
+        .where("practica.id_estudiante = :idEstudiante", { idEstudiante: estudianteEncontrado.id })
+        .andWhere("practica.estado IN (:...estados)", { estados: ["activa", "en_progreso"] })
+        .getOne();
 
     if (practicaExistente) {
         return handleErrorClient(res, 400, "El estudiante ya tiene una práctica en curso.");
     }
 
-    // 3. CREAR LA PRÁCTICA
+    // Actualizar el estado de la postulación a "aceptado"
+    const [postulacionActualizada, errorPostulacion] = await updateEstadoPostulacionService(
+      parseInt(idPostulacion), 
+      "aceptado"
+    );
+
+    if (errorPostulacion) {
+      return handleErrorClient(res, 400, errorPostulacion);
+    }
+
+    // CREAR LA PRÁCTICA
     const nuevaPractica = practicaRepo.create({
         estudiante: estudianteEncontrado,
         docente: oferta.encargado,
@@ -288,20 +316,73 @@ export async function aceptarPostulante(req, res) {
 
     await practicaRepo.save(nuevaPractica);
 
-    //  ENVIAR EL CORREO DE CONFIRMACIÓN
-    console.log("Intentando enviar correo a:", estudianteEncontrado.email);
+    // Enviar email de notificación al estudiante
+    const asunto = `¡Felicitaciones! Has sido aceptado en: ${oferta.titulo}`;
+    const mensajeHtml = `
+      <h1>¡Buenas noticias!</h1>
+      <p>Has sido <strong>aceptado</strong> en la oferta de práctica: <strong>${oferta.titulo}</strong></p>
+      <p>Ahora puedes comenzar tu práctica y subir tus bitácoras.</p>
+      <p>¡Mucho éxito!</p>
+    `;
+    await sendEmail(estudianteEncontrado.email, asunto, mensajeHtml);
     
-    // Obtenemos el nombre para el correo (o usamos uno genérico si falla)
-    const nombreEstudiante = estudianteEncontrado.nombreCompleto || "Estudiante";
-    const tituloOferta = oferta.titulo || "Práctica Profesional"; // Asegúrate que tu oferta tenga título
-    
-    // Llamamos al servicio (sin await para no hacer esperar al usuario en el frontend)
-    enviarCorreoAceptacion(estudianteEncontrado.email, nombreEstudiante, tituloOferta);
-
-    handleSuccess(res, 201, "Estudiante aceptado. Se ha enviado un correo de notificación.", nuevaPractica);
+    handleSuccess(res, 201, "Estudiante aceptado. Práctica iniciada correctamente.", { 
+      practica: nuevaPractica, 
+      postulacion: postulacionActualizada 
+    });
 
   } catch (error) {
     console.error("Error al aceptar postulante:", error);
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+// --- Rechazar Postulante ---
+export async function rechazarPostulante(req, res) {
+  try {
+    const { idOferta, idEstudiante, idPostulacion } = req.body;
+
+    const ofertaRepo = AppDataSource.getRepository(OfertaPractica);
+    const userRepo = AppDataSource.getRepository(User);
+
+    // Validaciones básicas
+    const oferta = await ofertaRepo.findOne({ 
+        where: { id: parseInt(idOferta) }
+    });
+    
+    if (!oferta) return handleErrorClient(res, 404, "Oferta no encontrada");
+
+    const estudianteEncontrado = await userRepo.findOne({ where: { id: parseInt(idEstudiante) } });
+    if (!estudianteEncontrado) return handleErrorClient(res, 404, "Estudiante no encontrado");
+
+    // Actualizar el estado de la postulación a "rechazado"
+    const [postulacionActualizada, errorPostulacion] = await updateEstadoPostulacionService(
+      parseInt(idPostulacion), 
+      "rechazado"
+    );
+
+    if (errorPostulacion) {
+      return handleErrorClient(res, 400, errorPostulacion);
+    }
+
+    // Devolver el cupo
+    oferta.cupos = oferta.cupos + 1;
+    await ofertaRepo.save(oferta);
+
+    // Enviar email de notificación al estudiante
+    const asunto = `Resultado de postulación: ${oferta.titulo}`;
+    const mensajeHtml = `
+      <h1>Resultado de tu postulación</h1>
+      <p>Lamentamos informarte que tu postulación a la oferta <strong>${oferta.titulo}</strong> no ha sido aceptada en esta ocasión.</p>
+      <p>Te animamos a seguir postulando a otras ofertas de práctica disponibles.</p>
+      <p>¡Mucho ánimo!</p>
+    `;
+    await sendEmail(estudianteEncontrado.email, asunto, mensajeHtml);
+
+    handleSuccess(res, 200, "Postulación rechazada correctamente.", postulacionActualizada);
+
+  } catch (error) {
+    console.error("Error al rechazar postulante:", error);
     handleErrorServer(res, 500, error.message);
   }
 }

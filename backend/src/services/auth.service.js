@@ -30,11 +30,17 @@ export async function loginService(user) {
     }
 
     const payload = {
+      id: userFound.id,
       nombreCompleto: userFound.nombreCompleto,
       email: userFound.email,
       rut: userFound.rut,
       rol: userFound.rol,
     };
+
+    if (!ACCESS_TOKEN_SECRET) {
+      console.error("ACCESS_TOKEN_SECRET no está configurado");
+      return [null, "Error de configuración del servidor"];
+    }
 
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, {
       expiresIn: "1d",

@@ -76,9 +76,42 @@ const Navbar = () => {
                     )}
                     {/* Visible solo para ESTUDIANTES */}
                     {userRole === 'estudiante' && (
+                    <>
                     <li>
                         <NavLink to="/mis-postulaciones" onClick={() => setMenuOpen(false)}>
                             Mis Postulaciones
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink 
+                            to="/practica-externa" 
+                            onClick={() => setMenuOpen(false)}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Práctica Externa
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink 
+                            to="/documentos-finales" 
+                            onClick={() => setMenuOpen(false)}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Documentos Finales
+                        </NavLink>
+                    </li>
+                    </>
+                    )}
+
+                    {/* Visible para DOCENTES y ADMINISTRADORES */}
+                    {(userRole === 'docente' || userRole === 'administrador') && (
+                    <li>
+                        <NavLink 
+                            to="/docs-entregados" 
+                            onClick={() => setMenuOpen(false)}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Docs. Entregados
                         </NavLink>
                     </li>
                     )}
@@ -91,6 +124,17 @@ const Navbar = () => {
                             className={({ isActive }) => (isActive ? 'active' : '')}
                         >
                             Ofertas Publicadas
+                        </NavLink>
+                    </li>
+
+                    {/* Comentarios - Visible para estudiantes y docentes */}
+                    <li>
+                        <NavLink
+                            to="/comentarios"
+                            onClick={() => { setMenuOpen(false); }}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Comentarios
                         </NavLink>
                     </li>
 

@@ -4,6 +4,7 @@ import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import { isDocenteOrAdmin, isEstudiante } from "../middlewares/authorization.middleware.js";
 import {
   aceptarPostulante,
+  rechazarPostulante,
   createOfertaPractica,
   deleteOfertaPractica,
   getMisPostulaciones,
@@ -37,5 +38,6 @@ router.post("/", isDocenteOrAdmin, createOfertaPractica);
 router.put("/:id", isDocenteOrAdmin, updateOfertaPractica);
 router.delete("/:id", isDocenteOrAdmin, deleteOfertaPractica);
 router.post("/aceptar-postulante", isDocenteOrAdmin, aceptarPostulante);
+router.post("/rechazar-postulante", isDocenteOrAdmin, rechazarPostulante);
 
 export default router;

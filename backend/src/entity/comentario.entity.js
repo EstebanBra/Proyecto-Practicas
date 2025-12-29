@@ -14,6 +14,11 @@ const ComentarioSchema = new EntitySchema({
             type: String,
             length: 500
         },
+        respuesta: {
+            type: String,
+            length: 500,
+            nullable: true
+        },
         fechaCreacion: {
             type: Date,
             default: () => "CURRENT_TIMESTAMP"
@@ -35,6 +40,20 @@ const ComentarioSchema = new EntitySchema({
             type: String,
             length: 50,
             default: "general"
+        },
+        archivos: {
+            type: "simple-json",
+            nullable: true,
+            comment: "Array de objetos con información de archivos {nombre, ruta, tipo, tamaño}"
+        }
+    },
+    relations: {
+        usuario: {
+            type: "many-to-one",
+            target: "User",
+            joinColumn: {
+                name: "usuarioId"
+            }
         }
     }
 });
