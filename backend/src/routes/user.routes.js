@@ -7,13 +7,9 @@ import {
   getUser,
   getUsers,
   updateUser,
-  getDocentes,
 } from "../controllers/user.controller.js";
 
 const router = Router();
-
-// Ruta pública para obtener docentes (sin autenticación requerida)
-router.get("/docentes", getDocentes);
 
 router
   .use(authenticateJwt)

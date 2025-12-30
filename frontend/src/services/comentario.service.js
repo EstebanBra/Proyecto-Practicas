@@ -10,11 +10,6 @@ export async function createComentario(dataComentario) {
             formData.append('nivelUrgencia', dataComentario.nivelUrgencia || 'normal');
             formData.append('tipoProblema', dataComentario.tipoProblema || 'General');
             
-            // Agregar docenteId si existe
-            if (dataComentario.docenteId) {
-                formData.append('docenteId', dataComentario.docenteId);
-            }
-            
             // Agregar todos los archivos
             dataComentario.archivos.forEach(file => {
                 formData.append('archivos', file);
@@ -62,11 +57,6 @@ export async function updateComentario(id, dataComentario) {
             formData.append('estado', dataComentario.estado || 'Pendiente');
             formData.append('nivelUrgencia', dataComentario.nivelUrgencia || 'normal');
             formData.append('tipoProblema', dataComentario.tipoProblema || 'General');
-            
-            // Agregar docenteId si existe
-            if (dataComentario.docenteId) {
-                formData.append('docenteId', dataComentario.docenteId);
-            }
             
             // Agregar todos los archivos
             dataComentario.archivos.forEach(file => {

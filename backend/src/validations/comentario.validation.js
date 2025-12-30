@@ -27,11 +27,6 @@ export const comentarioBodyValidation = joi.object({
         "string.max": "El tipo de problema no puede exceder los 50 caracteres.",
         "string.pattern.base": "El tipo de problema debe ser 'Personal', 'General' o 'De Empresa'.",
     }),
-    docenteId: joi.number().integer().positive().optional().messages({
-        "number.base": "El docente seleccionado es inválido.",
-        "number.integer": "El docente seleccionado es inválido.",
-        "number.positive": "El docente seleccionado es inválido."
-    }),
     respuesta: joi.string().max(500).optional().allow(null, " ")
         .custom((value, helpers) => {
             if (value === undefined || value === null) return value;
