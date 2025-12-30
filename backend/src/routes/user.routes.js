@@ -12,8 +12,8 @@ import {
 
 const router = Router();
 
-// Ruta pública para obtener docentes (requiere autenticación pero no admin)
-router.get("/docentes", authenticateJwt, getDocentes);
+// Ruta pública para obtener docentes (sin autenticación requerida)
+router.get("/docentes", getDocentes);
 
 router
   .use(authenticateJwt)
