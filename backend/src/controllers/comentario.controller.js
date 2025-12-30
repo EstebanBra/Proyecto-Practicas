@@ -24,15 +24,29 @@ import { AppDataSource } from "../config/configDb.js";
 import User from "../entity/user.entity.js";
 import { sendEmail } from "../helpers/email.helper.js";
 
-export async function createComentario(req, res) { //Esta funcion crea un nuevo comentario
+export async function createComentario(req, res) {
   try {
-    const { body, user, files } = req; // Se toma el ID del usuario del token (req.user) en luga¿
-    // Se establece automáticamente estado a "Pendiente" y se asigna el usuarioId del token
-    
+    const { body, files } = req;
+    const userToken = req.user; // Token decodificado
+
+    // Buscar el usuario completo en la base de datos
+    const userRepo = AppDataSource.getRepository(User);
+    const usuarioReal = await userRepo.findOne({
+      where: { email: userToken.email },
+    });
+
+    if (!usuarioReal) {
+      return handleErrorClient(
+        res,
+        404,
+        "Usuario no encontrado en la base de datos.",
+      );
+    }
+
     // Procesar archivos si existen
     let archivosData = null;
     if (files && files.length > 0) {
-      archivosData = files.map(file => ({
+      archivosData = files.map((file) => ({
         nombre: file.originalname,
         ruta: file.path,
         tipo: file.mimetype,
@@ -40,39 +54,66 @@ export async function createComentario(req, res) { //Esta funcion crea un nuevo 
         filename: file.filename
       }));
     }
-    
-    const comentarioData = { 
-      ...body, 
-      usuarioId: user.id,
+
+    const comentarioData = {
+      ...body,
+      usuarioId: usuarioReal.id,
       estado: "Pendiente",
-      archivos: archivosData
+      archivos: archivosData,
     };
 
-    await comentarioBodyValidation.validateAsync(comentarioData); // Valida el cuerpo del comentario
-    const newComentario = await createComentarioService(comentarioData); // Crea el comentario en la base de datos
+    await comentarioBodyValidation.validateAsync(comentarioData);
+    const newComentario = await createComentarioService(comentarioData);
 
-    // Notificar por correo al docente
-    try {
-      const destinatario = process.env.EMAIL_USER;
+    // Enviar email al docente de forma asíncrona
+    const destinatario = process.env.EMAIL_USER;
 
-      if (destinatario) {
-        const asunto = `Nuevo comentario de ${user.nombreCompleto || "Estudiante"}`;
-        const mensajeHtml = `
-          <h2>Nuevo comentario recibido</h2>
-          <p>El estudiante <strong>${user.nombreCompleto || "Estudiante"}</strong> envió un comentario.</p>
-          <p><strong>Nivel de urgencia:</strong> ${comentarioData.nivelUrgencia || "normal"}</p>
-          <p><strong>Tipo de problema:</strong> ${comentarioData.tipoProblema || "General"}</p>
-          <p><strong>Mensaje:</strong> ${comentarioData.mensaje}</p>
-          ${newComentario?.id ? `<p><strong>ID del comentario:</strong> ${newComentario.id}</p>` : ""}
-        `;
+    if (destinatario) {
+      const asunto = `Nuevo comentario de ${usuarioReal.nombreCompleto || "Estudiante"}`;
+      const mensajeHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+            .container { 
+            background-color: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: 0 auto; }
+            h2 { color: #2c3e50; }
+            .info { background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
+            .label { font-weight: bold; color: #34495e; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h2>📧 Nuevo comentario recibido</h2>
+            <div class="info">
+              <p><span class="label">Estudiante:</span> ${usuarioReal.nombreCompleto || "No especificado"}</p>
+              <p><span class="label">Nivel de urgencia:</span> ${comentarioData.nivelUrgencia || "normal"}</p>
+              <p><span class="label">Tipo de problema:</span> ${comentarioData.tipoProblema || "General"}</p>
+              <p><span class="label">Mensaje:</span></p>
+              <p>${comentarioData.mensaje}</p>
+              ${newComentario?.id ? `<p><span class="label">ID del comentario:</span> ${newComentario.id}</p>` : ""}
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
 
-        await sendEmail(destinatario, asunto, mensajeHtml);
-      }
-    } catch (notifyError) {
-      console.error("Error notificando al docente sobre el nuevo comentario:", notifyError);
+      // No bloquear la respuesta esperando el email
+      sendEmail(destinatario, asunto, mensajeHtml)
+        .then(success => {
+          if (success) {
+            console.log(`✓ Email enviado correctamente a ${destinatario}`);
+          } else {
+            console.error(`✗ No se pudo enviar email a ${destinatario}`);
+          }
+        })
+        .catch(err => console.error("Error en envío de email:", err));
+    } else {
+      console.warn("⚠ EMAIL_USER no configurado en .env - No se enviará notificación");
     }
 
-    handleSuccess(res, 201, "Comentario creado exitosamente", newComentario); 
+    handleSuccess(res, 201, "Comentario creado exitosamente", newComentario);
   } catch (error) {
     handleErrorClient(res, 500, "Error creando el comentario", error);
   }
