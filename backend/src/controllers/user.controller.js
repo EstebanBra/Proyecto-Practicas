@@ -130,7 +130,7 @@ export async function getDocentes(req, res) {
 
     if (errorUsers) return handleErrorClient(res, 404, errorUsers);
 
-    const docentes = users.filter(user => user.rol === 'docente');
+    const docentes = users.filter(user => user.rol === "docente");
 
     docentes.length === 0
       ? handleSuccess(res, 204)
