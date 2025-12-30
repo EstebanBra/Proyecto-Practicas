@@ -51,14 +51,11 @@ export async function createComentario(req, res) { //Esta funcion crea un nuevo 
     await comentarioBodyValidation.validateAsync(comentarioData); // Valida el cuerpo del comentario
     const newComentario = await createComentarioService(comentarioData); // Crea el comentario en la base de datos
 
-    // Notificar por correo a los docentes que existe un nuevo comentario
+    // Notificar por correo al docente
     try {
-      const userRepository = AppDataSource.getRepository(User);
-      const docentes = await userRepository.find({ where: { rol: "docente" } });
+      const destinatario = process.env.EMAIL_USER;
 
-      const destinatarios = docentes.map((docente) => docente.email).filter(Boolean);
-
-      if (destinatarios.length > 0) {
+      if (destinatario) {
         const asunto = `Nuevo comentario de ${user.nombreCompleto || "Estudiante"}`;
         const mensajeHtml = `
           <h2>Nuevo comentario recibido</h2>
@@ -69,12 +66,10 @@ export async function createComentario(req, res) { //Esta funcion crea un nuevo 
           ${newComentario?.id ? `<p><strong>ID del comentario:</strong> ${newComentario.id}</p>` : ""}
         `;
 
-        await Promise.allSettled(
-          destinatarios.map((destinatario) => sendEmail(destinatario, asunto, mensajeHtml))
-        );
+        await sendEmail(destinatario, asunto, mensajeHtml);
       }
     } catch (notifyError) {
-      console.error("Error notificando a docentes sobre el nuevo comentario:", notifyError);
+      console.error("Error notificando al docente sobre el nuevo comentario:", notifyError);
     }
 
     handleSuccess(res, 201, "Comentario creado exitosamente", newComentario); 
