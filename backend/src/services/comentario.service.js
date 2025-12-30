@@ -27,7 +27,7 @@ export async function getComentarioByIdService(id) {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
     const comentario = await comentarioRepository.findOne({
       where: { id },
-      relations: ["usuario"]
+      relations: ["usuario", "docente"]
     });
     return comentario;
   } catch (error) {
@@ -68,7 +68,7 @@ export async function getComentariosByUsuarioIdService(usuarioId) {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
     const comentarios = await comentarioRepository.find({
       where: { usuarioId },
-      relations: ["usuario"]
+      relations: ["usuario", "docente"]
     });
     return comentarios;
   } catch (error) {
@@ -76,11 +76,24 @@ export async function getComentariosByUsuarioIdService(usuarioId) {
   }
 }
 
+export async function getComentariosByDocenteIdService(docenteId) {
+  try {
+    const comentarioRepository = AppDataSource.getRepository(Comentario);
+    const comentarios = await comentarioRepository.find({
+      where: { docenteId },
+      relations: ["usuario", "docente"]
+    });
+    return comentarios;
+  } catch (error) {
+    throw new Error("Error al obtener los comentarios por docente");
+  }
+}
+
 export async function getallComentariosService() {
   try {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
     const comentarios = await comentarioRepository.find({
-      relations: ["usuario"]
+      relations: ["usuario", "docente"]
     });
     return comentarios;
   } catch (error) {

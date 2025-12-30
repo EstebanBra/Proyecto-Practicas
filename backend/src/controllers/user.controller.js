@@ -123,3 +123,19 @@ export async function deleteUser(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
+
+export async function getDocentes(req, res) {
+  try {
+    const [users, errorUsers] = await getUsersService();
+
+    if (errorUsers) return handleErrorClient(res, 404, errorUsers);
+
+    const docentes = users.filter(user => user.rol === 'docente');
+
+    docentes.length === 0
+      ? handleSuccess(res, 204)
+      : handleSuccess(res, 200, "Docentes encontrados", docentes);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}

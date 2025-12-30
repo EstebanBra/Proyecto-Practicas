@@ -4,6 +4,7 @@ import {
   deleteComentarioService,
   getallComentariosService,
   getComentarioByIdService,
+  getComentariosByDocenteIdService,
   getComentariosByUsuarioIdService,
   getComentariosService,
   updateComentarioService,
@@ -20,6 +21,9 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
+import { AppDataSource } from "../config/configDb.js";
+import User from "../entity/user.entity.js";
+import { sendEmail } from "../helpers/email.helper.js";
 
 export async function createComentario(req, res) { //Esta funcion crea un nuevo comentario
   try {
@@ -45,8 +49,47 @@ export async function createComentario(req, res) { //Esta funcion crea un nuevo 
       archivos: archivosData
     };
 
+    // Convertir docenteId a número si existe (FormData envía strings)
+    if (comentarioData.docenteId) {
+      comentarioData.docenteId = parseInt(comentarioData.docenteId);
+    }
+
     await comentarioBodyValidation.validateAsync(comentarioData); // Valida el cuerpo del comentario
     const newComentario = await createComentarioService(comentarioData); // Crea el comentario en la base de datos
+
+    // Notificar por correo a los docentes que existe un nuevo comentario
+    try {
+      const userRepository = AppDataSource.getRepository(User);
+      let docentes = [];
+
+      if (comentarioData.docenteId) {
+        const docente = await userRepository.findOne({ where: { id: comentarioData.docenteId, rol: "docente" } });
+        docentes = docente ? [docente] : [];
+      } else {
+        docentes = await userRepository.find({ where: { rol: "docente" } });
+      }
+
+      const destinatarios = docentes.map((docente) => docente.email).filter(Boolean);
+
+      if (destinatarios.length > 0) {
+        const asunto = `Nuevo comentario de ${user.nombreCompleto || "Estudiante"}`;
+        const mensajeHtml = `
+          <h2>Nuevo comentario recibido</h2>
+          <p>El estudiante <strong>${user.nombreCompleto || "Estudiante"}</strong> envió un comentario.</p>
+          <p><strong>Nivel de urgencia:</strong> ${comentarioData.nivelUrgencia || "normal"}</p>
+          <p><strong>Tipo de problema:</strong> ${comentarioData.tipoProblema || "General"}</p>
+          <p><strong>Mensaje:</strong> ${comentarioData.mensaje}</p>
+          ${newComentario?.id ? `<p><strong>ID del comentario:</strong> ${newComentario.id}</p>` : ""}
+        `;
+
+        await Promise.allSettled(
+          destinatarios.map((destinatario) => sendEmail(destinatario, asunto, mensajeHtml))
+        );
+      }
+    } catch (notifyError) {
+      console.error("Error notificando a docentes sobre el nuevo comentario:", notifyError);
+    }
+
     handleSuccess(res, 201, "Comentario creado exitosamente", newComentario); 
   } catch (error) {
     handleErrorClient(res, 500, "Error creando el comentario", error);
@@ -65,10 +108,20 @@ export async function getComentarios(req, res) {
     // Validar los query parameters si existen
     await ComentarioqueryValidation.validateAsync(query);
 
-    // Estudiantes: solo sus propios comentarios. Docentes: todos los comentarios.
-    const comentarios = user.rol === "estudiante"
-      ? await getComentariosByUsuarioIdService(user.id)
-      : await getallComentariosService();
+    let comentarios;
+    
+    // Estudiantes: solo sus propios comentarios
+    if (user.rol === "estudiante") {
+      comentarios = await getComentariosByUsuarioIdService(user.id);
+    } 
+    // Docentes: solo comentarios asignados a ellos o sin docente asignado
+    else if (user.rol === "docente") {
+      comentarios = await getComentariosByDocenteIdService(user.id);
+    } 
+    // Administradores: todos los comentarios
+    else {
+      comentarios = await getallComentariosService();
+    }
 
     handleSuccess(res, 200, "Comentarios obtenidos exitosamente", comentarios);
   } catch (error) {
@@ -129,18 +182,13 @@ export async function updateComentario(req, res) {
         ...(archivosFinales && archivosFinales.length > 0 && { archivos: archivosFinales })
       };
 
-      await comentarioBodyValidation.validateAsync(payloadDocente);
-      comentarioDataActualizado = payloadDocente;
+      const comentarioDataValidado = await comentarioBodyValidation.validateAsync(payloadDocente);
+      comentarioDataActualizado = comentarioDataValidado;
     } else {
       // Estudiante edita su propio comentario
-      const bodyConUsuario = { ...body, usuarioId: user.id };
-      await comentarioBodyValidation.validateAsync(bodyConUsuario);
-
-      comentarioDataActualizado = {
-        ...body,
-        usuarioId: user.id,
-        ...(archivosData && { archivos: archivosData })
-      };
+      const bodyConUsuario = { ...body, usuarioId: user.id, ...(archivosData && { archivos: archivosData }) };
+      const comentarioDataValidado = await comentarioBodyValidation.validateAsync(bodyConUsuario);
+      comentarioDataActualizado = comentarioDataValidado;
     }
 
     const updatedComentario = await updateComentarioService(id, comentarioDataActualizado);
@@ -186,7 +234,19 @@ export async function getComentariosByUsuarioId(req, res) {
 
 export async function getAllComentarios(req, res) {
   try {
-    const comentarios = await getallComentariosService();
+    const { user } = req;
+    
+    let comentarios;
+    
+    // Docentes: solo comentarios asignados a ellos
+    if (user.rol === "docente") {
+      comentarios = await getComentariosByDocenteIdService(user.id);
+    } 
+    // Administradores: todos los comentarios
+    else {
+      comentarios = await getallComentariosService();
+    }
+    
     handleSuccess(res, 200, "Todos los comentarios obtenidos exitosamente", comentarios);
   } catch (error) {
     handleErrorClient(res, 500, "Error obteniendo todos los comentarios", error);

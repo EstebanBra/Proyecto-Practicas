@@ -26,6 +26,10 @@ const ComentarioSchema = new EntitySchema({
         usuarioId: {
             type: Number
         },
+        docenteId: {
+            type: Number,
+            nullable: true
+        },
         estado: {
             type: String,
             length: 20,
@@ -54,6 +58,14 @@ const ComentarioSchema = new EntitySchema({
             joinColumn: {
                 name: "usuarioId"
             }
+        },
+        docente: {
+            type: "many-to-one",
+            target: "User",
+            joinColumn: {
+                name: "docenteId"
+            },
+            nullable: true
         }
     }
 });

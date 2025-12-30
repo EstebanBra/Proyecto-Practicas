@@ -27,10 +27,28 @@ export const comentarioBodyValidation = joi.object({
         "string.max": "El tipo de problema no puede exceder los 50 caracteres.",
         "string.pattern.base": "El tipo de problema debe ser 'Personal', 'General' o 'De Empresa'.",
     }),
-    respuesta: joi.string().max(500).optional().allow(null, " ").messages({
-        "string.base": "La respuesta debe ser de tipo string.",
-        "string.max": "La respuesta no puede exceder los 500 caracteres.",
+    docenteId: joi.number().integer().positive().optional().messages({
+        "number.base": "El docente seleccionado es inválido.",
+        "number.integer": "El docente seleccionado es inválido.",
+        "number.positive": "El docente seleccionado es inválido."
     }),
+    respuesta: joi.string().max(500).optional().allow(null, " ")
+        .custom((value, helpers) => {
+            if (value === undefined || value === null) return value;
+            const trimmed = value.trim();
+            if (!trimmed) {
+                return helpers.error("any.invalid", { message: "La respuesta no puede estar vacía." });
+            }
+            if (!/[A-Za-z]/.test(trimmed)) {
+                return helpers.error("any.invalid", { message: "La respuesta debe incluir letras, no solo números o símbolos." });
+            }
+            return trimmed;
+        })
+        .messages({
+            "string.base": "La respuesta debe ser de tipo string.",
+            "string.max": "La respuesta no puede exceder los 500 caracteres.",
+            "any.invalid": "{{#message}}",
+        }),
 
     archivos: joi.array().items(joi.object({
         nombre: joi.string(),
