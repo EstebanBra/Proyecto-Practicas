@@ -40,7 +40,8 @@ export const comentarioBodyValidation = joi.object({
                 return helpers.error("any.invalid", { message: "La respuesta no puede estar vacía." });
             }
             if (!/[A-Za-z]/.test(trimmed)) {
-                return helpers.error("any.invalid", { message: "La respuesta debe incluir letras, no solo números o símbolos." });
+                return helpers.error("any.invalid", {
+                    message: "La respuesta debe incluir letras, no solo números o símbolos." });
             }
             return trimmed;
         })

@@ -4,6 +4,7 @@ import { useCreateComentario } from '../hooks/comentario/useCreateComentario.jsx
 import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario.jsx';
 import { useDeleteComentario } from '../hooks/comentario/useDeleteComentario.jsx';
 import { downloadArchivoComentario } from '../services/comentario.service.js';
+import { getDocentes } from '../services/user.service.js';
 import FileUploadComentario from '../components/FileUploadComentario.jsx';
 import Swal from 'sweetalert2';
 import '../styles/comentario.css';
@@ -34,6 +35,7 @@ const Comentarios = () => {
         estado: 'Pendiente'
     });
     const [selectedFilesEdit, setSelectedFilesEdit] = useState([]);
+    const [docentes, setDocentes] = useState([]);
 
     const refreshComentarios = useCallback(() => {
         handleGetComentarios();
@@ -42,6 +44,20 @@ const Comentarios = () => {
     useEffect(() => {
         refreshComentarios();
     }, [refreshComentarios]);
+
+    useEffect(() => {
+        const fetchDocentes = async () => {
+            try {
+                const data = await getDocentes();
+                console.log('Docentes cargados:', data);
+                setDocentes(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error('Error al cargar docentes:', error);
+                setDocentes([]);
+            }
+        };
+        fetchDocentes();
+    }, []);
 
     const handleSearch = (e) => setSearchTerm(e.target.value);
 
@@ -55,7 +71,8 @@ const Comentarios = () => {
         setFormData({
             mensaje: '',
             nivelUrgencia: 'normal',
-            tipoProblema: 'General'
+            tipoProblema: 'General',
+            docenteId: ''
         });
         setSelectedFiles([]);
         setIsPopupOpen(true);
@@ -71,7 +88,8 @@ const Comentarios = () => {
             mensaje: comentario.mensaje || '',
             nivelUrgencia: comentario.nivelUrgencia || 'normal',
             tipoProblema: comentario.tipoProblema || 'General',
-            estado: comentario.estado || 'Pendiente'
+            estado: comentario.estado || 'Pendiente',
+            docenteId: comentario.docenteId || ''
         });
         setSelectedFilesEdit([]);
         setIsEditPopupOpen(true);
@@ -128,6 +146,12 @@ const Comentarios = () => {
             return { valid: false, message: 'Tipo de problema inválido.' };
         }
 
+        if (!isEdit) {
+            if (!data.docenteId) {
+                return { valid: false, message: 'Selecciona el docente al que enviarás el comentario.' };
+            }
+        }
+
         if (isEdit) {
             const estado = data.estado;
             if (estado && !['Abierto', 'Respondido', 'Pendiente'].includes(estado)) {
@@ -161,6 +185,7 @@ const Comentarios = () => {
             mensaje: formData.mensaje.trim(),
             nivelUrgencia: formData.nivelUrgencia,
             tipoProblema: formData.tipoProblema,
+            docenteId: formData.docenteId ? parseInt(formData.docenteId) : undefined,
             archivos: selectedFiles
         };
 
@@ -192,6 +217,7 @@ const Comentarios = () => {
             nivelUrgencia: editFormData.nivelUrgencia,
             tipoProblema: editFormData.tipoProblema,
             estado: editFormData.estado,
+            docenteId: editFormData.docenteId ? parseInt(editFormData.docenteId) : undefined,
             archivos: selectedFilesEdit.length > 0 ? selectedFilesEdit : undefined
         };
 
@@ -454,6 +480,22 @@ const Comentarios = () => {
                                         <option value="De Empresa">De Empresa</option>
                                     </select>
                                 </div>
+                                <div className="form-group">
+                                    <label>Docente destino *</label>
+                                    <select
+                                        name="docenteId"
+                                        value={formData.docenteId || ''}
+                                        onChange={handleInputChange}
+                                        required
+                                    >
+                                        <option value="">Selecciona un docente</option>
+                                        {docentes.map((docente) => (
+                                            <option key={docente.id} value={docente.id}>
+                                                {docente.nombreCompleto}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label>Archivos (opcional)</label>
@@ -515,6 +557,21 @@ const Comentarios = () => {
                                         <option value="General">General</option>
                                         <option value="Personal">Personal</option>
                                         <option value="De Empresa">De Empresa</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Docente destino</label>
+                                    <select
+                                        name="docenteId"
+                                        value={editFormData.docenteId || ''}
+                                        onChange={handleEditInputChange}
+                                    >
+                                        <option value="">Selecciona un docente</option>
+                                        {docentes.map((docente) => (
+                                            <option key={docente.id} value={docente.id}>
+                                                {docente.nombreCompleto}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

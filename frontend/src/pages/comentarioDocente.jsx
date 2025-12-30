@@ -27,18 +27,35 @@ const ComentarioDocente = () => {
 
     const handleSearch = (e) => setSearchTerm(e.target.value);
 
-    const comentariosFiltrados = (comentarios || []).filter((comentario) => {
-        const mensaje = comentario.mensaje?.toLowerCase() || '';
-        const nombreUsuario = comentario.usuario?.nombreCompleto?.toLowerCase() || '';
-        const matchSearch = mensaje.includes(searchTerm.toLowerCase()) || 
-                          nombreUsuario.includes(searchTerm.toLowerCase());
-        
-        if (filtroEstado === 'todos') return matchSearch;
-        if (filtroEstado === 'pendientes') return matchSearch && comentario.estado === 'Pendiente';
-        if (filtroEstado === 'respondidos') return matchSearch && comentario.estado === 'Respondido';
-        if (filtroEstado === 'urgentes') return matchSearch && comentario.nivelUrgencia === 'alta';
-        return matchSearch;
-    });
+    const comentariosFiltrados = (comentarios || [])
+        .filter((comentario) => {
+            const mensaje = comentario.mensaje?.toLowerCase() || '';
+            const nombreUsuario = comentario.usuario?.nombreCompleto?.toLowerCase() || '';
+            const matchSearch = mensaje.includes(searchTerm.toLowerCase()) || 
+                              nombreUsuario.includes(searchTerm.toLowerCase());
+            
+            if (filtroEstado === 'todos') return matchSearch;
+            if (filtroEstado === 'pendientes') return matchSearch && comentario.estado === 'Pendiente';
+            if (filtroEstado === 'respondidos') return matchSearch && comentario.estado === 'Respondido';
+            if (filtroEstado === 'urgentes') return matchSearch && comentario.nivelUrgencia === 'alta';
+            return matchSearch;
+        })
+            .sort((a, b) => {
+                // Urgentes primero
+                const urgA = a.nivelUrgencia === 'alta';
+                const urgB = b.nivelUrgencia === 'alta';
+                if (urgA !== urgB) return urgA ? -1 : 1;
+
+                // Pendientes antes que respondidos
+                const pendA = a.estado === 'Pendiente';
+                const pendB = b.estado === 'Pendiente';
+                if (pendA !== pendB) return pendA ? -1 : 1;
+
+                // Más recientes primero
+                const fechaA = a.fechaCreacion ? new Date(a.fechaCreacion).getTime() : 0;
+                const fechaB = b.fechaCreacion ? new Date(b.fechaCreacion).getTime() : 0;
+                return fechaB - fechaA;
+            });
 
     // Estadísticas
     const totalComentarios = comentarios?.length || 0;
@@ -62,8 +79,18 @@ const ComentarioDocente = () => {
         e.preventDefault();
         if (!comentarioSeleccionado) return;
 
+        const respuestaTrim = (respuesta || '').trim();
+        if (!respuestaTrim) {
+            await Swal.fire('Respuesta inválida', 'La respuesta no puede estar vacía.', 'warning');
+            return;
+        }
+        if (!/[A-Za-z]/.test(respuestaTrim)) {
+            await Swal.fire('Respuesta inválida', 'La respuesta debe incluir letras, no solo números o símbolos.', 'warning');
+            return;
+        }
+
         const dataToSend = {
-            respuesta: respuesta,
+            respuesta: respuestaTrim,
             estado: 'Respondido'
         };
 

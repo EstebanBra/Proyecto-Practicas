@@ -11,6 +11,17 @@ export async function getUsers() {
     }
 }
 
+export async function getDocentes() {
+    try {
+        const { data } = await axios.get('/user/docentes');
+        const docentes = Array.isArray(data.data) ? data.data : [];
+        return docentes;
+    } catch (error) {
+        console.error('Error obteniendo docentes:', error);
+        return [];
+    }
+}
+
 export async function updateUser(data, rut) {
     try {
         const response = await axios.patch(`/user/detail/?rut=${rut}`, data);
