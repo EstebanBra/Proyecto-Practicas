@@ -12,7 +12,7 @@ const Navbar = () => {
     const logoutSubmit = () => {
         try {
             logout();
-            navigate('/auth'); 
+            navigate('/auth');
         } catch (error) {
             console.error('Error al cerrar sesión:', error);
         }
@@ -38,8 +38,8 @@ const Navbar = () => {
                         </NavLink>
                     </li>
                     <li>
-                        <NavLink 
-                            to="/bitacoras" 
+                        <NavLink
+                            to="/bitacoras"
                             onClick={() => setMenuOpen(false)}
                             className={({ isActive }) => isActive ? 'active' : ''}
                         >
@@ -49,71 +49,93 @@ const Navbar = () => {
 
                     {/* Solo visible para ADMINISTRADORES */}
                     {userRole === 'administrador' && (
-                    <li>
-                        <NavLink
-                            to="/users"
-                            onClick={() => {
-                                setMenuOpen(false);
-                            }}
-                            className={({ isActive }) => (isActive ? 'active' : '')}
-                        >
-                            Usuarios
-                        </NavLink>
-                    </li>
+                        <li>
+                            <NavLink
+                                to="/users"
+                                onClick={() => {
+                                    setMenuOpen(false);
+                                }}
+                                className={({ isActive }) => (isActive ? 'active' : '')}
+                            >
+                                Usuarios
+                            </NavLink>
+                        </li>
                     )}
 
                     {/* Visible solo si NO es estudiante (Docentes y Admins) */}
                     {userRole !== 'estudiante' && (
-                    <li>
-                        <NavLink
-                            to="/ofertas"
-                            onClick={() => { setMenuOpen(false); }}
-                            className={({ isActive }) => (isActive ? 'active' : '')}
-                        >
-                            Ofertas
-                        </NavLink>
-                    </li>
-                    )}
-                    {/* Visible solo para ESTUDIANTES */}
-                    {userRole === 'estudiante' && (
-                    <>
-                    <li>
-                        <NavLink to="/mis-postulaciones" onClick={() => setMenuOpen(false)}>
-                            Mis Postulaciones
-                        </NavLink>
-                    </li>
-                    <li>
-                        <NavLink 
-                            to="/practica-externa" 
-                            onClick={() => setMenuOpen(false)}
-                            className={({ isActive }) => (isActive ? 'active' : '')}
-                        >
-                            Práctica Externa
-                        </NavLink>
-                    </li>
-                    <li>
-                        <NavLink 
-                            to="/documentos-finales" 
-                            onClick={() => setMenuOpen(false)}
-                            className={({ isActive }) => (isActive ? 'active' : '')}
-                        >
-                            Documentos Finales
-                        </NavLink>
-                    </li>
-                    </>
+                        <li>
+                            <NavLink
+                                to="/ofertas"
+                                onClick={() => { setMenuOpen(false); }}
+                                className={({ isActive }) => (isActive ? 'active' : '')}
+                            >
+                                Ofertas
+                            </NavLink>
+                        </li>
                     )}
 
-                    {/* Visible para DOCENTES y ADMINISTRADORES */}
+                    {/* Visible solo para ESTUDIANTES */}
+                    {userRole === 'estudiante' && (
+                        <>
+                            <li>
+                                <NavLink to="/mis-postulaciones" onClick={() => setMenuOpen(false)}>
+                                    Mis Postulaciones
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/practica-externa"
+                                    onClick={() => setMenuOpen(false)}
+                                    className={({ isActive }) => (isActive ? 'active' : '')}
+                                >
+                                    Práctica Externa
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/documentos-finales"
+                                    onClick={() => setMenuOpen(false)}
+                                    className={({ isActive }) => (isActive ? 'active' : '')}
+                                >
+                                    Documentos Finales
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink
+                                    to="/mi-nota-final"
+                                    onClick={() => setMenuOpen(false)}
+                                    className={({ isActive }) => (isActive ? 'active' : '')}
+                                >
+                                    Mi Nota Final
+                                </NavLink>
+                            </li>
+                        </>
+                    )}
+
                     {(userRole === 'docente' || userRole === 'administrador') && (
-                    <li>
-                        <NavLink 
-                            to="/docs-entregados" 
-                            onClick={() => setMenuOpen(false)}
-                            className={({ isActive }) => (isActive ? 'active' : '')}
-                        >
-                            Docs. Entregados
-                        </NavLink>
-                    </li>
+                        <>
+                            <li>
+                                <NavLink
+                                    to="/docs-entregados"
+                                    onClick={() => setMenuOpen(false)}
+                                    className={({ isActive }) => (isActive ? 'active' : '')}
+                                >
+                                    Docs. Entregados
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink
+                                    to="/notas-estudiantes"
+                                    onClick={() => setMenuOpen(false)}
+                                    className={({ isActive }) => (isActive ? 'active' : '')}
+                                >
+                                    Notas Estudiantes
+                                </NavLink>
+                            </li>
+                        </>
                     )}
 
                     {/* Visible para TODOS */}
