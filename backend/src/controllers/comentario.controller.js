@@ -2,11 +2,15 @@
 import {
   createComentarioService,
   deleteComentarioService,
+  generateComentariosExcelConRespuestasService,
+  generateComentariosExcelService,
   getallComentariosService,
   getComentarioByIdService,
   getComentariosByUsuarioIdService,
   getComentariosService,
+  processComentariosExcelService,
   updateComentarioService,
+  
 } from "../services/comentario.service.js";
 
 import {
@@ -58,14 +62,16 @@ export async function createComentario(req, res) {
     const comentarioData = {
       ...body,
       usuarioId: usuarioReal.id,
-      estado: "Pendiente",
+      estado: "Pendiente", // Estado inicial por defecto
       archivos: archivosData,
     };
 
+    // Validar el cuerpo del comentario antes de guardar
     await comentarioBodyValidation.validateAsync(comentarioData);
     const newComentario = await createComentarioService(comentarioData);
 
     // Enviar email al docente de forma asíncrona
+    // Nota: Aquí usas EMAIL_USER como destinatario único
     const destinatario = process.env.EMAIL_USER;
 
     if (destinatario) {
@@ -99,7 +105,7 @@ export async function createComentario(req, res) {
         </html>
       `;
 
-      // No bloquear la respuesta esperando el email
+      // Envío asíncrono para no bloquear la respuesta al cliente
       sendEmail(destinatario, asunto, mensajeHtml)
         .then(success => {
           if (success) {
@@ -113,6 +119,7 @@ export async function createComentario(req, res) {
       console.warn("⚠ EMAIL_USER no configurado en .env - No se enviará notificación");
     }
 
+    // Respuesta de éxito al frontend
     handleSuccess(res, 201, "Comentario creado exitosamente", newComentario);
   } catch (error) {
     handleErrorClient(res, 500, "Error creando el comentario", error);
@@ -291,5 +298,93 @@ export async function downloadArchivoComentario(req, res) {
     });
   } catch (error) {
     handleErrorClient(res, 500, "Error descargando el archivo del comentario", error);
+  }
+};
+
+export async function downloadComentariosExcel(req, res) {
+  try {
+    const { usuarioId } = req.params;
+    const { user } = req;
+
+    // Validar ID
+    await comentarioIdValidation.validateAsync({ id: usuarioId });
+
+    // Verificar permisos: solo docentes y admin pueden descargar plantillas de otros
+    if (user.rol === "estudiante" && Number(usuarioId) !== Number(user.id)) {
+      return handleErrorClient(res, 403, 
+        "Acceso denegado", "Los estudiantes solo pueden descargar sus propias plantillas");
+    }
+
+    const excelBuffer = await generateComentariosExcelService(usuarioId);
+    
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="comentarios_estudiante_${usuarioId}.xlsx"`);
+    res.send(excelBuffer);
+  } catch (error) {
+    if (error.message.includes("No hay comentarios")) {
+      handleErrorClient(res, 404, error.message);
+    } else {
+      handleErrorClient(res, 500, "Error descargando la plantilla Excel", error);
+    }
+  }
+};
+
+export async function uploadComentariosExcel(req, res) {
+  try {
+    const { usuarioId } = req.params;
+    const { user, file } = req;
+
+    // Validar ID
+    await comentarioIdValidation.validateAsync({ id: usuarioId });
+
+    // Validar que se subió un archivo
+    if (!file) {
+      return handleErrorClient(res, 400, "No se subió ningún archivo");
+    }
+
+    // Verificar que sea archivo Excel
+    const allowedMimetypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel"
+    ];
+    
+    if (!allowedMimetypes.includes(file.mimetype)) {
+      return handleErrorClient(res, 400, "El archivo debe ser Excel (.xlsx o .xls)");
+    }
+
+    // Verificar permisos: solo docentes pueden procesar plantillas de otros usuarios
+    if (user.rol === "estudiante" && Number(usuarioId) !== Number(user.id)) {
+      return handleErrorClient(res, 403, 
+        "Acceso denegado", "Los estudiantes solo pueden procesar sus propias plantillas");
+    }
+
+    // Procesar el archivo Excel
+    const resultado = await processComentariosExcelService(usuarioId, file.path);
+
+    handleSuccess(res, 200, "Plantilla procesada exitosamente", resultado);
+  } catch (error) {
+    console.error("Error en uploadComentariosExcel:", error);
+    handleErrorServer(res, "Error procesando la plantilla Excel", error);
+  }
+};
+
+export async function downloadComentariosExcelConRespuestas(req, res) {
+  try {
+    const { user } = req;
+
+    // El estudiante descarga sus propias respuestas
+    const usuarioId = user.id;
+
+    const excelBuffer = await generateComentariosExcelConRespuestasService(usuarioId);
+    
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="mis_comentarios_respondidos_${usuarioId}.xlsx"`);
+    res.send(excelBuffer);
+  } catch (error) {
+    if (error.message.includes("No hay comentarios")) {
+      handleErrorClient(res, 404, error.message);
+    } else {
+      handleErrorClient(res, 500, "Error descargando la plantilla Excel", error);
+    }
   }
 };

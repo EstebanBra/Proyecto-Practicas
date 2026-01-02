@@ -126,3 +126,72 @@ export async function downloadArchivoComentario(comentarioId, archivoIndex, nomb
         return error.response?.data || { success: false, message: 'Error al descargar el archivo' };
     }
 }
+export async function downloadComentariosExcel(usuarioId) {
+    try {
+        const response = await axios.get(`/comentario/plantilla/descargar/${usuarioId}`, {
+            responseType: 'blob'
+        });
+        
+        // Crear un enlace temporal para descargar
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `comentarios_estudiante_${usuarioId}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        return { success: true };
+    } catch (error) {
+        return error.response?.data || { success: false, message: 'Error al descargar la plantilla' };
+    }
+}
+
+export async function uploadComentariosExcel(usuarioId, archivo) {
+    try {
+        const formData = new FormData();
+        formData.append('plantilla', archivo);
+        
+        const response = await axios.post(`/comentario/plantilla/subir/${usuarioId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        
+        // response.data tiene la estructura: { status: "Success", message, data }
+        return {
+            success: response.data.status === "Success",
+            message: response.data.message,
+            data: response.data.data
+        };
+    } catch (error) {
+        const errorData = error.response?.data || {};
+        return {
+            success: false,
+            message: errorData.message || 'Error al subir la plantilla'
+        };
+    }
+}
+
+export async function downloadComentariosExcelConRespuestas() {
+    try {
+        const response = await axios.get('/comentario/plantilla/descargar-respuestas', {
+            responseType: 'blob'
+        });
+        
+        // Crear un enlace temporal para descargar
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `mis_comentarios_respondidos.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        return { success: true };
+    } catch (error) {
+        return error.response?.data || { success: false, message: 'Error al descargar la plantilla' };
+    }
+}

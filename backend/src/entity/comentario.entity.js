@@ -49,6 +49,12 @@ const ComentarioSchema = new EntitySchema({
             type: "simple-json",
             nullable: true,
             comment: "Array de objetos con información de archivos {nombre, ruta, tipo, tamaño}"
+        },
+        respondidoViaExcel: {
+            type: Boolean,
+            default: false,
+            nullable: true,
+            comment: "Indica si el comentario fue respondido mediante la carga de plantilla Excel"
         }
     },
     relations: {

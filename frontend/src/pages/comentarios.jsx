@@ -3,7 +3,7 @@ import { useGetComentarios } from '../hooks/comentario/useGetComentarios.jsx';
 import { useCreateComentario } from '../hooks/comentario/useCreateComentario.jsx';
 import { useUpdateComentario } from '../hooks/comentario/useUpdateComentario.jsx';
 import { useDeleteComentario } from '../hooks/comentario/useDeleteComentario.jsx';
-import { downloadArchivoComentario } from '../services/comentario.service.js';
+import { downloadArchivoComentario, downloadComentariosExcelConRespuestas } from '../services/comentario.service.js';
 import FileUploadComentario from '../components/FileUploadComentario.jsx';
 import Swal from 'sweetalert2';
 import '../styles/comentario.css';
@@ -20,6 +20,7 @@ const Comentarios = () => {
     const [editingComentario, setEditingComentario] = useState(null);
     const [expandedMensaje, setExpandedMensaje] = useState({});
     const [expandedRespuesta, setExpandedRespuesta] = useState({});
+    const [loadingExcelRespuestas, setLoadingExcelRespuestas] = useState(false);
     
     const [formData, setFormData] = useState({
         mensaje: '',
@@ -202,6 +203,37 @@ const Comentarios = () => {
         }
     };
 
+    const handleDescargarRespuestas = async () => {
+        // Verificar si hay comentarios respondidos VÍA EXCEL (no manualmente)
+        const comentariosViaExcel = (comentarios || []).filter(c => 
+            c.respondidoViaExcel === true
+        );
+        
+        if (comentariosViaExcel.length === 0) {
+            await Swal.fire({
+                icon: 'info',
+                title: 'No disponible',
+                html: '<p>El docente aún no ha subido la plantilla Excel con respuestas.</p><p>Esta función estará disponible cuando el docente procese tus comentarios mediante Excel.</p>',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        setLoadingExcelRespuestas(true);
+        try {
+            const result = await downloadComentariosExcelConRespuestas();
+            if (result.success) {
+                await Swal.fire('Éxito', 'Plantilla de respuestas descargada correctamente', 'success');
+            } else {
+                await Swal.fire('Error', result.message || 'Error al descargar la plantilla', 'error');
+            }
+        } catch {
+            await Swal.fire('Error', 'Error al descargar la plantilla de respuestas', 'error');
+        } finally {
+            setLoadingExcelRespuestas(false);
+        }
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
@@ -251,7 +283,7 @@ const Comentarios = () => {
         <div className="comentarios-estudiante-container">
             <div className="comentarios-header">
                 <h1>💬 Mis Comentarios</h1>
-                <div className="header-actions">
+                <div className="header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     <input
                         type="text"
                         placeholder="Buscar comentarios..."
@@ -259,6 +291,17 @@ const Comentarios = () => {
                         onChange={handleSearch}
                         className="search-input"
                     />
+                    <button 
+                        className="btn-crear-comentario" 
+                        onClick={handleDescargarRespuestas}
+                        disabled={loadingExcelRespuestas}
+                        title="Descargar Excel con las respuestas del docente"
+                        style={{
+                            background: loadingExcelRespuestas ? '#4CAF50' : '#17a2b8'
+                        }}
+                    >
+                        {loadingExcelRespuestas ? '⏳ Descargando...' : '📥 Descargar Respuestas'}
+                    </button>
                     <button 
                         className="btn-crear-comentario" 
                         onClick={handleOpenCreate}
