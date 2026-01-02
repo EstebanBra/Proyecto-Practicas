@@ -1,84 +1,63 @@
 import { useState, useEffect, useCallback } from 'react';
 import { obtenerMiNotaFinal as serviceObtenerMiNotaFinal } from '@services/notaFinal.servicef.js';
-import useGetDocumentos from '../documentos/useGetDocumentos.jsx';
 
 export function useMiNotaFinal() {
     const [nota, setNota] = useState(null);
-    const [loadingNota, setLoadingNota] = useState(true);
-    const [errorNota, setErrorNota] = useState(null);
-
-    // Usar el hook existente de documentos
-    const {
-        documentos,
-        loading: loadingDocumentos,
-        error: errorDocumentos,
-        fetchDocumentos
-    } = useGetDocumentos();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const fetchMiNota = useCallback(async () => {
-        setLoadingNota(true);
-        setErrorNota(null);
+        setLoading(true);
+        setError(null);
 
         try {
             const result = await serviceObtenerMiNotaFinal();
 
+            console.log("Resultado de obtenerMiNotaFinal:", result);
+
             if (result.success) {
-                setNota(result.data);
+                if (result.success) {
+                    if (result.data && result.data.data) {
+                        setNota(result.data.data);
+                    } else {
+                        setNota(null);
+                    }
+                }
             } else {
-                // Si no hay nota, no es error, solo no hay datos
-                if (result.message.includes("No se encontró") ||
-                    result.message.includes("No tienes")) {
+                // Si no hay nota calculada, no es un error
+                if (result.message && (
+                    result.message.includes("No se encontró") ||
+                    result.message.includes("No tienes") ||
+                    result.message.includes("no tiene nota calculada") ||
+                    result.message.includes("no existe")
+                )) {
                     setNota(null);
                 } else {
-                    setErrorNota(result.message);
-                    setNota(null);
+                    setError(result.message || "Error desconocido");
                 }
             }
         } catch (err) {
             console.error("Error al cargar nota:", err);
-            setErrorNota("Error al cargar la nota");
-            setNota(null);
+            setError("Error al cargar la nota");
         } finally {
-            setLoadingNota(false);
+            setLoading(false);
         }
     }, []);
-
-    const reloadAll = useCallback(async () => {
-        await Promise.all([fetchMiNota(), fetchDocumentos()]);
-    }, [fetchMiNota, fetchDocumentos]);
 
     useEffect(() => {
         fetchMiNota();
     }, [fetchMiNota]);
 
-    // Determinar si hay documentos de nota (informe/autoevaluacion)
-    const documentosNota = documentos?.filter(doc =>
-        doc.tipo === 'informe' || doc.tipo === 'autoevaluacion'
-    ) || [];
+    const reload = useCallback(() => {
+        fetchMiNota();
+    }, [fetchMiNota]);
 
     return {
-        // Datos
         nota,
-        documentos: documentosNota,
-        todosDocumentos: documentos,
-
-        // Estados combinados
-        loading: loadingNota || loadingDocumentos,
-        error: errorNota || errorDocumentos,
-
-        // Métodos
+        loading,
+        error,
         fetchMiNota,
-        fetchDocumentos,
-        reloadAll,
-
-        // Estados individuales
-        loadingNota,
-        loadingDocumentos,
-        errorNota,
-        errorDocumentos,
-
-        // Helpers
-        tieneNota: !!nota,
-        puedeCalcular: !nota && documentosNota.length >= 2
+        reload,
+        tieneNota: !!nota && nota.nota_final != null
     };
 }

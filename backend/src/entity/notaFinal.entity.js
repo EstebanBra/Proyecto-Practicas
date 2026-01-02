@@ -65,7 +65,6 @@ export default new EntitySchema({
       type: "many-to-one",
       joinColumn: {
         name: "id_practica",
-        referencedColumnName: "id_practica",
       },
       onDelete: "CASCADE",
     },
@@ -74,7 +73,6 @@ export default new EntitySchema({
       type: "many-to-one",
       joinColumn: {
         name: "id_estudiante",
-        referencedColumnName: "id",
       },
       onDelete: "CASCADE",
     },
@@ -83,7 +81,6 @@ export default new EntitySchema({
       type: "many-to-one",
       joinColumn: {
         name: "id_docente",
-        referencedColumnName: "id",
       },
       nullable: true,
       onDelete: "SET NULL",

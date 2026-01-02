@@ -9,6 +9,7 @@ import evaluacionFinalRoutes from "./evaluacionFinal.routes.js";
 import ofertaPracticaRoutes from "./ofertaPractica.routes.js";
 import practicaRoutes from "./practica.routes.js";
 import userRoutes from "./user.routes.js";
+import notaFinalRoutes from "./notaFinal.routes.js";
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router
     .use("/bitacora", Bitacorasroutes)
     .use("/practica", practicaRoutes)
     .use("/documentos", documentoRoutes)
-    .use("/evaluaciones", evaluacionFinalRoutes);
+    .use("/evaluaciones", evaluacionFinalRoutes)
+    .use("/notas", notaFinalRoutes);
 
 export default router;

@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   calcularNotaFinal,
   obtenerMiNotaFinal,
+  obtenerNotaFinalById,
   obtenerNotasFinalesEstudiantes,
   obtenerTodasNotasFinales,
   validarPrerequisitosNota,
@@ -10,27 +11,30 @@ import {
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import {
   isDocenteOrAdmin,
-  isEstudiante,
+  isEstudiante
 } from "../middlewares/authorization.middleware.js";
+import { exportarNotasFinalesExcel } from "../middlewares/exportarNotasFinalesExcel.middleware.js";
+
 
 const router = Router();
 
-// Todas las rutas requieren estar logueado
 router.use(authenticateJwt);
 
-// Calcular nota final (estudiante)
-router.post("/calcular", isEstudiante, calcularNotaFinal);
+router.post("/calcular", isDocenteOrAdmin, calcularNotaFinal);
 
-// Validar prerequisitos para calcular nota (estudiante)
 router.get("/validar-prerequisitos", isEstudiante, validarPrerequisitosNota);
 
-// Ver mi nota final (estudiante)
 router.get("/mi-nota", isEstudiante, obtenerMiNotaFinal);
 
-// Ver notas de estudiantes asignados (docente y admin)
 router.get("/estudiantes", isDocenteOrAdmin, obtenerNotasFinalesEstudiantes);
 
-// Ver todas las notas (admin)
 router.get("/todas", isDocenteOrAdmin, obtenerTodasNotasFinales);
+
+router.get("/:id", obtenerNotaFinalById);
+
+router.get(
+  "/notas-finales/exportar", isDocenteOrAdmin,
+  exportarNotasFinalesExcel,
+);
 
 export default router;

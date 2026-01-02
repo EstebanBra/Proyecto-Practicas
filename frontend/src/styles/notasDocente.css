@@ -515,3 +515,227 @@
 .notas-table tbody tr:nth-child(3) { animation-delay: 0.3s; }
 .notas-table tbody tr:nth-child(4) { animation-delay: 0.4s; }
 .notas-table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+
+.filtros-principales {
+    padding: 20px 30px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.filtros-botones {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filtro-btn {
+    padding: 10px 20px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    color: #4a5568;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.filtro-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.filtro-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.documentos-cell .documentos-estado {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.doc-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.doc-badge.completo {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.doc-badge.incompleto {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.nota-badge.pendiente {
+    background: #fef3c7;
+    color: #92400e;
+    border: 2px solid #fde68a;
+}
+
+.acciones-cell .acciones-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-ver-detalles {
+    padding: 8px 16px;
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-ver-detalles:hover {
+    background: #cbd5e0;
+}
+
+.btn-calcular {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-calcular:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-calcular:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.detalles-row {
+    background: #f8fafc !important;
+}
+
+.detalles-estudiante {
+    padding: 25px;
+    background: white;
+    margin: 10px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.detalles-estudiante h4 {
+    color: #003366;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f4f8;
+}
+
+.detalles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.detalle-info {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.detalle-info h5 {
+    color: #4a5568;
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+
+.documentos-calificados p {
+    margin: 10px 0;
+    color: #065f46;
+    font-size: 0.95rem;
+}
+
+.documentos-pendientes {
+    color: #991b1b;
+}
+
+.documentos-pendientes ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.documentos-pendientes li {
+    margin: 5px 0;
+}
+
+.desglose-nota p {
+    margin: 10px 0;
+    color: #4a5568;
+}
+
+.no-estudiantes {
+    text-align: center;
+    padding: 60px 40px;
+    color: #718096;
+}
+
+.porcentaje-cell .porcentaje-badge {
+    padding: 6px 12px;
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid #bbdefb;
+}
+.btn-exportar-excel {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .3px;
+
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 190px;
+
+    transition: all .3s ease;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, .25);
+}
+
+.btn-exportar-excel:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, .35);
+}
+
+.btn-exportar-excel:active {
+    transform: translateY(-1px);
+}
+
+.btn-exportar-excel:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    box-shadow: none;
+}

@@ -1,71 +1,36 @@
 "use strict";
 import { AppDataSource } from "../config/configDb.js";
-import { In, Not, IsNull } from "typeorm";
+import { In } from "typeorm";
+import NotaFinal from "../entity/notaFinal.entity.js";
+import Practica from "../entity/practica.entity.js";
+import Documento from "../entity/documento.entity.js";
 
-export async function calcularNotaFinalService(idEstudiante) {
+export async function calcularNotaFinalService(idPractica) {
   try {
-    const notaFinalRepo = AppDataSource.getRepository("NotaFinal");
-    const practicaRepo = AppDataSource.getRepository("Practica");
-    const bitacoraRepo = AppDataSource.getRepository("Bitacora");
-    const documentoRepo = AppDataSource.getRepository("Documento");
-    const evaluacionRepo = AppDataSource.getRepository("EvaluacionFinal");
+    const notaFinalRepository = AppDataSource.getRepository(NotaFinal);
+    const practicaRepository = AppDataSource.getRepository(Practica);
+    const documentoRepository = AppDataSource.getRepository(Documento);
 
-    // 1. Validar que el estudiante tenga práctica finalizada
-    const practica = await practicaRepo.findOne({
+    const practica = await practicaRepository.findOne({
       where: {
-        id_estudiante: idEstudiante,
-        estado: "finalizada",
+        id_practica: idPractica,
+        estado: In(["en_progreso", "finalizada"]),
       },
       relations: ["estudiante", "docente"],
     });
 
     if (!practica) {
-      return [null, "No tienes una práctica finalizada para calcular la nota"];
-    }
-
-    console.log("Práctica encontrada:", practica.id_practica);
-
-    // 2. Verificar si ya existe una nota final para esta práctica
-    const notaFinalExistente = await notaFinalRepo.findOne({
-      where: { id_practica: practica.id_practica },
-    });
-
-    if (notaFinalExistente) {
-      // Opción 1: Actualizar la nota existente (comentar si no se desea)
-      // await notaFinalRepo.remove(notaFinalExistente);
-      // Opción 2: Devolver error
       return [
         null,
-        "Ya existe una nota final calculada para esta práctica. Contacta al administrador para recalcular.",
+        "No existe una práctica válida para calcular la nota. La práctica debe estar en progreso o finalizada",
       ];
     }
 
-    // 3. Validar bitácoras aprobadas con notas
-    const bitacoras = await bitacoraRepo.find({
-      where: {
-        id_practica: practica.id_practica,
-        estado_revision: "aprobado",
-        nota: Not(IsNull()),
-      },
-      order: { semana: "ASC" },
+    const notaFinalExistente = await notaFinalRepository.findOne({
+      where: { id_practica: practica.id_practica },
     });
 
-    console.log("Bitácoras aprobadas con nota:", bitacoras.length);
-
-    if (bitacoras.length === 0) {
-      return [null, "No hay bitácoras aprobadas con notas para esta práctica"];
-    }
-
-    // 4. Calcular promedio de bitácoras
-    const sumaNotasBitacoras = bitacoras.reduce(
-      (sum, b) => sum + parseFloat(b.nota),
-      0,
-    );
-    const promedioBitacoras = sumaNotasBitacoras / bitacoras.length;
-    console.log("Promedio bitácoras:", promedioBitacoras.toFixed(1));
-
-    // 5. Validar documentos de informe y autoevaluación con evaluaciones
-    const documentos = await documentoRepo.find({
+    const documentos = await documentoRepository.find({
       where: {
         id_practica: practica.id_practica,
         tipo: In(["informe", "autoevaluacion"]),
@@ -73,86 +38,58 @@ export async function calcularNotaFinalService(idEstudiante) {
       },
     });
 
-    console.log("Documentos revisados:", documentos.length);
+    const informe = documentos.find((d) => d.tipo === "informe");
+    const autoevaluacion = documentos.find((d) => d.tipo === "autoevaluacion");
 
-    if (documentos.length < 2) {
-      return [null, "Faltan documentos revisados (informe y autoevaluación)"];
+    if (!informe || !autoevaluacion) {
+      return [null, "Faltan documentos revisados"];
     }
 
-    // 6. Buscar evaluaciones para cada documento
-    let notaInforme = 0;
-    let notaAutoevaluacion = 0;
-    let encontroInforme = false;
-    let encontroAutoevaluacion = false;
-
-    for (const documento of documentos) {
-      const evaluacion = await evaluacionRepo.findOne({
-        where: {
-          id_documento: documento.id_documento,
-        },
-      });
-
-      if (evaluacion) {
-        if (documento.tipo === "informe") {
-          notaInforme = evaluacion.nota;
-          encontroInforme = true;
-          console.log("Nota informe encontrada:", notaInforme);
-        } else if (documento.tipo === "autoevaluacion") {
-          notaAutoevaluacion = evaluacion.nota;
-          encontroAutoevaluacion = true;
-          console.log("Nota autoevaluación encontrada:", notaAutoevaluacion);
-        }
-      }
+    if (informe.nota_revision == null || autoevaluacion.nota_revision == null) {
+      return [null, "Faltan notas en los documentos"];
     }
 
-    // 7. Validar que ambas evaluaciones existan
-    if (!encontroInforme) {
-      return [null, "Falta evaluación del informe final"];
-    }
+    const notaFinal =
+      informe.nota_revision * 0.7 + autoevaluacion.nota_revision * 0.3;
 
-    if (!encontroAutoevaluacion) {
-      return [null, "Falta evaluación de la autoevaluación"];
-    }
-
-    // 8. Calcular nota final según fórmula
-    const notaFinalCalculada = calcularFormulaNotaFinal(
-      promedioBitacoras,
-      notaInforme,
-      notaAutoevaluacion,
-    );
-
-    console.log("Nota final calculada:", notaFinalCalculada);
-
-    // 9. Crear registro de nota final
-    const nuevaNotaFinal = notaFinalRepo.create({
+    const nuevaNotaFinal = notaFinalRepository.create({
       id_practica: practica.id_practica,
-      id_estudiante: idEstudiante,
+      id_estudiante: practica.id_estudiante,
       id_docente: practica.id_docente,
-      nota_final: notaFinalCalculada,
+
+      nota_final: Number(notaFinal.toFixed(1)),
+      nota_informe: informe.nota_revision,
+      nota_autoevaluacion: autoevaluacion.nota_revision,
+
+      promedio_bitacoras: 0,
+      detalle_bitacoras: [],
+
       estado: "calculada",
-      promedio_bitacoras: promedioBitacoras.toFixed(1),
-      nota_informe: notaInforme,
-      nota_autoevaluacion: notaAutoevaluacion,
-      detalle_bitacoras: bitacoras.map((b) => `Semana ${b.semana}: ${b.nota}`),
       fecha_calculo: new Date(),
     });
 
-    await notaFinalRepo.save(nuevaNotaFinal);
 
-    console.log("Nota final guardada exitosamente. ID:", nuevaNotaFinal.id);
+    await notaFinalRepository.save(nuevaNotaFinal);
+
+    practica.nota_practica = nuevaNotaFinal.nota_final;
+    if (practica.estado === "en_progreso") {
+      practica.estado = "finalizada";
+    }
+    await practicaRepository.save(practica);
 
     return [nuevaNotaFinal, null];
   } catch (error) {
-    console.error("Error en calcularNotaFinalService:", error);
-    return [null, `Error interno del servidor: ${error.message}`];
+    console.error("calcularNotaFinalService:", error);
+    return [null, error.message];
   }
+
 }
 
 export async function obtenerNotaFinalEstudianteService(idEstudiante) {
   try {
-    const notaFinalRepo = AppDataSource.getRepository("NotaFinal");
+    const notaFinalRepository = AppDataSource.getRepository(NotaFinal);
 
-    const notaFinal = await notaFinalRepo.findOne({
+    const notaFinal = await notaFinalRepository.findOne({
       where: { id_estudiante: idEstudiante },
       relations: ["practica", "practica.estudiante", "practica.docente"],
       order: { fecha_calculo: "DESC" },
@@ -167,33 +104,34 @@ export async function obtenerNotaFinalEstudianteService(idEstudiante) {
       id: notaFinal.id,
       nota_final: notaFinal.nota_final,
       estado: notaFinal.estado,
-      promedio_bitacoras: notaFinal.promedio_bitacoras,
+      promedio_bitacoras: notaFinal.promedio_bitacoras || 0,
       nota_informe: notaFinal.nota_informe,
       nota_autoevaluacion: notaFinal.nota_autoevaluacion,
       fecha_calculo: notaFinal.fecha_calculo,
-      detalle_bitacoras: notaFinal.detalle_bitacoras,
+      detalle_bitacoras: notaFinal.detalle_bitacoras || [],
       practica: {
         id: notaFinal.practica?.id_practica,
         empresa: notaFinal.practica?.empresa,
         estado: notaFinal.practica?.estado,
+        nota_practica: notaFinal.practica?.nota_practica,
       },
       estudiante: notaFinal.practica?.estudiante
-        ? {
+          ? {
             nombre:
-              notaFinal.practica.estudiante.nombreCompleto ||
-              `${notaFinal.practica.estudiante.nombre || ""} ${notaFinal.practica.estudiante.apellido || ""}`.trim(),
+                notaFinal.practica.estudiante.nombreCompleto ||
+                `${notaFinal.practica.estudiante.nombre || ""} ${notaFinal.practica.estudiante.apellido || ""}`.trim(),
             rut: notaFinal.practica.estudiante.rut,
             email: notaFinal.practica.estudiante.email,
           }
-        : null,
+          : null,
       docente: notaFinal.practica?.docente
-        ? {
+          ? {
             nombre:
-              notaFinal.practica.docente.nombreCompleto ||
-              `${notaFinal.practica.docente.nombre || ""} ${notaFinal.practica.docente.apellido || ""}`.trim(),
+                notaFinal.practica.docente.nombreCompleto ||
+                `${notaFinal.practica.docente.nombre || ""} ${notaFinal.practica.docente.apellido || ""}`.trim(),
             email: notaFinal.practica.docente.email,
           }
-        : null,
+          : null,
     };
 
     return [resultado, null];
@@ -203,40 +141,66 @@ export async function obtenerNotaFinalEstudianteService(idEstudiante) {
   }
 }
 
-export async function obtenerNotasFinalesDocenteService(idDocente) {
+export async function obtenerNotasFinalesDocenteService(idDocente, filtros = {}) {
   try {
-    const notaFinalRepo = AppDataSource.getRepository("NotaFinal");
+    const notaFinalRepository = AppDataSource.getRepository(NotaFinal);
 
-    console.log("Buscando notas para docente ID:", idDocente);
+    const queryBuilder = notaFinalRepository
+        .createQueryBuilder("notaFinal")
+        .leftJoinAndSelect("notaFinal.practica", "practica")
+        .leftJoinAndSelect("practica.estudiante", "estudiante")
+        .where("notaFinal.id_docente = :idDocente", { idDocente });
 
-    const notasFinales = await notaFinalRepo.find({
-      where: { id_docente: idDocente },
-      relations: ["practica", "practica.estudiante"],
-      order: { fecha_calculo: "DESC" },
-    });
-
-    console.log("Notas encontradas:", notasFinales.length);
-
-    if (!notasFinales || notasFinales.length === 0) {
-      return [[], null]; // Devolver array vacío
+    if (filtros.estado) {
+      queryBuilder.andWhere("notaFinal.estado = :estado", { estado: filtros.estado });
     }
 
-    // Formatear datos para mostrar
+    if (filtros.id_practica) {
+      queryBuilder.andWhere("notaFinal.id_practica = :id_practica", { id_practica: filtros.id_practica });
+    }
+
+    if (filtros.id_estudiante) {
+      queryBuilder.andWhere("notaFinal.id_estudiante = :id_estudiante", { id_estudiante: filtros.id_estudiante });
+    }
+
+    if (filtros.nota_minima) {
+      queryBuilder.andWhere("notaFinal.nota_final >= :nota_minima", { nota_minima: filtros.nota_minima });
+    }
+
+    if (filtros.nota_maxima) {
+      queryBuilder.andWhere("notaFinal.nota_final <= :nota_maxima", { nota_maxima: filtros.nota_maxima });
+    }
+
+    if (filtros.fecha_desde) {
+      queryBuilder.andWhere("notaFinal.fecha_calculo >= :fecha_desde", { fecha_desde: filtros.fecha_desde });
+    }
+
+    if (filtros.fecha_hasta) {
+      queryBuilder.andWhere("notaFinal.fecha_calculo <= :fecha_hasta", { fecha_hasta: filtros.fecha_hasta });
+    }
+
+    queryBuilder.orderBy("notaFinal.fecha_calculo", "DESC");
+
+    const notasFinales = await queryBuilder.getMany();
+
+    if (!notasFinales || notasFinales.length === 0) {
+      return [[], null];
+    }
+
+    // Formatear respuesta
     const resultado = notasFinales.map((nota) => {
-      // Verificar si practica y estudiante existen
       if (!nota.practica || !nota.practica.estudiante) {
-        console.warn("Nota sin práctica o estudiante:", nota.id);
         return {
           id: nota.id,
           estudiante: null,
           nota_final: nota.nota_final,
           estado: nota.estado,
-          promedio_bitacoras: nota.promedio_bitacoras,
+          promedio_bitacoras: nota.promedio_bitacoras || 0,
           nota_informe: nota.nota_informe,
           nota_autoevaluacion: nota.nota_autoevaluacion,
           fecha_calculo: nota.fecha_calculo,
           practica_id: nota.id_practica,
-          detalle_bitacoras: nota.detalle_bitacoras,
+          detalle_bitacoras: nota.detalle_bitacoras || [],
         };
       }
 
@@ -245,20 +209,21 @@ export async function obtenerNotasFinalesDocenteService(idDocente) {
         estudiante: {
           id: nota.practica.estudiante.id,
           nombre:
-            nota.practica.estudiante.nombreCompleto ||
-            `${nota.practica.estudiante.nombre || ""} ${nota.practica.estudiante.apellido || ""}`.trim(),
+              nota.practica.estudiante.nombreCompleto ||
+              `${nota.practica.estudiante.nombre || ""} ${nota.practica.estudiante.apellido || ""}`.trim(),
           rut: nota.practica.estudiante.rut,
           email: nota.practica.estudiante.email,
         },
         nota_final: nota.nota_final,
         estado: nota.estado,
-        promedio_bitacoras: nota.promedio_bitacoras,
+        promedio_bitacoras: nota.promedio_bitacoras || 0,
         nota_informe: nota.nota_informe,
         nota_autoevaluacion: nota.nota_autoevaluacion,
         fecha_calculo: nota.fecha_calculo,
         practica_id: nota.id_practica,
-        detalle_bitacoras: nota.detalle_bitacoras,
+        detalle_bitacoras: nota.detalle_bitacoras || [],
         practica_empresa: nota.practica.empresa || "No especificada",
+        practica_nota: nota.practica.nota_practica,
       };
     });
 
@@ -269,39 +234,68 @@ export async function obtenerNotasFinalesDocenteService(idDocente) {
   }
 }
 
-export async function obtenerTodasNotasFinalesService() {
+export async function obtenerTodasNotasFinalesService(filtros = {}) {
   try {
-    const notaFinalRepo = AppDataSource.getRepository("NotaFinal");
+    const notaFinalRepository = AppDataSource.getRepository(NotaFinal);
 
-    console.log("Obteniendo todas las notas finales...");
+    const queryBuilder = notaFinalRepository
+        .createQueryBuilder("notaFinal")
+        .leftJoinAndSelect("notaFinal.practica", "practica")
+        .leftJoinAndSelect("practica.estudiante", "estudiante")
+        .leftJoinAndSelect("practica.docente", "docente");
 
-    const notasFinales = await notaFinalRepo.find({
-      relations: ["practica", "practica.estudiante", "practica.docente"],
-      order: { fecha_calculo: "DESC" },
-    });
+    // Aplicar filtros si existen
+    if (filtros.estado) {
+      queryBuilder.andWhere("notaFinal.estado = :estado", { estado: filtros.estado });
+    }
 
-    console.log("Total notas encontradas:", notasFinales.length);
+    if (filtros.id_docente) {
+      queryBuilder.andWhere("notaFinal.id_docente = :id_docente", { id_docente: filtros.id_docente });
+    }
+
+    if (filtros.id_estudiante) {
+      queryBuilder.andWhere("notaFinal.id_estudiante = :id_estudiante", { id_estudiante: filtros.id_estudiante });
+    }
+
+    if (filtros.id_practica) {
+      queryBuilder.andWhere("notaFinal.id_practica = :id_practica", { id_practica: filtros.id_practica });
+    }
+
+    if (filtros.nota_minima) {
+      queryBuilder.andWhere("notaFinal.nota_final >= :nota_minima", { nota_minima: filtros.nota_minima });
+    }
+
+    if (filtros.nota_maxima) {
+      queryBuilder.andWhere("notaFinal.nota_final <= :nota_maxima", { nota_maxima: filtros.nota_maxima });
+    }
+
+    if (filtros.estado_practica) {
+      queryBuilder.andWhere("practica.estado = :estado_practica", { estado_practica: filtros.estado_practica });
+    }
+
+    queryBuilder.orderBy("notaFinal.fecha_calculo", "DESC");
+
+    const notasFinales = await queryBuilder.getMany();
 
     if (!notasFinales || notasFinales.length === 0) {
       return [[], null];
     }
 
+    // Formatear respuesta
     const resultado = notasFinales.map((nota) => {
-      // Verificar si practica y estudiante existen
       if (!nota.practica || !nota.practica.estudiante) {
-        console.warn("Nota sin práctica o estudiante:", nota.id);
         return {
           id: nota.id,
           estudiante: null,
           docente: null,
           nota_final: nota.nota_final,
           estado: nota.estado,
-          promedio_bitacoras: nota.promedio_bitacoras,
+          promedio_bitacoras: nota.promedio_bitacoras || 0,
           nota_informe: nota.nota_informe,
           nota_autoevaluacion: nota.nota_autoevaluacion,
           fecha_calculo: nota.fecha_calculo,
           practica_id: nota.id_practica,
-          detalle_bitacoras: nota.detalle_bitacoras,
+          detalle_bitacoras: nota.detalle_bitacoras || [],
         };
       }
 
@@ -310,30 +304,31 @@ export async function obtenerTodasNotasFinalesService() {
         estudiante: {
           id: nota.practica.estudiante.id,
           nombre:
-            nota.practica.estudiante.nombreCompleto ||
-            `${nota.practica.estudiante.nombre || ""} ${nota.practica.estudiante.apellido || ""}`.trim(),
+              nota.practica.estudiante.nombreCompleto ||
+              `${nota.practica.estudiante.nombre || ""} ${nota.practica.estudiante.apellido || ""}`.trim(),
           rut: nota.practica.estudiante.rut,
           email: nota.practica.estudiante.email,
         },
         docente: nota.practica.docente
-          ? {
+            ? {
               id: nota.practica.docente.id,
               nombre:
-                nota.practica.docente.nombreCompleto ||
-                `${nota.practica.docente.nombre || ""} ${nota.practica.docente.apellido || ""}`.trim(),
+                  nota.practica.docente.nombreCompleto ||
+                  `${nota.practica.docente.nombre || ""} ${nota.practica.docente.apellido || ""}`.trim(),
               email: nota.practica.docente.email,
             }
-          : null,
+            : null,
         nota_final: nota.nota_final,
         estado: nota.estado,
-        promedio_bitacoras: nota.promedio_bitacoras,
+        promedio_bitacoras: nota.promedio_bitacoras || 0,
         nota_informe: nota.nota_informe,
         nota_autoevaluacion: nota.nota_autoevaluacion,
         fecha_calculo: nota.fecha_calculo,
         practica_id: nota.id_practica,
-        detalle_bitacoras: nota.detalle_bitacoras,
+        detalle_bitacoras: nota.detalle_bitacoras || [],
         practica_empresa: nota.practica.empresa || "No especificada",
         practica_estado: nota.practica.estado,
+        practica_nota: nota.practica.nota_practica,
       };
     });
 
@@ -344,61 +339,49 @@ export async function obtenerTodasNotasFinalesService() {
   }
 }
 
-// Función auxiliar mejorada para calcular la nota final
-function calcularFormulaNotaFinal(
-  promedioBitacoras,
-  notaInforme,
-  notaAutoevaluacion,
-) {
-  // Fórmula: 50% bitácoras + 30% informe + 20% autoevaluación
-  const nota =
-    promedioBitacoras * 0.5 + notaInforme * 0.3 + notaAutoevaluacion * 0.2;
-
-  // Redondear a 1 decimal
-  const notaRedondeada = Math.round(nota * 10) / 10;
-
-  // Asegurar que esté entre 1.0 y 7.0
-  if (notaRedondeada < 1.0) return 1.0;
-  if (notaRedondeada > 7.0) return 7.0;
-
-  return notaRedondeada;
-}
-
-// NUEVA FUNCIÓN: Validar prerequisitos para calcular nota
-export async function validarPrerequisitosNotaService(idEstudiante) {
+export async function obtenerNotaFinalByIdService(id) {
   try {
-    const practicaRepo = AppDataSource.getRepository("Practica");
-    const bitacoraRepo = AppDataSource.getRepository("Bitacora");
-    const documentoRepo = AppDataSource.getRepository("Documento");
-    const evaluacionRepo = AppDataSource.getRepository("EvaluacionFinal");
+    const notaFinalRepository = AppDataSource.getRepository(NotaFinal);
 
-    // 1. Verificar práctica finalizada
-    const practica = await practicaRepo.findOne({
-      where: { id_estudiante: idEstudiante, estado: "finalizada" },
+    const notaFinal = await notaFinalRepository.findOne({
+      where: { id },
+      relations: ["practica", "practica.estudiante", "practica.docente"],
     });
 
-    if (!practica) {
-      return [null, "No tienes una práctica finalizada"];
+    if (!notaFinal) {
+      return [null, "Nota final no encontrada"];
     }
 
-    // 2. Verificar bitácoras aprobadas con nota
-    const bitacorasCount = await bitacoraRepo.count({
+    return [notaFinal, null];
+  } catch (error) {
+    console.error("Error en obtenerNotaFinalByIdService:", error);
+    return [null, "Error al obtener la nota final"];
+  }
+}
+
+export async function validarPrerequisitosNotaService(idEstudiante) {
+  try {
+    const practicaRepository = AppDataSource.getRepository(Practica);
+    const documentoRepository = AppDataSource.getRepository(Documento);
+
+    // Buscar práctica activa del estudiante
+    const practica = await practicaRepository.findOne({
       where: {
-        id_practica: practica.id_practica,
-        estado_revision: "aprobado",
-        nota: Not(IsNull()),
+        id_estudiante: idEstudiante,
+        estado: In(["en_progreso"]),
       },
     });
 
-    if (bitacorasCount === 0) {
-      return [null, "No hay bitácoras aprobadas con nota"];
+    if (!practica) {
+      return [null, "No tienes una práctica activa"];
     }
 
-    // 3. Verificar documentos con evaluaciones
-    const documentos = await documentoRepo.find({
+    // Verificar documentos requeridos
+    const documentos = await documentoRepository.find({
       where: {
         id_practica: practica.id_practica,
         tipo: In(["informe", "autoevaluacion"]),
+        estado_revision: "revisado",
       },
     });
 
@@ -406,19 +389,10 @@ export async function validarPrerequisitosNotaService(idEstudiante) {
     const autoevaluacion = documentos.find((d) => d.tipo === "autoevaluacion");
 
     if (!informe || !autoevaluacion) {
-      return [null, "Faltan documentos (informe o autoevaluación)"];
+      return [null, "Faltan documentos revisados (informe o autoevaluación)"];
     }
 
-    // 4. Verificar evaluaciones
-    const evaluacionInforme = await evaluacionRepo.findOne({
-      where: { id_documento: informe.id_documento },
-    });
-
-    const evaluacionAutoevaluacion = await evaluacionRepo.findOne({
-      where: { id_documento: autoevaluacion.id_documento },
-    });
-
-    if (!evaluacionInforme || !evaluacionAutoevaluacion) {
+    if (!informe.nota_revision || !autoevaluacion.nota_revision) {
       return [null, "Faltan evaluaciones de los documentos"];
     }
 
@@ -426,9 +400,10 @@ export async function validarPrerequisitosNotaService(idEstudiante) {
       {
         puede_calcular: true,
         practica_id: practica.id_practica,
-        bitacoras_aprobadas: bitacorasCount,
-        informe_evaluado: !!evaluacionInforme,
-        autoevaluacion_evaluada: !!evaluacionAutoevaluacion,
+        informe_evaluado: !!informe.nota_revision,
+        autoevaluacion_evaluada: !!autoevaluacion.nota_revision,
+        nota_informe: informe.nota_revision,
+        nota_autoevaluacion: autoevaluacion.nota_revision,
       },
       null,
     ];

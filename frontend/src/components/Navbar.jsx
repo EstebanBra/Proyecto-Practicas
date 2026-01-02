@@ -118,16 +118,6 @@ const Navbar = () => {
                         <>
                             <li>
                                 <NavLink
-                                    to="/docs-entregados"
-                                    onClick={() => setMenuOpen(false)}
-                                    className={({ isActive }) => (isActive ? 'active' : '')}
-                                >
-                                    Docs. Entregados
-                                </NavLink>
-                            </li>
-
-                            <li>
-                                <NavLink
                                     to="/notas-estudiantes"
                                     onClick={() => setMenuOpen(false)}
                                     className={({ isActive }) => (isActive ? 'active' : '')}
@@ -148,6 +138,18 @@ const Navbar = () => {
                             Ofertas Publicadas
                         </NavLink>
                     </li>
+
+                    {(userRole === 'docente' &&
+                    <li>
+                        <NavLink
+                            to="/docs-entregados"
+                            onClick={() => setMenuOpen(false)}
+                            className={({ isActive }) => (isActive ? 'active' : '')}
+                        >
+                            Docs. Entregados
+                        </NavLink>
+                    </li>
+                    )}
 
                     {/* Comentarios - Visible para estudiantes y docentes */}
                     <li>

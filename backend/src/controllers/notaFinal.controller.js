@@ -14,28 +14,22 @@ import {
 
 export async function calcularNotaFinal(req, res) {
   try {
-    const idEstudiante = req.user.id;
+    const { id_practica } = req.body;
     const rolUsuario = req.user.rol;
 
-    if (rolUsuario !== "estudiante") {
+    if (rolUsuario !== "docente" && rolUsuario !== "administrador") {
       return handleErrorClient(
         res,
         403,
-        "Solo los estudiantes pueden calcular su nota final",
+        "Solo docentes o administradores pueden calcular notas finales",
       );
     }
 
-    // Primero validar prerequisitos
-    const [validacion, errorValidacion] =
-      await validarPrerequisitosNotaService(idEstudiante);
-
-    if (errorValidacion) {
-      return handleErrorClient(res, 400, errorValidacion);
+    if (!id_practica) {
+      return handleErrorClient(res, 400, "Se requiere el ID de la práctica");
     }
 
-    console.log("Validación exitosa, calculando nota...");
-
-    const [resultado, error] = await calcularNotaFinalService(idEstudiante);
+    const [resultado, error] = await calcularNotaFinalService(id_practica);
 
     if (error) {
       return handleErrorClient(res, 400, error);
@@ -53,9 +47,6 @@ export async function calcularNotaFinal(req, res) {
   }
 }
 
-/**
- * Validar prerequisitos para calcular nota (estudiante)
- */
 export async function validarPrerequisitosNota(req, res) {
   try {
     const idEstudiante = req.user.id;
@@ -88,9 +79,6 @@ export async function validarPrerequisitosNota(req, res) {
   }
 }
 
-/**
- * Obtener mi nota final (estudiante)
- */
 export async function obtenerMiNotaFinal(req, res) {
   try {
     const idEstudiante = req.user.id;
@@ -123,15 +111,11 @@ export async function obtenerMiNotaFinal(req, res) {
   }
 }
 
-/**
- * Obtener notas finales de estudiantes (docente y admin)
- */
 export async function obtenerNotasFinalesEstudiantes(req, res) {
   try {
     const idUsuario = req.user.id;
     const rolUsuario = req.user.rol;
 
-    // Solo docente o admin pueden ver notas de estudiantes
     if (rolUsuario !== "docente" && rolUsuario !== "administrador") {
       return handleErrorClient(
         res,
@@ -144,7 +128,6 @@ export async function obtenerNotasFinalesEstudiantes(req, res) {
     let mensaje;
 
     if (rolUsuario === "docente") {
-      // Docente ve solo sus estudiantes asignados
       const [notas, error] = await obtenerNotasFinalesDocenteService(idUsuario);
 
       if (error) {
@@ -154,7 +137,6 @@ export async function obtenerNotasFinalesEstudiantes(req, res) {
       resultado = notas;
       mensaje = "Notas de estudiantes asignados obtenidas exitosamente";
     } else {
-      // Admin ve todas las notas
       const [notas, error] = await obtenerTodasNotasFinalesService();
 
       if (error) {
@@ -172,14 +154,10 @@ export async function obtenerNotasFinalesEstudiantes(req, res) {
   }
 }
 
-/**
- * Obtener todas las notas finales (solo admin)
- */
 export async function obtenerTodasNotasFinales(req, res) {
   try {
     const rolUsuario = req.user.rol;
 
-    // Solo admin puede ver todas las notas
     if (rolUsuario !== "administrador") {
       return handleErrorClient(
         res,
@@ -202,6 +180,61 @@ export async function obtenerTodasNotasFinales(req, res) {
     );
   } catch (error) {
     console.error("Error en obtenerTodasNotasFinales:", error);
+    return handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function obtenerNotaFinalById(req, res) {
+  try {
+    const { id } = req.params;
+    const rolUsuario = req.user.rol;
+    const idUsuario = req.user.id;
+
+    const [notaFinal, error] = await obtenerNotaFinalByIdService(parseInt(id));
+
+    if (error) {
+      return handleErrorClient(res, 404, error);
+    }
+
+    if (rolUsuario === "estudiante") {
+      if (notaFinal.id_estudiante !== idUsuario) {
+        return handleErrorClient(
+          res,
+          403,
+          "No tienes permiso para ver esta nota",
+        );
+      }
+    }
+
+    if (rolUsuario === "docente") {
+      const [notasDocente, errorDocente] =
+        await obtenerNotasFinalesDocenteService(idUsuario);
+
+      if (errorDocente) {
+        return handleErrorClient(res, 400, errorDocente);
+      }
+
+      const notaPertenece = notasDocente.some(
+        (nota) => nota.id === parseInt(id),
+      );
+
+      if (!notaPertenece) {
+        return handleErrorClient(
+          res,
+          403,
+          "No tienes permiso para ver esta nota",
+        );
+      }
+    }
+
+    return handleSuccess(
+      res,
+      200,
+      "Nota final obtenida exitosamente",
+      notaFinal,
+    );
+  } catch (error) {
+    console.error("Error en obtenerNotaFinalById:", error);
     return handleErrorServer(res, 500, error.message);
   }
 }

@@ -72,27 +72,27 @@ const DocsEntregados = () => {
         const { value: formValues } = await Swal.fire({
             title: evaluacionExistente ? 'Actualizar Calificación' : 'Agregar Calificación',
             html: `
-                <div style="text-align: left;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nota (1.0 - 7.0)</label>
-                    <input 
-                        type="number" 
-                        id="swal-nota" 
-                        class="swal2-input" 
-                        min="1" 
-                        max="7" 
-                        step="0.1"
-                        value="${evaluacionExistente?.nota || ''}"
-                        style="width: 100%; margin: 0 0 15px 0;"
-                    >
-                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Comentario</label>
-                    <textarea 
-                        id="swal-comentario" 
-                        class="swal2-textarea" 
-                        placeholder="Comentario sobre el documento..."
-                        style="width: 100%; margin: 0; min-height: 100px;"
-                    >${evaluacionExistente?.comentario || ''}</textarea>
-                </div>
-            `,
+            <div style="text-align: left;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nota (1.0 - 7.0)</label>
+                <input 
+                    type="number" 
+                    id="swal-nota" 
+                    class="swal2-input" 
+                    min="1" 
+                    max="7" 
+                    step="0.1"
+                    value="${evaluacionExistente?.nota || ''}"
+                    style="width: 100%; margin: 0 0 15px 0;"
+                >
+                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Comentario</label>
+                <textarea 
+                    id="swal-comentario" 
+                    class="swal2-textarea" 
+                    placeholder="Comentario sobre el documento..."
+                    style="width: 100%; margin: 0; min-height: 100px;"
+                >${evaluacionExistente?.comentario || ''}</textarea>
+            </div>
+        `,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: evaluacionExistente ? 'Actualizar' : 'Guardar',
@@ -104,6 +104,12 @@ const DocsEntregados = () => {
 
                 if (isNaN(nota) || nota < 1 || nota > 7) {
                     Swal.showValidationMessage('La nota debe ser un número entre 1.0 y 7.0');
+                    return false;
+                }
+
+                const caracteresEspeciales = /[<>{}[\];:$%&|~^`@#*+=_¡!¿?\\]/;
+                if (caracteresEspeciales.test(comentario)) {
+                    Swal.showValidationMessage('El comentario no puede contener caracteres especiales como < > { } [ ] ; : $ % & | ~ ^ ` @ # * + = _ ¡ ! ¿ ? \\');
                     return false;
                 }
 
@@ -125,7 +131,6 @@ const DocsEntregados = () => {
             await fetchDocumentos();
         }
     };
-
     // Filtrar documentos
     const documentosFiltrados = documentos.filter(doc => {
         const matchesSearch = 
@@ -231,7 +236,10 @@ const DocsEntregados = () => {
                                         )}
 
                                         {doc.comentario && (
-                                            <div className="comentario">
+                                            <div
+                                                className="comentario texto-truncado"
+                                                title={doc.comentario}
+                                            >
                                                 &ldquo;{doc.comentario}&rdquo;
                                             </div>
                                         )}
