@@ -26,7 +26,6 @@ import {
 } from "../handlers/responseHandlers.js";
 import { AppDataSource } from "../config/configDb.js";
 import User from "../entity/user.entity.js";
-import { sendEmail } from "../helpers/email.helper.js";
 
 export async function createComentario(req, res) {
   try {
@@ -69,55 +68,6 @@ export async function createComentario(req, res) {
     // Validar el cuerpo del comentario antes de guardar
     await comentarioBodyValidation.validateAsync(comentarioData);
     const newComentario = await createComentarioService(comentarioData);
-
-    // Enviar email al docente de forma asíncrona
-    // Nota: Aquí usas EMAIL_USER como destinatario único
-    const destinatario = process.env.EMAIL_USER;
-
-    if (destinatario) {
-      const asunto = `Nuevo comentario de ${usuarioReal.nombreCompleto || "Estudiante"}`;
-      const mensajeHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-            .container { 
-            background-color: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: 0 auto; }
-            h2 { color: #2c3e50; }
-            .info { background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
-            .label { font-weight: bold; color: #34495e; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h2>📧 Nuevo comentario recibido</h2>
-            <div class="info">
-              <p><span class="label">Estudiante:</span> ${usuarioReal.nombreCompleto || "No especificado"}</p>
-              <p><span class="label">Nivel de urgencia:</span> ${comentarioData.nivelUrgencia || "normal"}</p>
-              <p><span class="label">Tipo de problema:</span> ${comentarioData.tipoProblema || "General"}</p>
-              <p><span class="label">Mensaje:</span></p>
-              <p>${comentarioData.mensaje}</p>
-              ${newComentario?.id ? `<p><span class="label">ID del comentario:</span> ${newComentario.id}</p>` : ""}
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-
-      // Envío asíncrono para no bloquear la respuesta al cliente
-      sendEmail(destinatario, asunto, mensajeHtml)
-        .then(success => {
-          if (success) {
-            console.log(`✓ Email enviado correctamente a ${destinatario}`);
-          } else {
-            console.error(`✗ No se pudo enviar email a ${destinatario}`);
-          }
-        })
-        .catch(err => console.error("Error en envío de email:", err));
-    } else {
-      console.warn("⚠ EMAIL_USER no configurado en .env - No se enviará notificación");
-    }
 
     // Respuesta de éxito al frontend
     handleSuccess(res, 201, "Comentario creado exitosamente", newComentario);
