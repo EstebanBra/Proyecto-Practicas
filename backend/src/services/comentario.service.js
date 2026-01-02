@@ -227,7 +227,9 @@ export async function processComentariosExcelService(usuarioId, filePath) {
     });
     
     if (comentariosVaciados.length > 0) {
-      throw new Error(`No se puede procesar el Excel: ${comentariosVaciados.length} comentario(s) tienen la respuesta vacía. No está permitido borrar respuestas existentes.`);
+      throw new Error(`No se puede procesar el Excel: 
+        ${comentariosVaciados.length} 
+        comentario(s) tienen la respuesta vacía. No está permitido borrar respuestas existentes.`);
     }
 
     if (resultados.length === 0) {
