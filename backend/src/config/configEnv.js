@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 const _filename = fileURLToPath(import.meta.url);
 const _dirname = path.dirname(_filename);
 
-const envFilePath = path.resolve(_dirname, ".env");
+const envFilePath = path.join(_dirname, ".env");
 
 const result = dotenv.config({ path: envFilePath });
 
