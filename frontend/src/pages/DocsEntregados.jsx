@@ -25,17 +25,21 @@ const DocsEntregados = () => {
     const { practicas, loading: loadingPracticas, refetch: refetchPracticas } = useTodasPracticas();
     const { updating: updatingEstado, handleUpdateEstados } = useUpdateEstadoDocumento(fetchDocumentos);
     const { submitting: creatingEval, handleCrearEvaluacion } = useCrearEvaluacion(fetchEvaluacionByDocumento, fetchEvaluacionesDocente);
-    const { updating: updatingEval, handleUpdateEvaluacion } = useUpdateEvaluacion(fetchEvaluacionesDocente);
-
-    const fetchData = useCallback(async () => {
-        await fetchDocumentos();
-        await fetchEvaluacionesDocente();
-        await refetchPracticas();
-    }, [fetchDocumentos, fetchEvaluacionesDocente, refetchPracticas]);
+    const { updating: updatingEval, handleUpdateEvaluacion } =
+      useUpdateEvaluacion(fetchEvaluacionesDocente);
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+      const fetchData = async () => {
+        await Promise.all([
+          fetchDocumentos(),
+          fetchEvaluacionesDocente(),
+          refetchPracticas(),
+        ]);
+      };
+
+      fetchData();
+    }, []);
+
 
     // Mapear prácticas por id
     useEffect(() => {
