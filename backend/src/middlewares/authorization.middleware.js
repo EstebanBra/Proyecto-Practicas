@@ -5,104 +5,119 @@ import {
   handleErrorServer,
 } from "../handlers/responseHandlers.js";
 
-export async function isAdmin(req, res, next) {
+async function verifyRole(req, res, next, allowedRoles) {
   try {
-    const userRepository = AppDataSource.getRepository(User);
+    const userRole = req.user.rol;
+    
+    //'Estudiante' y 'estudiante' valen lo mismo.
+    const normalizedUserRole = userRole.toLowerCase();
+    const normalizedAllowedRoles = allowedRoles.map(role => role.toLowerCase());
 
-    const userFound = await userRepository.findOneBy({ email: req.user.email });
-
-    if (!userFound) {
-      return handleErrorClient(
-        res,
-        404,
-        "Usuario no encontrado en la base de datos",
-      );
-    }
-
-    const rolUser = userFound.rol;
-
-    if (rolUser !== "administrador") {
+    if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
       return handleErrorClient(
         res,
         403,
         "Error al acceder al recurso",
-        "Se requiere un rol de administrador para realizar esta acción."
+        `Se requiere uno de los siguientes roles: ${allowedRoles.join(", ")}`
       );
     }
     next();
   } catch (error) {
-    handleErrorServer(
-      res,
-      500,
-      error.message,
-    );
+    handleErrorServer(res, 500, error.message);
   }
 }
 
-export async function isDocente(req, res, next) {
-  try {
-    const userRepository = AppDataSource.getRepository(User);
+// 1. Permiso exclusivo para ADMINISTRADORES
+export const isAdmin = (req, res, next) => {
+    verifyRole(req, res, next, ["administrador"]);
+};
 
-    const userFound = await userRepository.findOneBy({ email: req.user.email });
+// 2. Permiso exclusivo para DOCENTES
+export const isDocente = (req, res, next) => {
+    verifyRole(req, res, next, ["docente"]);
+};
 
-    if (!userFound) {
-      return handleErrorClient(
+// 3. Permiso exclusivo para ESTUDIANTES
+export const isEstudiante = (req, res, next) => {
+    verifyRole(req, res, next, ["estudiante"]);
+};
+
+// 4. Permiso COMBINADO (Admin o Docente) - Para gestión de ofertas
+export const isDocenteOrAdmin = (req, res, next) => {
+    verifyRole(req, res, next, ["administrador", "docente"]);
+};
+
+/**
+ * Middleware para verificar si el usuario tiene uno de los roles permitidos
+ * @param {string[]} rolesPermitidos - Array con los roles permitidos
+ * @returns {Function} Middleware de Express
+ */
+
+export function verificarRol(rolesPermitidos) {
+  return async (req, res, next) => {
+    try {
+      const userRepository = AppDataSource.getRepository(User);
+
+      const userFound = await userRepository.findOneBy({ email: req.user.email });
+
+      if (!userFound) {
+        return handleErrorClient(
+          res,
+          404,
+          "Usuario no encontrado en la base de datos",
+        );
+      }
+
+      const rolUser = userFound.rol;
+
+      if (!rolesPermitidos.includes(rolUser)) {
+        return handleErrorClient(
+          res,
+          403,
+          "Error al acceder al recurso",
+          `Se requiere uno de los siguientes roles: ${rolesPermitidos.join(", ")}`
+        );
+      }
+      next();
+    } catch (error) {
+      handleErrorServer(
         res,
-        404,
-        "Usuario no encontrado en la base de datos",
+        500,
+        error.message,
       );
     }
-
-    const rolUser = userFound.rol;
-
-    if (rolUser !== "docente") {
-      return handleErrorClient(
-        res,
-        403,
-        "Error al acceder al recurso",
-        "Se requiere un rol de docente para realizar esta acción."
-      );
-    }
-    next();
-  } catch (error) {
-    handleErrorServer(
-      res,
-      500,
-      error.message,
-    );
-  }
+  };
 }
 
-export async function isEstudiante(req, res, next) {
+export async function isDocenteOrEstudiante(req, res, next) {
   try {
-    const userRepository = AppDataSource.getRepository(User);
+    // Verifica que el middleware de autenticación haya establecido req.user
+    if (!req.user) {
+      return handleErrorClient(res, 401, "Usuario no autenticado.");
+    }
 
-    const userFound = await userRepository.findOneBy({ email: req.user.email });
+    const { id, rol } = req.user;
 
-    if (!userFound) {
+    // Verifica que el payload del token contenga la información necesaria.
+    if (!id || !rol) {
       return handleErrorClient(
         res,
-        404,
-        "Usuario no encontrado en la base de datos",
+        400,
+        "Token inválido: no contiene la información de usuario requerida (id, rol)."
       );
     }
 
-    const rolUser = userFound.rol;
-
-    if (rolUser !== "estudiante") {
+    if (rol !== "docente" && rol !== "estudiante") {
       return handleErrorClient(
         res,
         403,
-        "Error al acceder al recurso",
-        "Se requiere un rol de estudiante para realizar esta acción."
+        "Acceso denegado",
+        `Tu rol '${rol}' no tiene permiso para realizar esta acción.`
       );
     }
+
     next();
   } catch (error) {
-    handleErrorServer(
-      res,
-      500,
-      error.message,
-    );
+    handleErrorServer(res, 500, error.message);
   }
 }

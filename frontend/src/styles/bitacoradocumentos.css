@@ -1,0 +1,325 @@
+/* Bitácora Documentos Page Styles */
+
+.documentos-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.documentos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.documentos-header h1 {
+    font-size: 28px;
+    color: #333;
+    margin: 0;
+}
+
+.btn-upload-document {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-upload-document:hover {
+    background-color: #0b7dda;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.btn-upload-document:active {
+    transform: translateY(0);
+}
+
+/* Upload Section */
+.upload-section {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.upload-section h2 {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 20px;
+}
+
+.upload-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.btn-confirm-upload,
+.btn-clear-files {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-confirm-upload {
+    background-color: #2196F3;
+    color: white;
+    flex: 1;
+    min-width: 150px;
+}
+
+.btn-confirm-upload:hover:not(:disabled) {
+    background-color: #0b7dda;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.btn-confirm-upload:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-clear-files {
+    background-color: #f44336;
+    color: white;
+    min-width: 120px;
+}
+
+.btn-clear-files:hover {
+    background-color: #da190b;
+}
+
+/* Documentos List */
+.documentos-list {
+    margin-top: 30px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.empty-state h3 {
+    color: #333;
+    margin: 15px 0 8px 0;
+    font-size: 20px;
+}
+
+.empty-state p {
+    color: #666;
+    margin: 0 0 20px 0;
+    font-size: 14px;
+}
+
+.btn-create-from-empty {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-create-from-empty:hover {
+    background-color: #0b7dda;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.documentos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Documento Card */
+.documento-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.documento-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+    border-color: #2196F3;
+}
+
+.documento-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.documento-info {
+    width: 100%;
+}
+
+.documento-nombre {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 15px;
+    font-weight: 600;
+    word-break: break-word;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.documento-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 12px 0;
+    border-top: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.meta-label {
+    font-size: 11px;
+    color: #999;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.meta-value {
+    font-size: 13px;
+    color: #333;
+    font-weight: 600;
+}
+
+.fecha-subida {
+    font-size: 12px;
+    color: #999;
+    margin: 8px 0;
+}
+
+.estado-revision {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.estado-revision.pendiente {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.estado-revision.aprobado {
+    background-color: #c8e6c9;
+    color: #2e7d32;
+}
+
+.estado-revision.rechazado {
+    background-color: #ffcdd2;
+    color: #c62828;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .documentos-container {
+        padding: 15px;
+    }
+
+    .documentos-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-upload-document {
+        width: 100%;
+    }
+
+    .upload-section {
+        padding: 20px;
+    }
+
+    .upload-actions {
+        flex-direction: column;
+    }
+
+    .btn-confirm-upload,
+    .btn-clear-files {
+        width: 100%;
+    }
+
+    .documentos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .documento-meta {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .documentos-header h1 {
+        font-size: 22px;
+    }
+
+    .documento-icon {
+        font-size: 40px;
+    }
+
+    .documento-nombre {
+        font-size: 14px;
+    }
+
+    .upload-section {
+        padding: 15px;
+    }
+}

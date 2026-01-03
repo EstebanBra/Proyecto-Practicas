@@ -1,30 +1,28 @@
 "use strict";
+import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
 import passport from "passport";
+import jwt from "jsonwebtoken";
 import {
   handleErrorClient,
   handleErrorServer,
-  } from "../handlers/responseHandlers.js";
+} from "../handlers/responseHandlers.js";
 
 export function authenticateJwt(req, res, next) {
-  passport.authenticate("jwt", { session: false }, (err, user, info) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send("No se proporcionó un token de autorización");
+  }
+  const token = authHeader.split(" ")[1];
+  
+  jwt.verify(token, ACCESS_TOKEN_SECRET, (err, user) => {
     if (err) {
-      return handleErrorServer(
-        res,
-        500,
-        "Error de autenticación en el servidor"
-      );
+      console.error("Error de verificación del token:", err); // Log detallado del error
+      return res.status(403).send("Token inválido");
     }
-
-    if (!user) {
-      return handleErrorClient(
-        res,
-        401,
-        "No tienes permiso para acceder a este recurso",
-        { info: info ? info.message : "No se encontró el usuario" }
-      )
-    }
-
     req.user = user;
     next();
-  })(req, res, next);
+  });
 }
+
+// Alias para compatibilidad
+export const verificarToken = authenticateJwt;;

@@ -1,0 +1,60 @@
+.offers-page {
+  padding: 24px;
+}
+.offers-header h2 {
+  margin: 0 0 6px 0;
+}
+.muted {
+  color: #666;
+  margin: 0 0 18px 0;
+}
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.offer-card {
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.offer-card__header {
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:8px;
+}
+.offer-card__title {
+  margin:0;
+  font-size:1.05rem;
+}
+.ofertas-container {
+    padding-top: 120px;
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Clase usada en Ofertas.jsx */
+.ofertas-form {
+    padding-top: 100px; 
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Espacio extra para los títulos */
+.ofertas-container h1,
+.ofertas-form h1 {
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+.offer-card__meta small { color:#777; }
+.offer-card__desc { margin:12px 0; color:#333; }
+.offer-card__list { margin:0; padding:0 0 0 18px; color:#444; }
+.offer-card__list li { margin:6px 0; }
+.error { color: #c0392b }

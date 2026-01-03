@@ -26,6 +26,34 @@ export const comentarioBodyValidation = joi.object({
         "string.empty": "El tipo de problema no puede estar vacío.",
         "string.max": "El tipo de problema no puede exceder los 50 caracteres.",
         "string.pattern.base": "El tipo de problema debe ser 'Personal', 'General' o 'De Empresa'.",
+    }),
+    respuesta: joi.string().max(500).optional().allow(null, " ")
+        .custom((value, helpers) => {
+            if (value === undefined || value === null) return value;
+            const trimmed = value.trim();
+            if (!trimmed) {
+                return helpers.error("any.invalid", { message: "La respuesta no puede estar vacía." });
+            }
+            if (!/[A-Za-z]/.test(trimmed)) {
+                return helpers.error("any.invalid", {
+                    message: "La respuesta debe incluir letras, no solo números o símbolos." });
+            }
+            return trimmed;
+        })
+        .messages({
+            "string.base": "La respuesta debe ser de tipo string.",
+            "string.max": "La respuesta no puede exceder los 500 caracteres.",
+            "any.invalid": "{{#message}}",
+        }),
+
+    archivos: joi.array().items(joi.object({
+        nombre: joi.string(),
+        ruta: joi.string(),
+        tipo: joi.string(),
+        tamaño: joi.number(),
+        filename: joi.string()
+    })).optional().allow(null).max(5).messages({
+        "array.max": "No se pueden subir más de 5 archivos por comentario."
     })
 });
 

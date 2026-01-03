@@ -6,15 +6,23 @@ import indexRoutes from "./routes/index.routes.js";
 import session from "express-session";
 import passport from "passport";
 import express, { json, urlencoded } from "express";
-import { cookieKey, HOST, PORT } from "./config/configEnv.js";
+import { ACCESS_TOKEN_SECRET, cookieKey, HOST, PORT } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
 import { createUsers } from "./config/initialSetup.js";
 import { passportJwtSetup } from "./auth/passport.auth.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 async function setupServer() {
   try {
     const app = express();
 
+    const uploadsPath = path.resolve(dirname, "../../uploads");
+    app.use("/uploads", express.static(uploadsPath));
+    
     app.disable("x-powered-by");
 
     app.use(
@@ -54,11 +62,10 @@ async function setupServer() {
       }),
     );
 
+    
     app.use(passport.initialize());
-    app.use(passport.session());
-
-    passportJwtSetup();
-
+    // app.use(passport.session()); 
+    passportJwtSetup();             
     app.use("/api", indexRoutes);
 
     app.listen(PORT, () => {

@@ -10,6 +10,13 @@ const options = {
   secretOrKey: ACCESS_TOKEN_SECRET,
 };
 
+if (!options.secretOrKey) {
+  console.error(
+    "FATAL: ACCESS_TOKEN_SECRET no definido. Revisa backend/src/config/.env o variables de entorno."
+  );
+  process.exit(1);
+}
+
 passport.use(
   new JwtStrategy(options, async (jwt_payload, done) => {
     try {

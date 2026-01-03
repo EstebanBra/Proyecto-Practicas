@@ -30,11 +30,17 @@ export async function loginService(user) {
     }
 
     const payload = {
+      id: userFound.id,
       nombreCompleto: userFound.nombreCompleto,
       email: userFound.email,
       rut: userFound.rut,
       rol: userFound.rol,
     };
+
+    if (!ACCESS_TOKEN_SECRET) {
+      console.error("ACCESS_TOKEN_SECRET no está configurado");
+      return [null, "Error de configuración del servidor"];
+    }
 
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, {
       expiresIn: "1d",
@@ -47,12 +53,11 @@ export async function loginService(user) {
   }
 }
 
-
 export async function registerService(user) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    const { nombreCompleto, rut, email } = user;
+    const { nombreCompleto, rut, email, rol } = user;
 
     const createErrorMessage = (dataInfo, message) => ({
       dataInfo,
@@ -60,17 +65,13 @@ export async function registerService(user) {
     });
 
     const existingEmailUser = await userRepository.findOne({
-      where: {
-        email,
-      },
+      where: { email },
     });
     
     if (existingEmailUser) return [null, createErrorMessage("email", "Correo electrónico en uso")];
 
     const existingRutUser = await userRepository.findOne({
-      where: {
-        rut,
-      },
+      where: { rut },
     });
 
     if (existingRutUser) return [null, createErrorMessage("rut", "Rut ya asociado a una cuenta")];
@@ -80,7 +81,7 @@ export async function registerService(user) {
       email,
       rut,
       password: await encryptPassword(user.password),
-      rol: "estudiante",
+      rol: rol || "estudiante", 
     });
 
     await userRepository.save(newUser);
