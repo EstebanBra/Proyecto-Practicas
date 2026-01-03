@@ -16,6 +16,8 @@ import MisPostulaciones from '@pages/MisPostulaciones';
 import PracticaExterna from '@pages/PracticaExterna';
 import DocumentosFinales from '@pages/DocumentosFinales';
 import DocsEntregados from '@pages/DocsEntregados';
+import MiNotaFinal from '@pages/MiNotaFinal.jsx';
+import NotasEstudiantes from '@pages/NotasEstudiantes.jsx';
 
 const router = createBrowserRouter([
   {
@@ -38,57 +40,73 @@ const router = createBrowserRouter([
       {
         path: '/mis-postulaciones',
         element: (
-          <ProtectedRoute allowedRoles={['estudiante']}>
-            <MisPostulaciones />
-          </ProtectedRoute>
+            <ProtectedRoute allowedRoles={['estudiante']}>
+              <MisPostulaciones />
+            </ProtectedRoute>
         ),
       },
       {
         path: '/practica-externa',
         element: (
-          <ProtectedRoute allowedRoles={['estudiante']}>
-            <PracticaExterna />
-          </ProtectedRoute>
+            <ProtectedRoute allowedRoles={['estudiante']}>
+              <PracticaExterna />
+            </ProtectedRoute>
         ),
       },
       {
         path: '/documentos-finales',
         element: (
-          <ProtectedRoute allowedRoles={['estudiante']}>
-            <DocumentosFinales />
-          </ProtectedRoute>
+            <ProtectedRoute allowedRoles={['estudiante']}>
+              <DocumentosFinales />
+            </ProtectedRoute>
         ),
       },
       {
         path: '/docs-entregados',
         element: (
-          <ProtectedRoute allowedRoles={['docente', 'administrador']}>
-            <DocsEntregados />
-          </ProtectedRoute>
+            <ProtectedRoute allowedRoles={['docente', 'administrador']}>
+              <DocsEntregados />
+            </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/mi-nota-final',
+        element: (
+            <ProtectedRoute allowedRoles={['estudiante']}>
+              <MiNotaFinal />
+            </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/notas-estudiantes',
+        element: (
+            <ProtectedRoute allowedRoles={['docente', 'administrador']}>
+              <NotasEstudiantes />
+            </ProtectedRoute>
         ),
       },
       {
         path: '/users',
         element: (
-        <ProtectedRoute allowedRoles={['administrador']}>
-          <Users />
-        </ProtectedRoute>
+            <ProtectedRoute allowedRoles={['administrador']}>
+              <Users />
+            </ProtectedRoute>
         ),
       },
       {
         path: '/bitacoras',
         element: (
-        <ProtectedRoute allowedRoles={['estudiante', 'docente', 'administrador']}>
-          <Bitacoras />
-        </ProtectedRoute>
+            <ProtectedRoute allowedRoles={['estudiante', 'docente', 'administrador']}>
+              <Bitacoras />
+            </ProtectedRoute>
         ),
       },
       {
         path: '/comentarios',
         element: (
-        <ProtectedRoute allowedRoles={['estudiante', 'docente', 'administrador']}>
-          <ComentariosWrapper />
-        </ProtectedRoute>
+            <ProtectedRoute allowedRoles={['estudiante', 'docente', 'administrador']}>
+              <ComentariosWrapper />
+            </ProtectedRoute>
         ),
       }
     ]
@@ -104,5 +122,5 @@ const router = createBrowserRouter([
 ])
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <RouterProvider router={router}/>
+    <RouterProvider router={router}/>
 )
