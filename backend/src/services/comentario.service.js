@@ -257,7 +257,10 @@ export async function processComentariosExcelService(usuarioId, filePath) {
       const respuestaAnterior = comentario.respuesta || "";
       const respuestaNueva = item.respuesta;
       
-      if (respuestaAnterior !== respuestaNueva || !comentario.respondidoViaExcel) {
+      // Verificar si hay un cambio real
+      const hayChange = respuestaAnterior !== respuestaNueva;
+      
+      if (hayChange) {
         comentario.respuesta = respuestaNueva;
         comentario.estado = "Respondido";
         comentario.respondidoViaExcel = true;
