@@ -85,62 +85,51 @@ const DocenteNotas = () => {
 
     const handleCalcularNota = useCallback(async (idPractica, nombreEstudiante) => {
 
-        try {
-            // Confirmación previa
-            const confirmacion = await Swal.fire({
-                title: 'Calcular nota final',
-                html: `¿Calcular nota final para <strong>${nombreEstudiante}</strong>?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Sí, calcular',
-                cancelButtonText: 'Cancelar',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            });
+        // Confirmación previa
+        const confirmacion = await Swal.fire({
+            title: 'Calcular nota final',
+            html: `¿Calcular nota final para <strong>${nombreEstudiante}</strong>?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, calcular',
+            cancelButtonText: 'Cancelar'
+        });
 
-            if (!confirmacion.isConfirmed) {
-                return;
-            }
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
 
-            // Ejecutar cálculo
-            const result = await calcularNotaEstudiante(idPractica, nombreEstudiante);
+        // Ejecutar cálculo
+        const result = await calcularNotaEstudiante(idPractica, nombreEstudiante);
 
-            // Si el usuario canceló dentro del proceso
-            if (result?.cancelled) {
-                return;
-            }
+        // Si el usuario canceló dentro del proceso
+        if (result?.cancelled) {
+            return;
+        }
 
-            // Determinar éxito aún si viene success:false pero mensaje indica que sí
-            const fueExitoso =
-                result?.success ||
-                result?.message?.toLowerCase()?.includes('exitosamente') ||
-                result?.message?.toLowerCase()?.includes('calculada');
+        // Determinar éxito aún si viene success:false pero mensaje indica que sí
+        const fueExitoso =
+            result?.success ||
+            result?.message?.toLowerCase()?.includes('exitosamente') ||
+            result?.message?.toLowerCase()?.includes('calculada');
 
-            if (fueExitoso) {
-                showSuccessAlert(
-                    'Éxito',
-                    `Nota calculada exitosamente para ${nombreEstudiante}`
-                );
+        if (fueExitoso) {
+            showSuccessAlert(
+                'Éxito',
+                `Nota calculada exitosamente para ${nombreEstudiante}`
+            );
 
-                // Pequeño delay para que el backend termine de persistir
-                setTimeout(() => {
-                    reload();
-                }, 500);
+            // Pequeño delay para que el backend termine de persistir
+            setTimeout(() => {
+                reload();
+            }, 500);
 
-            } else {
-                showErrorAlert(
-                    'Error al calcular',
-                    result?.message || 'No fue posible calcular la nota'
-                );
-            }
-
-        } catch (error) {
-            console.error('Error en handleCalcularNota:', error);
+        } else {
             showErrorAlert(
-                'Error del Sistema',
-                'Ocurrió un error inesperado al calcular la nota. Por favor, intenta de nuevo.'
+                'Error al calcular',
+                result?.message || 'No fue posible calcular la nota'
             );
         }
 
@@ -149,7 +138,7 @@ const DocenteNotas = () => {
     const handleDescargarExcel = async () => {
         const result = await exportarNotasFinalesExcelService();
 
-        if (!result.success) {
+        if (!result.success) {z
             return showErrorAlert('Error', result.message);
         }
 
