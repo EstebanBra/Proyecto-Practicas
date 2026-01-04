@@ -331,8 +331,8 @@ export async function generateComentariosExcelConRespuestasService(usuarioId) {
     };
 
     // Agregar datos
-    comentariosConRespuesta.forEach((comentario) => {
-      worksheet.addRow({
+    comentariosConRespuesta.forEach((comentario, index) => {
+      const row = worksheet.addRow({
         id: comentario.id,
         fechaCreacion: comentario.fechaCreacion,
         mensaje: comentario.mensaje,
@@ -340,12 +340,39 @@ export async function generateComentariosExcelConRespuestasService(usuarioId) {
         nivelUrgencia: comentario.nivelUrgencia,
         respuesta: comentario.respuesta
       });
+
+      // Proteger la columna de respuesta (columna G = índice 6)
+      // Hacer que sea de solo lectura
+      row.getCell(6).protection = {
+        locked: true,
+        hidden: false
+      };
     });
 
     // Ajustar altura de filas
     worksheet.eachRow({ includeEmpty: false }, (row) => {
       row.height = 30;
       row.alignment = { wrapText: true, vertical: "top" };
+    });
+
+    // Proteger la hoja
+    // Esto permite que el usuario vea el contenido pero no pueda modificar las celdas bloqueadas
+    await worksheet.protect('', {
+      sheet: true,           // Proteger la hoja
+      content: true,         // Proteger el contenido
+      objects: false,        // Permitir modificar objetos
+      scenarios: false,      // Permitir modificar escenarios
+      formatRows: false,     // No permitir cambiar formato de filas
+      formatColumns: false,  // No permitir cambiar formato de columnas
+      insertRows: false,     // No permitir insertar filas
+      insertColumns: false,  // No permitir insertar columnas
+      deleteRows: false,     // No permitir eliminar filas
+      deleteColumns: false,  // No permitir eliminar columnas
+      selectLockedCells: true, // Permitir seleccionar celdas bloqueadas (para ver)
+      sort: true,            // Permitir ordenar
+      autoFilter: true,      // Permitir filtros
+      pivotTables: false,    // No permitir tablas dinámicas
+      selectUnlockedCells: true // Permitir seleccionar celdas desbloqueadas
     });
 
     return await workbook.xlsx.writeBuffer();
