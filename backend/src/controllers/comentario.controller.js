@@ -314,7 +314,7 @@ export async function uploadComentariosExcel(req, res) {
     handleSuccess(res, 200, "Plantilla procesada exitosamente", resultado);
   } catch (error) {
     console.error("Error en uploadComentariosExcel:", error);
-    handleErrorServer(res, "Error procesando la plantilla Excel", error);
+    handleErrorServer(res, 400, error.message);
   }
 };
 
