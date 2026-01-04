@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d5c0a1e3-b12d-4bc8-b975-acaf636ce443" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/uploads/documentos/licencia_medica-1767503158886-728677716.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/uploads/documentos/openvpn-1767503158888-801568913.pdf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/DocsEntregados.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/DocsEntregados.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/hooks/notafinales/useCalcularNotaFinal.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/hooks/notafinales/useCalcularNotaFinal.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/NotasEstudiantes.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/NotasEstudiantes.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,8 +15,16 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="221" />
+    <option name="cachedIndexableFilesCount" value="223" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JSX File" />
+        <option value="CSS File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -58,6 +64,7 @@
     "git-widget-placeholder": "dev",
     "javascript.preferred.runtime.type.id": "node",
     "last_opened_file_path": "C:/Users/gcany/OneDrive/Documentos/aaaa/Proyecto-Practicas-carlocoide/backend/src/entity",
+    "list.type.of.created.stylesheet": "CSS",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -93,6 +100,7 @@
       <workItem from="1767410142942" duration="7064000" />
       <workItem from="1767493634228" duration="1272000" />
       <workItem from="1767499898775" duration="5070000" />
+      <workItem from="1767505028127" duration="1457000" />
     </task>
     <servers />
   </component>
@@ -109,5 +117,16 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/frontend/src/hooks/notafinales/useCalcularNotaFinal.jsx</url>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

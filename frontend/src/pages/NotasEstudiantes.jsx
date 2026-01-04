@@ -5,6 +5,7 @@ import '@styles/notasDocente.css';
 import useGetDocumentos from '@hooks/documentos/useGetDocumentos';
 import { exportarNotasFinalesExcelService }
     from '@services/notaFinal.servicef.js';
+import Swal from "sweetalert2";
 
 
 const DocenteNotas = () => {
@@ -83,16 +84,56 @@ const DocenteNotas = () => {
     }, []);
 
     const handleCalcularNota = useCallback(async (idPractica, nombreEstudiante) => {
-        const confirmacion = window.confirm(`¿Calcular nota final para ${nombreEstudiante}?`);
-        if (!confirmacion) return;
 
-        const result = await calcularNotaEstudiante(idPractica);
-        if (result.success) {
-            showSuccessAlert('¡Éxito!', `Nota calculada para ${nombreEstudiante}`);
-        } else {
-            showErrorAlert('Error', result.message);
+        // Confirmación previa
+        const confirmacion = await Swal.fire({
+            title: 'Calcular nota final',
+            html: `¿Calcular nota final para <strong>${nombreEstudiante}</strong>?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, calcular',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
         }
-    }, [calcularNotaEstudiante]);
+
+        // Ejecutar cálculo
+        const result = await calcularNotaEstudiante(idPractica, nombreEstudiante);
+
+        // Si el usuario canceló dentro del proceso
+        if (result?.cancelled) {
+            return;
+        }
+
+        // Determinar éxito aún si viene success:false pero mensaje indica que sí
+        const fueExitoso =
+            result?.success ||
+            result?.message?.toLowerCase()?.includes('exitosamente') ||
+            result?.message?.toLowerCase()?.includes('calculada');
+
+        if (fueExitoso) {
+            showSuccessAlert(
+                'Éxito',
+                `Nota calculada exitosamente para ${nombreEstudiante}`
+            );
+
+            // Pequeño delay para que el backend termine de persistir
+            setTimeout(() => {
+                reload();
+            }, 500);
+
+        } else {
+            showErrorAlert(
+                'Error al calcular',
+                result?.message || 'No fue posible calcular la nota'
+            );
+        }
+
+    }, [calcularNotaEstudiante, reload]);
 
     const handleDescargarExcel = async () => {
         const result = await exportarNotasFinalesExcelService();
