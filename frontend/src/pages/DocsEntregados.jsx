@@ -25,17 +25,21 @@ const DocsEntregados = () => {
     const { practicas, loading: loadingPracticas, refetch: refetchPracticas } = useTodasPracticas();
     const { updating: updatingEstado, handleUpdateEstados } = useUpdateEstadoDocumento(fetchDocumentos);
     const { submitting: creatingEval, handleCrearEvaluacion } = useCrearEvaluacion(fetchEvaluacionByDocumento, fetchEvaluacionesDocente);
-    const { updating: updatingEval, handleUpdateEvaluacion } = useUpdateEvaluacion(fetchEvaluacionesDocente);
-
-    const fetchData = useCallback(async () => {
-        await fetchDocumentos();
-        await fetchEvaluacionesDocente();
-        await refetchPracticas();
-    }, [fetchDocumentos, fetchEvaluacionesDocente, refetchPracticas]);
+    const { updating: updatingEval, handleUpdateEvaluacion } =
+      useUpdateEvaluacion(fetchEvaluacionesDocente);
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+      const fetchData = async () => {
+        await Promise.all([
+          fetchDocumentos(),
+          fetchEvaluacionesDocente(),
+          refetchPracticas(),
+        ]);
+      };
+
+      fetchData();
+    }, []);
+
 
     // Mapear prácticas por id
     useEffect(() => {
@@ -56,12 +60,19 @@ const DocsEntregados = () => {
         setCurrentPage(1);
     };
 
+    // Un bonito frankestein para que funcione el descargar documentos
     const handleDownload = (ruta_archivo) => {
-        const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-        const relativePath = ruta_archivo.replace(/\\/g, '/').split('uploads/')[1];
+        let baseUrl = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000')
+            .replace(/\/+$/, '');
+        baseUrl = baseUrl.replace(/\/api$/, '');
+
+        const relativePath = ruta_archivo
+            .replace(/\\/g, '/')
+            .split('uploads/')[1];
         const downloadUrl = `${baseUrl}/uploads/${relativePath}`;
         window.open(downloadUrl, '_blank');
     };
+
 
     const handleAddNote = async (doc) => {
         // Verificar si ya tiene evaluación

@@ -6,7 +6,7 @@ import {
 } from '@services/notaFinal.servicef.js';
 
 export function useNotasEstudiantes() {
-    const { practicas, loading: loadingPracticas } = useTodasPracticas();
+    const { practicas, loading: loadingPracticas, refetch: refetchPracticas } = useTodasPracticas(); // ← Añadir refetch aquí
 
     const [notas, setNotas] = useState([]);
     const [loadingNotas, setLoadingNotas] = useState(true);
@@ -92,12 +92,15 @@ export function useNotasEstudiantes() {
         const result = await calcularNotaFinal(idEstudiante);
 
         if (result?.success) {
-            await fetchNotas();
+            await Promise.all([
+                fetchNotas(),
+                refetchPracticas()
+            ]);
         }
 
         setCalculando(prev => ({ ...prev, [idEstudiante]: false }));
         return result;
-    }, [fetchNotas]);
+    }, [fetchNotas, refetchPracticas]);
 
     const cambiarFiltro = useCallback((nuevoFiltro) => {
         setFiltroActual(nuevoFiltro);
