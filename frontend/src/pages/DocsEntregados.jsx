@@ -60,12 +60,19 @@ const DocsEntregados = () => {
         setCurrentPage(1);
     };
 
+    // Un bonito frankestein para que funcione el descargar documentos
     const handleDownload = (ruta_archivo) => {
-        const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-        const relativePath = ruta_archivo.replace(/\\/g, '/').split('uploads/')[1];
+        let baseUrl = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000')
+            .replace(/\/+$/, '');
+        baseUrl = baseUrl.replace(/\/api$/, '');
+
+        const relativePath = ruta_archivo
+            .replace(/\\/g, '/')
+            .split('uploads/')[1];
         const downloadUrl = `${baseUrl}/uploads/${relativePath}`;
         window.open(downloadUrl, '_blank');
     };
+
 
     const handleAddNote = async (doc) => {
         // Verificar si ya tiene evaluación

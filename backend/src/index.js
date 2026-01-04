@@ -20,7 +20,7 @@ async function setupServer() {
   try {
     const app = express();
 
-    const uploadsPath = path.resolve(dirname, "../../uploads");
+    const uploadsPath = path.resolve(dirname, "../uploads");
     app.use("/uploads", express.static(uploadsPath));
     
     app.disable("x-powered-by");

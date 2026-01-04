@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d5c0a1e3-b12d-4bc8-b975-acaf636ce443" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/uploads/documentos/licencia_medica-1767503158886-728677716.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/uploads/documentos/openvpn-1767503158888-801568913.pdf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/controllers/comentario.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/controllers/comentario.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/services/comentario.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/services/comentario.service.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/styles/notaFinal.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles/notaFinal.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/DocsEntregados.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/DocsEntregados.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,7 +92,7 @@
       <workItem from="1767409470314" duration="531000" />
       <workItem from="1767410142942" duration="7064000" />
       <workItem from="1767493634228" duration="1272000" />
-      <workItem from="1767499898775" duration="1299000" />
+      <workItem from="1767499898775" duration="5070000" />
     </task>
     <servers />
   </component>
