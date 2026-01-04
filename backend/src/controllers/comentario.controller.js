@@ -261,12 +261,12 @@ export async function downloadComentariosExcel(req, res) {
 
     // Verificar permisos: solo docentes y admin pueden descargar plantillas de otros
     if (user.rol === "estudiante" && Number(usuarioId) !== Number(user.id)) {
-      return handleErrorClient(res, 403, 
+      return handleErrorClient(res, 403,
         "Acceso denegado", "Los estudiantes solo pueden descargar sus propias plantillas");
     }
 
     const excelBuffer = await generateComentariosExcelService(usuarioId);
-    
+
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="comentarios_estudiante_${usuarioId}.xlsx"`);
     res.send(excelBuffer);
@@ -295,28 +295,58 @@ export async function uploadComentariosExcel(req, res) {
     // Verificar que sea archivo Excel
     const allowedMimetypes = [
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "application/vnd.ms-excel"
+      "application/vnd.ms-excel",
     ];
-    
+
     if (!allowedMimetypes.includes(file.mimetype)) {
-      return handleErrorClient(res, 400, "El archivo debe ser Excel (.xlsx o .xls)");
+      return handleErrorClient(
+        res,
+        400,
+        "El archivo debe ser Excel (.xlsx o .xls)",
+      );
     }
 
     // Verificar permisos: solo docentes pueden procesar plantillas de otros usuarios
     if (user.rol === "estudiante" && Number(usuarioId) !== Number(user.id)) {
-      return handleErrorClient(res, 403, 
-        "Acceso denegado", "Los estudiantes solo pueden procesar sus propias plantillas");
+      return handleErrorClient(
+        res,
+        403,
+        "Acceso denegado",
+        "Los estudiantes solo pueden procesar sus propias plantillas",
+      );
     }
 
-    // Procesar el archivo Excel
-    const resultado = await processComentariosExcelService(usuarioId, file.path);
+    // Procesar el archivo Excel con timeout para evitar loops infinitos
+    const resultado = await Promise.race([
+      processComentariosExcelService(usuarioId, file.path),
+      new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              "Tiempo de procesamiento excedido (30 segundos). Verifique que el archivo sea válido.",
+            ),
+          );
+        }, 30000); // 30 segundos timeout
+      }),
+    ]);
 
     handleSuccess(res, 200, "Plantilla procesada exitosamente", resultado);
   } catch (error) {
     console.error("Error en uploadComentariosExcel:", error);
-    handleErrorServer(res, "Error procesando la plantilla Excel", error);
+
+    // Determinar el tipo de error para dar mejor feedback
+    if (error.message.includes("Tiempo de procesamiento")) {
+      handleErrorClient(res, 408, error.message);
+    } else if (
+      error.message.includes("No se puede procesar") ||
+      error.message.includes("no pertenece al estudiante")
+    ) {
+      handleErrorClient(res, 400, error.message);
+    } else {
+      handleErrorServer(res, "Error procesando la plantilla Excel", error);
+    }
   }
-};
+}
 
 export async function downloadComentariosExcelConRespuestas(req, res) {
   try {

@@ -107,7 +107,7 @@ export async function generateComentariosExcelService(usuarioId) {
     const comentarioRepository = AppDataSource.getRepository(Comentario);
     const comentarios = await comentarioRepository.find({
       where: { usuarioId },
-      relations: ["usuario", "docente"]
+      relations: ["usuario", "docente"],
     });
 
     if (comentarios.length === 0) {
@@ -126,23 +126,23 @@ export async function generateComentariosExcelService(usuarioId) {
       { header: "Tipo Problema", key: "tipoProblema", width: 15 },
       { header: "Urgencia", key: "nivelUrgencia", width: 15 },
       { header: "Estado", key: "estado", width: 15 },
-      { header: "Respuesta del Docente", key: "respuesta", width: 40 }
+      { header: "Respuesta del Docente", key: "respuesta", width: 40 },
     ];
 
     // Formatear encabezados
     worksheet.getRow(1).font = {
       bold: true,
-      color: { argb: "FFFFFFFF" }
+      color: { argb: "FFFFFFFF" },
     };
     worksheet.getRow(1).fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF4472C4" }
+      fgColor: { argb: "FF4472C4" },
     };
     worksheet.getRow(1).alignment = {
       horizontal: "center",
       vertical: "center",
-      wrapText: true
+      wrapText: true,
     };
 
     // Agregar datos
@@ -154,7 +154,7 @@ export async function generateComentariosExcelService(usuarioId) {
         tipoProblema: comentario.tipoProblema,
         nivelUrgencia: comentario.nivelUrgencia,
         estado: comentario.estado,
-        respuesta: comentario.respuesta || ""
+        respuesta: comentario.respuesta || "",
       });
     });
 
@@ -181,12 +181,12 @@ export async function processComentariosExcelService(usuarioId, filePath) {
     }
 
     const comentarioRepository = AppDataSource.getRepository(Comentario);
-    
+
     // Obtener todos los comentarios del estudiante que ya están en la BD
     const comentariosExistentes = await comentarioRepository.find({
-      where: { usuarioId: parseInt(usuarioId) }
+      where: { usuarioId: parseInt(usuarioId) },
     });
-    
+
     const resultados = [];
     const idsEnExcel = new Set();
 
@@ -199,33 +199,35 @@ export async function processComentariosExcelService(usuarioId, filePath) {
 
       if (comentarioId) {
         idsEnExcel.add(parseInt(comentarioId));
-        
+
         if (respuesta && respuesta.toString().trim()) {
           resultados.push({
             id: parseInt(comentarioId),
-            respuesta: respuesta.toString().trim()
+            respuesta: respuesta.toString().trim(),
           });
         }
       }
     });
 
     // Validación: detectar comentarios borrados (que existen en BD pero no en Excel)
-    const comentariosBorrados = comentariosExistentes.filter(c => !idsEnExcel.has(c.id));
-    
+    const comentariosBorrados = comentariosExistentes.filter(
+      (c) => !idsEnExcel.has(c.id),
+    );
+
     if (comentariosBorrados.length > 0) {
       throw new Error(`No se puede procesar el Excel:
         Faltan ${comentariosBorrados.length} comentario(s) en el archivo. No está permitido eliminar comentarios.`);
     }
 
     // Validación: detectar comentarios con respuesta vaciada (tenían respuesta y ahora está vacía)
-    const comentariosVaciados = comentariosExistentes.filter(c => {
+    const comentariosVaciados = comentariosExistentes.filter((c) => {
       const tieneRespuesta = c.respuesta && c.respuesta.trim();
       const estaEnExcel = idsEnExcel.has(c.id);
-      const tieneRespuestaEnExcel = resultados.some(r => r.id === c.id);
-      
+      const tieneRespuestaEnExcel = resultados.some((r) => r.id === c.id);
+
       return tieneRespuesta && estaEnExcel && !tieneRespuestaEnExcel;
     });
-    
+
     if (comentariosVaciados.length > 0) {
       throw new Error(`No se puede procesar el Excel: 
         ${comentariosVaciados.length} 
@@ -233,31 +235,59 @@ export async function processComentariosExcelService(usuarioId, filePath) {
     }
 
     if (resultados.length === 0) {
-      throw new Error("No se encontraron comentarios con respuestas en el Excel");
+      throw new Error(
+        "No se encontraron comentarios con respuestas en el Excel",
+      );
+    }
+
+    // Validar que TODOS los comentarios en Excel pertenezcan al estudiante ANTES de procesar
+    const comentariosNoPertenecen = [];
+
+    for (const item of resultados) {
+      const comentario = await comentarioRepository.findOneBy({ id: item.id });
+
+      if (comentario && comentario.usuarioId !== parseInt(usuarioId)) {
+        comentariosNoPertenecen.push({
+          id: item.id,
+          estudianteReal: comentario.usuarioId,
+        });
+      }
+    }
+
+    // Si hay comentarios que no pertenecen al estudiante, lanzar error inmediatamente
+    if (comentariosNoPertenecen.length > 0) {
+      const idsErroneos = comentariosNoPertenecen
+        .map(
+          (c) => `ID ${c.id} (pertenece al estudiante ID ${c.estudianteReal})`,
+        )
+        .join(", ");
+      throw new Error(
+        `Error: El archivo contiene comentarios que no pertenecen al estudiante seleccionado: ${idsErroneos}`,
+      );
     }
 
     // Actualizar comentarios en la base de datos
     const actualizados = [];
     const noActualizados = [];
-    
+
     for (const item of resultados) {
       const comentario = await comentarioRepository.findOneBy({ id: item.id });
-      
+
       if (!comentario) {
-        noActualizados.push({ id: item.id, motivo: "Comentario no encontrado" });
-        continue;
+        // Esto no debería pasar después de la validación anterior, pero por seguridad
+        throw new Error(
+          `Comentario ID ${item.id} no encontrado en la base de datos`,
+        );
       }
-      
-      if (comentario.usuarioId !== parseInt(usuarioId)) {
-        noActualizados.push({ id: item.id, motivo: "No pertenece al estudiante seleccionado" });
-        continue;
-      }
-      
+
       // Solo actualizar si la respuesta es diferente o es la primera vez que se responde vía Excel
       const respuestaAnterior = comentario.respuesta || "";
       const respuestaNueva = item.respuesta;
-      
-      if (respuestaAnterior !== respuestaNueva || !comentario.respondidoViaExcel) {
+
+      if (
+        respuestaAnterior !== respuestaNueva ||
+        !comentario.respondidoViaExcel
+      ) {
         comentario.respuesta = respuestaNueva;
         comentario.estado = "Respondido";
         comentario.respondidoViaExcel = true;
@@ -271,8 +301,9 @@ export async function processComentariosExcelService(usuarioId, filePath) {
     return {
       totalProcesados: resultados.length,
       totalActualizados: actualizados.length,
-      totalSinCambios: noActualizados.filter(n => n.motivo === "Sin cambios").length,
-      comentarios: actualizados
+      totalSinCambios: noActualizados.filter((n) => n.motivo === "Sin cambios")
+        .length,
+      comentarios: actualizados,
     };
   } catch (error) {
     console.error("Error en processComentariosExcelService:", error);

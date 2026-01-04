@@ -4,31 +4,36 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d5c0a1e3-b12d-4bc8-b975-acaf636ce443" name="Changes" comment="" />
+    <list default="true" id="d5c0a1e3-b12d-4bc8-b975-acaf636ce443" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/controllers/comentario.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/controllers/comentario.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/services/comentario.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/services/comentario.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/styles/notaFinal.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles/notaFinal.css" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="198" />
+    <option name="cachedIndexableFilesCount" value="221" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "Anyelolol"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Anyelolol&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Anyelolol/Proyecto-Practicas.git",
-    "accountId": "6aa18e44-dcf1-4874-98bb-8872eeb6d2f6"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Anyelolol/Proyecto-Practicas.git&quot;,
+    &quot;accountId&quot;: &quot;6aa18e44-dcf1-4874-98bb-8872eeb6d2f6&quot;
   }
-}]]></component>
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -47,8 +52,9 @@
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "dev",
     "javascript.preferred.runtime.type.id": "node",
     "last_opened_file_path": "C:/Users/gcany/OneDrive/Documentos/aaaa/Proyecto-Practicas-carlocoide/backend/src/entity",
     "node.js.detected.package.eslint": "true",
@@ -83,7 +89,9 @@
       <option name="presentableId" value="Default" />
       <updated>1767409468955</updated>
       <workItem from="1767409470314" duration="531000" />
-      <workItem from="1767410142942" duration="4875000" />
+      <workItem from="1767410142942" duration="7064000" />
+      <workItem from="1767493634228" duration="1272000" />
+      <workItem from="1767499898775" duration="1299000" />
     </task>
     <servers />
   </component>
